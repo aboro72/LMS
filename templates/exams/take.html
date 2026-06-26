@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block title %}{{ pruefung.titel }} ablegen - ABoroLMS{% endblock %}
+
+{% block content %}
+<div class="exam-shell">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h1 class="h4 mb-0">{{ pruefung.titel }}</h1>
+        <span class="badge text-bg-light">Frage {{ index|add:1 }} von {{ gesamt }}</span>
+    </div>
+    <form class="aboro-panel" method="post">
+        {% csrf_token %}
+        <input type="hidden" name="index" value="{{ index }}">
+        {% if frage %}
+            <div class="lesson-content mb-4">{{ frage.fragetext.html|safe }}</div>
+            {% if frage.typ == "SC" or frage.typ == "WF" %}
+                {% for antwort in antworten %}
+                    <label class="exam-option">
+                        <input type="radio" name="antworten" value="{{ antwort.id }}">
+                        <span>{{ antwort.antworttext }}</span>
+                    </label>
+                {% endfor %}
+            {% elif frage.typ == "MC" %}
+                {% for antwort in antworten %}
+                    <label class="exam-option">
+                        <input type="checkbox" name="antworten" value="{{ antwort.id }}">
+                        <span>{{ antwort.antworttext }}</span>
+                    </label>
+                {% endfor %}
+            {% elif frage.typ == "FT" %}
+                <textarea class="form-control" name="freitext_antwort" rows="8">{{ bestehende_antwort.freitext_antwort }}</textarea>
+            {% elif frage.typ == "ZO" %}
+                <p class="text-secondary">Zuordnungsantworten werden in einer spaeteren UI-Ausbaustufe per Drag and Drop gespeichert.</p>
+            {% endif %}
+            <div class="d-flex justify-content-end gap-2 mt-4">
+                {% if is_last %}
+                    <button class="btn btn-aboro" name="finish" value="1" type="submit">Pruefung abgeben</button>
+                {% else %}
+                    <button class="btn btn-aboro" type="submit">Speichern und weiter</button>
+                {% endif %}
+            </div>
+        {% else %}
+            <p class="text-secondary mb-0">Keine Frage gefunden.</p>
+        {% endif %}
+    </form>
+</div>
+{% endblock %}

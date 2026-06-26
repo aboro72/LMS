@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+
+{% block title %}ABoroLMS - Learning Management{% endblock %}
+
+{% block content %}
+<section class="aboro-hero py-5">
+    <div class="row align-items-center g-4">
+        <div class="col-lg-7">
+            <p class="text-uppercase text-aboro-orange fw-semibold mb-2">ABoroSoft</p>
+            <h1 class="display-5 fw-bold mb-3">Professionelles Learning Management fuer Organisationen</h1>
+            <p class="lead text-secondary mb-4">Mandantenfaehige Kurse, Rollenverwaltung und der Grundstein fuer Pruefungen und Zertifikate.</p>
+            <div class="d-flex gap-2 flex-wrap">
+                <a class="btn btn-aboro btn-lg" href="{% url 'register' %}">Jetzt starten</a>
+                <a class="btn btn-outline-secondary btn-lg" href="{% url 'account_login' %}">Einloggen</a>
+            </div>
+        </div>
+        <div class="col-lg-5">
+            <div class="aboro-panel">
+                <h2 class="h5 mb-3">Phase 1 Fundament</h2>
+                <ul class="list-unstyled mb-0">
+                    <li class="mb-2">Custom User Model</li>
+                    <li class="mb-2">Organisationen und Rollenprofile</li>
+                    <li class="mb-2">Django Admin und Auth-Routing</li>
+                    <li>Bootstrap 5 Basistemplate</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="aboro-panel mt-4">
+    <div class="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-3">
+        <div>
+            <h2 class="h5 mb-1">Demo-Zugaenge</h2>
+            <p class="text-secondary mb-0">Diese Konten werden mit <code>python manage.py create_demo_data</code> erstellt.</p>
+        </div>
+        <span class="badge text-bg-light">Passwort: ChangeMe123!</span>
+    </div>
+    <div class="table-responsive">
+        <table class="table align-middle mb-0">
+            <thead>
+            <tr>
+                <th>Rolle</th>
+                <th>Benutzername</th>
+                <th>E-Mail</th>
+                <th>Passwort</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <td>Super-Admin</td>
+                <td><code>superadmin</code></td>
+                <td><code>superadmin@example.com</code></td>
+                <td><code>ChangeMe123!</code></td>
+            </tr>
+            <tr>
+                <td>Org-Admin</td>
+                <td><code>orgadmin</code></td>
+                <td><code>orgadmin@example.com</code></td>
+                <td><code>ChangeMe123!</code></td>
+            </tr>
+            <tr>
+                <td>Trainer</td>
+                <td><code>trainer</code></td>
+                <td><code>trainer@example.com</code></td>
+                <td><code>ChangeMe123!</code></td>
+            </tr>
+            <tr>
+                <td>Pruefer</td>
+                <td><code>examiner</code></td>
+                <td><code>examiner@example.com</code></td>
+                <td><code>ChangeMe123!</code></td>
+            </tr>
+            <tr>
+                <td>Lernender</td>
+                <td><code>learner</code></td>
+                <td><code>learner@example.com</code></td>
+                <td><code>ChangeMe123!</code></td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</section>
+{% endblock %}

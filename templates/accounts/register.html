@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block title %}Registrieren - ABoroLMS{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-6">
+        <div class="aboro-panel">
+            <h1 class="h3 mb-4">Konto erstellen</h1>
+            <form method="post" novalidate>
+                {% csrf_token %}
+                {{ form.as_p }}
+                <button class="btn btn-aboro w-100" type="submit">Registrieren</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

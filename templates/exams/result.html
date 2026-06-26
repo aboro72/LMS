@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block title %}Pruefungsergebnis - ABoroLMS{% endblock %}
+
+{% block content %}
+<div class="aboro-panel">
+    <p class="text-uppercase text-aboro-orange fw-semibold mb-2">Ergebnis</p>
+    <h1 class="h3 mb-3">{{ versuch.pruefung.titel }}</h1>
+    <dl class="row">
+        <dt class="col-sm-4">Status</dt>
+        <dd class="col-sm-8">{{ versuch.get_status_display }}</dd>
+        <dt class="col-sm-4">Punkte</dt>
+        <dd class="col-sm-8">{{ versuch.punkte_erreicht }} / {{ versuch.punkte_gesamt }}</dd>
+        <dt class="col-sm-4">Prozent</dt>
+        <dd class="col-sm-8">{{ versuch.prozent_erreicht }}%</dd>
+        <dt class="col-sm-4">Bestanden</dt>
+        <dd class="col-sm-8">{% if versuch.bestanden %}Ja{% else %}Nein{% endif %}</dd>
+    </dl>
+</div>
+{% endblock %}

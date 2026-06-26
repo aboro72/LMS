@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+
+{% block title %}{{ kurs.titel }} - ABoroLMS{% endblock %}
+
+{% block breadcrumbs %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'home' %}">Start</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'course_catalog' %}">Kurse</a></li>
+        <li class="breadcrumb-item active" aria-current="page">{{ kurs.titel }}</li>
+    </ol>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+    <div class="col-lg-8">
+        <div class="aboro-panel mb-4">
+            <p class="text-uppercase text-aboro-orange fw-semibold mb-2">{{ kurs.organisation.name }}</p>
+            <h1 class="h2 mb-3">{{ kurs.titel }}</h1>
+            <div class="text-secondary mb-3">{{ kurs.beschreibung.html|safe }}</div>
+            <div class="d-flex gap-2 flex-wrap">
+                <span class="badge text-bg-light">{{ kurs.get_niveau_display }}</span>
+                <span class="badge text-bg-light">{{ kurs.sprache }}</span>
+                <span class="badge text-bg-light">{% if kurs.ist_kostenlos %}Kostenlos{% else %}{{ kurs.preis }} EUR{% endif %}</span>
+            </div>
+            {% if kurs.pruefung %}
+                <div class="mt-4 p-3 border rounded">
+                    <h2 class="h5 mb-2">Abschlusspruefung</h2>
+                    <p class="text-secondary mb-3">{{ kurs.pruefung.titel }}</p>
+                    <a class="btn btn-outline-secondary" href="{% url 'exam_detail' kurs.pruefung.id %}">Zur Pruefung</a>
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="aboro-panel">
+            <h2 class="h5 mb-3">Kursinhalt</h2>
+            {% for abschnitt in kurs.abschnitte.all %}
+                <div class="course-section mb-3">
+                    <h3 class="h6 mb-2">{{ abschnitt.titel }}</h3>
+                    <div class="list-group">
+                        {% for lektion in abschnitt.lektionen.all %}
+                            <div class="list-group-item d-flex justify-content-between align-items-center">
+                                <span>{{ lektion.titel }}</span>
+                                <span class="small text-secondary">{{ lektion.get_typ_display }} · {{ lektion.dauer_minuten }} Min.</span>
+                            </div>
+                        {% empty %}
+                            <div class="list-group-item text-secondary">Noch keine Lektionen.</div>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% empty %}
+                <p class="text-secondary mb-0">Noch keine Inhalte veroeffentlicht.</p>
+            {% endfor %}
+        </div>
+    </div>
+    <aside class="col-lg-4">
+        <div class="aboro-panel sticky-lg-top course-action-panel">
+            {% if kurs.thumbnail %}
+                <img class="img-fluid rounded mb-3" src="{{ kurs.thumbnail.url }}" alt="{{ kurs.titel }}">
+            {% endif %}
+            {% if user.is_authenticated %}
+                {% if einschreibung %}
+                    <a class="btn btn-aboro w-100" href="{% url 'course_learn' kurs.slug %}">Weiterlernen</a>
+                {% else %}
+                    <form method="post" action="{% url 'course_enroll' kurs.slug %}">
+                        {% csrf_token %}
+                        <button class="btn btn-aboro w-100" type="submit">Einschreiben</button>
+                    </form>
+                {% endif %}
+            {% else %}
+                <a class="btn btn-aboro w-100" href="{% url 'account_login' %}">Einloggen zum Einschreiben</a>
+            {% endif %}
+        </div>
+    </aside>
+</div>
+{% endblock %}

@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+
+{% block title %}Kurs bearbeiten - ABoroLMS{% endblock %}
+
+{% block breadcrumbs %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'home' %}">Start</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'trainer_course_list' %}">Trainer Kurse</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Kurs</li>
+    </ol>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+    <div class="col-lg-7">
+        <div class="aboro-panel">
+            <h1 class="h3 mb-4">{% if object %}Kurs bearbeiten{% else %}Kurs erstellen{% endif %}</h1>
+            <form method="post" enctype="multipart/form-data" novalidate>
+                {% csrf_token %}
+                {{ form.as_p }}
+                <button class="btn btn-aboro" type="submit">Speichern</button>
+            </form>
+        </div>
+    </div>
+
+    {% if object %}
+        <div class="col-lg-5">
+            <div class="aboro-panel mb-4">
+                <h2 class="h5 mb-3">Abschnitt erstellen</h2>
+                <form method="post" action="{% url 'trainer_section_create' object.slug %}">
+                    {% csrf_token %}
+                    {{ abschnitt_form.as_p }}
+                    <button class="btn btn-outline-secondary" type="submit">Abschnitt hinzufuegen</button>
+                </form>
+            </div>
+
+            <div class="aboro-panel">
+                <h2 class="h5 mb-3">Kursstruktur</h2>
+                <div id="courseStructure">
+                    {% for abschnitt in abschnitte %}
+                        <section class="trainer-section mb-4">
+                            <h3 class="h6">{{ abschnitt.titel }}</h3>
+                            <div class="lesson-sortable list-group mb-3" data-section-id="{{ abschnitt.id }}">
+                                {% for lektion in abschnitt.lektionen.all %}
+                                    <div class="list-group-item d-flex justify-content-between align-items-center" data-lesson-id="{{ lektion.id }}">
+                                        <span>{{ lektion.titel }}</span>
+                                        <span class="small text-secondary">{{ lektion.get_typ_display }}</span>
+                                    </div>
+                                {% empty %}
+                                    <div class="list-group-item text-secondary">Keine Lektionen.</div>
+                                {% endfor %}
+                            </div>
+                            <details>
+                                <summary>Lektion hinzufuegen</summary>
+                                <form class="mt-3" method="post" enctype="multipart/form-data" action="{% url 'trainer_lesson_create' object.slug abschnitt.id %}">
+                                    {% csrf_token %}
+                                    {{ lektion_form.as_p }}
+                                    <button class="btn btn-sm btn-outline-secondary" type="submit">Lektion speichern</button>
+                                </form>
+                            </details>
+                        </section>
+                    {% empty %}
+                        <p class="text-secondary mb-0">Noch keine Abschnitte.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
+<script>
+    document.querySelectorAll(".lesson-sortable").forEach((element) => {
+        new Sortable(element, {
+            animation: 150
+        });
+    });
+</script>
+{% endblock %}

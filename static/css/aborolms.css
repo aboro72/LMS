@@ -1,0 +1,115 @@
+:root {
+    --aboro-blue: #12315f;
+    --aboro-blue-dark: #0c2448;
+    --aboro-orange: #f28c28;
+    --aboro-bg: #f6f8fb;
+}
+
+body {
+    background: var(--aboro-bg);
+    color: #172033;
+}
+
+.aboro-navbar {
+    background: var(--aboro-blue-dark);
+}
+
+.btn-aboro {
+    --bs-btn-bg: var(--aboro-orange);
+    --bs-btn-border-color: var(--aboro-orange);
+    --bs-btn-color: #1b1b1b;
+    --bs-btn-hover-bg: #dc7814;
+    --bs-btn-hover-border-color: #dc7814;
+    --bs-btn-hover-color: #111;
+}
+
+.text-aboro-orange {
+    color: var(--aboro-orange);
+}
+
+.aboro-hero {
+    min-height: 60vh;
+}
+
+.aboro-panel {
+    background: #fff;
+    border: 1px solid rgba(18, 49, 95, 0.12);
+    border-radius: 8px;
+    box-shadow: 0 10px 30px rgba(18, 49, 95, 0.08);
+    padding: 1.5rem;
+}
+
+.course-card {
+    background: #fff;
+    border: 1px solid rgba(18, 49, 95, 0.12);
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 8px 22px rgba(18, 49, 95, 0.07);
+}
+
+.course-card__image,
+.course-card__placeholder {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    object-fit: cover;
+}
+
+.course-card__placeholder {
+    display: grid;
+    place-items: center;
+    background: linear-gradient(135deg, var(--aboro-blue), #355f93);
+    color: #fff;
+    font-weight: 700;
+}
+
+.course-card__body {
+    padding: 1rem;
+}
+
+.course-card a {
+    color: #172033;
+    text-decoration: none;
+}
+
+.course-card a:hover {
+    color: var(--aboro-blue);
+}
+
+.course-stars {
+    color: var(--aboro-orange);
+    letter-spacing: 0;
+}
+
+.aboro-progress {
+    background-color: var(--aboro-orange);
+}
+
+.lesson-sidebar {
+    max-height: calc(100vh - 7rem);
+    overflow: auto;
+}
+
+.active-lesson {
+    color: var(--aboro-blue);
+    font-weight: 700;
+}
+
+.course-action-panel {
+    top: 1rem;
+}
+
+.exam-shell {
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.exam-option {
+    display: flex;
+    gap: 0.75rem;
+    align-items: flex-start;
+    border: 1px solid rgba(18, 49, 95, 0.14);
+    border-radius: 8px;
+    padding: 0.85rem 1rem;
+    margin-bottom: 0.75rem;
+    background: #fff;
+}

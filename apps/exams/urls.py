@@ -1,0 +1,38 @@
+from django.urls import path
+
+from .views import (
+    ExaminerBewertungView,
+    ExaminerQueueView,
+    PruefungAblegenView,
+    PruefungDetailView,
+    PruefungErgebnisView,
+    PruefungStartView,
+    TrainerAntwortCreateView,
+    TrainerCSVImportView,
+    TrainerFrageCreateView,
+    TrainerFragenkatalogCreateView,
+    TrainerFragenkatalogListView,
+    TrainerFragenkatalogUpdateView,
+    TrainerPruefungCreateView,
+    TrainerPruefungListView,
+    TrainerPruefungUpdateView,
+)
+
+
+urlpatterns = [
+    path("pruefungen/<int:pk>/", PruefungDetailView.as_view(), name="exam_detail"),
+    path("pruefungen/<int:pk>/starten/", PruefungStartView.as_view(), name="exam_start"),
+    path("pruefungen/<int:pk>/ablegen/<int:versuch_id>/", PruefungAblegenView.as_view(), name="exam_take"),
+    path("pruefungen/<int:pk>/ergebnis/<int:versuch_id>/", PruefungErgebnisView.as_view(), name="exam_result"),
+    path("trainer/fragenkataloge/", TrainerFragenkatalogListView.as_view(), name="trainer_catalog_list"),
+    path("trainer/fragenkataloge/neu/", TrainerFragenkatalogCreateView.as_view(), name="trainer_catalog_create"),
+    path("trainer/fragenkataloge/<int:pk>/", TrainerFragenkatalogUpdateView.as_view(), name="trainer_catalog_edit"),
+    path("trainer/fragenkataloge/<int:katalog_id>/fragen/neu/", TrainerFrageCreateView.as_view(), name="trainer_question_create"),
+    path("trainer/fragenkataloge/<int:katalog_id>/csv/", TrainerCSVImportView.as_view(), name="trainer_catalog_csv"),
+    path("trainer/fragen/<int:frage_id>/eintraege/neu/", TrainerAntwortCreateView.as_view(), name="trainer_answer_create"),
+    path("trainer/pruefungen/", TrainerPruefungListView.as_view(), name="trainer_exam_list"),
+    path("trainer/pruefungen/neu/", TrainerPruefungCreateView.as_view(), name="trainer_exam_create"),
+    path("trainer/pruefungen/<int:pk>/", TrainerPruefungUpdateView.as_view(), name="trainer_exam_edit"),
+    path("examiner/queue/", ExaminerQueueView.as_view(), name="examiner_queue"),
+    path("examiner/queue/<int:pk>/", ExaminerBewertungView.as_view(), name="examiner_review"),
+]

@@ -9,8 +9,24 @@ from django.views.generic import CreateView, DetailView, ListView, TemplateView,
 from apps.accounts.mixins import OrganisationMixin, RollenMixin
 from apps.accounts.models import Rolle
 
-from .forms import AbschnittForm, KursForm, LektionForm
-from .models import Abschnitt, Einschreibung, Kurs, Lektion, LektionsFortschritt
+from .forms import (
+    AbschnittForm,
+    BegleitmaterialForm,
+    KursForm,
+    LektionForm,
+    UebungsantwortForm,
+    UebungsfrageForm,
+)
+from .models import (
+    Abschnitt,
+    Begleitmaterial,
+    Einschreibung,
+    Kurs,
+    Lektion,
+    LektionsFortschritt,
+    Uebungsantwort,
+    Uebungsfrage,
+)
 
 
 def trainer_course_queryset(user):
@@ -21,6 +37,14 @@ def trainer_course_queryset(user):
         return queryset
     organisation_ids = user.profile.filter(aktiv=True).values_list("organisation_id", flat=True)
     return queryset.filter(organisation_id__in=organisation_ids)
+
+
+def kurszugriff_bezahlt(user, kurs):
+    if kurs.ist_kostenlos or kurs.preis <= 0:
+        return True
+    if not user.is_authenticated:
+        return False
+    return Einschreibung.objects.filter(nutzer=user, kurs=kurs, bezahlt=True).exists()
 
 
 class DashboardCourseMixin(LoginRequiredMixin):
@@ -88,6 +112,7 @@ class KursDetailView(DetailView):
             context["einschreibung"] = Einschreibung.objects.filter(
                 nutzer=self.request.user,
                 kurs=self.object,
+                bezahlt=True,
             ).first()
         return context
 
@@ -95,7 +120,9 @@ class KursDetailView(DetailView):
 class EinschreibenView(LoginRequiredMixin, View):
     def post(self, request, slug):
         kurs = get_object_or_404(Kurs, slug=slug, ist_veroeffentlicht=True, organisation__aktiv=True)
-        Einschreibung.objects.get_or_create(nutzer=request.user, kurs=kurs)
+        if not kurs.ist_kostenlos and kurs.preis > 0:
+            return redirect("course_checkout", slug=kurs.slug)
+        Einschreibung.objects.update_or_create(nutzer=request.user, kurs=kurs, defaults={"bezahlt": True})
         messages.success(request, "Du bist in den Kurs eingeschrieben.")
         return redirect("course_learn", slug=kurs.slug)
 
@@ -108,12 +135,25 @@ class KursLernenView(LoginRequiredMixin, DetailView):
 
     def get_queryset(self):
         return Kurs.objects.filter(ist_veroeffentlicht=True).prefetch_related(
-            Prefetch("abschnitte", queryset=Abschnitt.objects.prefetch_related("lektionen"))
+            Prefetch(
+                "abschnitte",
+                queryset=Abschnitt.objects.prefetch_related(
+                    "lektionen__materialien",
+                    "lektionen__uebungsfragen__antworten",
+                ),
+            )
         )
 
     def dispatch(self, request, *args, **kwargs):
         self.object = self.get_object()
-        self.einschreibung, _ = Einschreibung.objects.get_or_create(nutzer=request.user, kurs=self.object)
+        if not kurszugriff_bezahlt(request.user, self.object):
+            messages.warning(request, "Bitte bezahle den Kurs, um unbegrenzten Zugriff zu erhalten.")
+            return redirect("course_checkout", slug=self.object.slug)
+        self.einschreibung, _ = Einschreibung.objects.update_or_create(
+            nutzer=request.user,
+            kurs=self.object,
+            defaults={"bezahlt": True},
+        )
         return super().dispatch(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
@@ -138,6 +178,7 @@ class KursLernenView(LoginRequiredMixin, DetailView):
             "abgeschlossene_ids": abgeschlossene_ids,
             "vorherige_lektion": None,
             "naechste_lektion": self._naechste_lektion(lektion),
+            "uebung_ergebnis": self.request.session.pop(f"lesson_exercise_{lektion.id}", None) if lektion else None,
         }
 
     def _naechste_lektion(self, lektion):
@@ -175,11 +216,42 @@ class LektionDetailView(KursLernenView):
 class LektionAbschliessenView(LoginRequiredMixin, View):
     def post(self, request, slug, lektion_id):
         kurs = get_object_or_404(Kurs, slug=slug, ist_veroeffentlicht=True)
+        if not kurszugriff_bezahlt(request.user, kurs):
+            return redirect("course_checkout", slug=kurs.slug)
         einschreibung, _ = Einschreibung.objects.get_or_create(nutzer=request.user, kurs=kurs)
         lektion = get_object_or_404(Lektion, id=lektion_id, abschnitt__kurs=kurs)
         LektionsFortschritt.objects.get_or_create(einschreibung=einschreibung, lektion=lektion)
         einschreibung.aktualisiere_fortschritt()
         messages.success(request, "Lektion wurde als abgeschlossen markiert.")
+        return redirect("course_lesson", slug=kurs.slug, lektion_id=lektion.id)
+
+
+class LektionUebungPruefenView(LoginRequiredMixin, View):
+    def post(self, request, slug, lektion_id):
+        kurs = get_object_or_404(Kurs, slug=slug, ist_veroeffentlicht=True)
+        get_object_or_404(Einschreibung, nutzer=request.user, kurs=kurs, bezahlt=True)
+        lektion = get_object_or_404(Lektion, id=lektion_id, abschnitt__kurs=kurs)
+        fragen = list(lektion.uebungsfragen.filter(aktiv=True).prefetch_related("antworten"))
+        richtig = 0
+        details = []
+        for frage in fragen:
+            ausgewaehlt = set(request.POST.getlist(f"uebungsfrage_{frage.id}"))
+            korrekt = {str(antwort.id) for antwort in frage.antworten.filter(ist_korrekt=True)}
+            ist_richtig = ausgewaehlt == korrekt
+            if ist_richtig:
+                richtig += 1
+            details.append(
+                {
+                    "frage": frage.frage,
+                    "ist_richtig": ist_richtig,
+                    "erklaerung": frage.erklaerung,
+                }
+            )
+        request.session[f"lesson_exercise_{lektion.id}"] = {
+            "richtig": richtig,
+            "gesamt": len(fragen),
+            "details": details,
+        }
         return redirect("course_lesson", slug=kurs.slug, lektion_id=lektion.id)
 
 
@@ -236,7 +308,13 @@ class TrainerKursUpdateView(RollenMixin, OrganisationMixin, UpdateView):
         context = super().get_context_data(**kwargs)
         context["abschnitt_form"] = AbschnittForm()
         context["lektion_form"] = LektionForm()
-        context["abschnitte"] = self.object.abschnitte.prefetch_related("lektionen")
+        context["material_form"] = BegleitmaterialForm()
+        context["uebungsfrage_form"] = UebungsfrageForm()
+        context["uebungsantwort_form"] = UebungsantwortForm()
+        context["abschnitte"] = self.object.abschnitte.prefetch_related(
+            "lektionen__materialien",
+            "lektionen__uebungsfragen__antworten",
+        )
         return context
 
 
@@ -270,4 +348,55 @@ class TrainerLektionCreateView(RollenMixin, View):
             messages.success(request, "Lektion wurde erstellt.")
         else:
             messages.error(request, "Lektion konnte nicht erstellt werden.")
+        return redirect("trainer_course_edit", slug=kurs.slug)
+
+
+class TrainerMaterialCreateView(RollenMixin, View):
+    rolle = Rolle.TRAINER
+
+    def post(self, request, slug, lektion_id):
+        kurs = get_object_or_404(trainer_course_queryset(request.user), slug=slug)
+        lektion = get_object_or_404(Lektion, id=lektion_id, abschnitt__kurs=kurs)
+        form = BegleitmaterialForm(request.POST, request.FILES)
+        if form.is_valid():
+            material = form.save(commit=False)
+            material.lektion = lektion
+            material.save()
+            messages.success(request, "Begleitmaterial wurde hochgeladen.")
+        else:
+            messages.error(request, "Begleitmaterial konnte nicht gespeichert werden.")
+        return redirect("trainer_course_edit", slug=kurs.slug)
+
+
+class TrainerUebungsfrageCreateView(RollenMixin, View):
+    rolle = Rolle.TRAINER
+
+    def post(self, request, slug, lektion_id):
+        kurs = get_object_or_404(trainer_course_queryset(request.user), slug=slug)
+        lektion = get_object_or_404(Lektion, id=lektion_id, abschnitt__kurs=kurs)
+        form = UebungsfrageForm(request.POST)
+        if form.is_valid():
+            frage = form.save(commit=False)
+            frage.lektion = lektion
+            frage.save()
+            messages.success(request, "Uebungsfrage wurde erstellt.")
+        else:
+            messages.error(request, "Uebungsfrage konnte nicht gespeichert werden.")
+        return redirect("trainer_course_edit", slug=kurs.slug)
+
+
+class TrainerUebungsantwortCreateView(RollenMixin, View):
+    rolle = Rolle.TRAINER
+
+    def post(self, request, slug, frage_id):
+        kurs = get_object_or_404(trainer_course_queryset(request.user), slug=slug)
+        frage = get_object_or_404(Uebungsfrage, id=frage_id, lektion__abschnitt__kurs=kurs)
+        form = UebungsantwortForm(request.POST)
+        if form.is_valid():
+            antwort = form.save(commit=False)
+            antwort.frage = frage
+            antwort.save()
+            messages.success(request, "Uebungsantwort wurde erstellt.")
+        else:
+            messages.error(request, "Uebungsantwort konnte nicht gespeichert werden.")
         return redirect("trainer_course_edit", slug=kurs.slug)

@@ -44,9 +44,50 @@
                             <h3 class="h6">{{ abschnitt.titel }}</h3>
                             <div class="lesson-sortable list-group mb-3" data-section-id="{{ abschnitt.id }}">
                                 {% for lektion in abschnitt.lektionen.all %}
-                                    <div class="list-group-item d-flex justify-content-between align-items-center" data-lesson-id="{{ lektion.id }}">
-                                        <span>{{ lektion.titel }}</span>
-                                        <span class="small text-secondary">{{ lektion.get_typ_display }}</span>
+                                    <div class="list-group-item" data-lesson-id="{{ lektion.id }}">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <span>{{ lektion.titel }}</span>
+                                            <span class="small text-secondary">{{ lektion.get_typ_display }}</span>
+                                        </div>
+                                        {% if lektion.materialien.all %}
+                                            <div class="small text-secondary mt-2">{{ lektion.materialien.count }} Begleitmaterialien</div>
+                                        {% endif %}
+                                        {% if lektion.uebungsfragen.all %}
+                                            <div class="small text-secondary">{{ lektion.uebungsfragen.count }} Uebungsfragen</div>
+                                        {% endif %}
+                                        <details class="mt-3">
+                                            <summary>Begleitmaterial hinzufuegen</summary>
+                                            <form class="mt-3" method="post" enctype="multipart/form-data" action="{% url 'trainer_material_create' object.slug lektion.id %}">
+                                                {% csrf_token %}
+                                                {{ material_form.as_p }}
+                                                <button class="btn btn-sm btn-outline-secondary" type="submit">Material speichern</button>
+                                            </form>
+                                        </details>
+                                        <details class="mt-3">
+                                            <summary>Uebungsfrage hinzufuegen</summary>
+                                            <form class="mt-3" method="post" action="{% url 'trainer_exercise_question_create' object.slug lektion.id %}">
+                                                {% csrf_token %}
+                                                {{ uebungsfrage_form.as_p }}
+                                                <button class="btn btn-sm btn-outline-secondary" type="submit">Frage speichern</button>
+                                            </form>
+                                        </details>
+                                        {% for frage in lektion.uebungsfragen.all %}
+                                            <details class="mt-3">
+                                                <summary>Antwort zu: {{ frage.frage|truncatechars:60 }}</summary>
+                                                <div class="small text-secondary mt-2">
+                                                    {% for antwort in frage.antworten.all %}
+                                                        <div>{% if antwort.ist_korrekt %}Richtig:{% else %}Falsch:{% endif %} {{ antwort.antwort }}</div>
+                                                    {% empty %}
+                                                        <div>Noch keine Antworten.</div>
+                                                    {% endfor %}
+                                                </div>
+                                                <form class="mt-3" method="post" action="{% url 'trainer_exercise_answer_create' object.slug frage.id %}">
+                                                    {% csrf_token %}
+                                                    {{ uebungsantwort_form.as_p }}
+                                                    <button class="btn btn-sm btn-outline-secondary" type="submit">Antwort speichern</button>
+                                                </form>
+                                            </details>
+                                        {% endfor %}
                                     </div>
                                 {% empty %}
                                     <div class="list-group-item text-secondary">Keine Lektionen.</div>
@@ -54,6 +95,10 @@
                             </div>
                             <details>
                                 <summary>Lektion hinzufuegen</summary>
+                                <div class="alert alert-light border mt-3 mb-3">
+                                    <strong>Video-Lektion:</strong> Typ auf Video setzen und entweder eine Video-Datei hochladen
+                                    oder eine externe Video-URL eintragen. Fuer Selfhosting sind MP4 oder WebM ideal.
+                                </div>
                                 <form class="mt-3" method="post" enctype="multipart/form-data" action="{% url 'trainer_lesson_create' object.slug abschnitt.id %}">
                                     {% csrf_token %}
                                     {{ lektion_form.as_p }}

@@ -20,6 +20,16 @@
 - Phase 2 wurde validiert: `check`, Migration, Demo-Command und Smoke-Tests fuer Katalog, Detail, Lernen und Trainerseiten.
 - Demo-Kurs `ABoroLMS Grundlagen` ist mit der Zertifikatspruefung `ABoroLMS Grundlagen Zertifikatspruefung` verbunden.
 - Demo-Kurs `ABoroLMS Grundlagen` enthaelt 4 Abschnitte und 8 vorbereitende Lerneinheiten passend zur Zertifikatspruefung.
+- Kurslektionen unterstuetzen Video-Uploads fuer Selfhosting: Trainer koennen MP4/WebM/MOV/M4V hochladen oder eine Video-URL hinterlegen.
+- Lerninterface spielt hochgeladene Videos ueber HTML5-Video ab und zeigt bei fehlender Videodatei einen Platzhalter.
+- Lektionen unterstuetzen mehrere Begleitmaterialien sowie optionale Multiple-Choice-Uebungsfragen zur Lernfortschrittspruefung.
+- Demo-Kurs enthaelt jetzt 8 Uebungsfragen, 24 Uebungsantworten und 2 Begleitmaterialien.
+- Bezahlte Kurse werden ueber eine Payment-App abgebildet: Stripe, Google Pay, PayPal und Ueberweisung sind als Zahlungsarten vorhanden.
+- Zahlungsanbieter und optionale API-Keys koennen in den Django-Admin-Zahlungseinstellungen aktiviert und gepflegt werden.
+- Nach bestaetigter Zahlung wird die Einschreibung bezahlt markiert und der Kurs dauerhaft freigeschaltet.
+- Zahlungen laufen zentral ein; pro Zahlung werden 15% Plattformgebuehr und 85% Trainer-Anteil fest gespeichert.
+- Superadmin-Auszahlungsuebersicht zeigt offene Trainer-Summen und erlaubt manuelle Bestaetigung von Ueberweisungen sowie Auszahlungstracking.
+- Demo-Kurs `ABoroLMS Grundlagen` kostet 49 EUR; Demo-Zahlungen zeigen 7,35 EUR Plattformgebuehr und 41,65 EUR Trainer-Anteil.
 - Demo-Pruefung enthaelt 8 Fragen und 30 Antworten mit plausiblen falschen Antworten und passenden richtigen Antworten.
 - Pruefungsdetail, Pruefungsstart, Durchfuehrungsseite und Ergebnisansicht sind fuer den Demo-Fluss angelegt.
 - RollenMixin leitet anonyme Nutzer jetzt korrekt zum Login weiter, statt auf `AnonymousUser.profile` zuzugreifen.

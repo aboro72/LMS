@@ -1,12 +1,15 @@
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
+from django.core.files.base import ContentFile
 from django.core.management.base import BaseCommand
 from django_quill.quill import Quill
 
 from apps.accounts.models import Rolle, UserProfile
-from apps.courses.models import Abschnitt, Kurs, Lektion, Niveau
+from apps.courses.models import Abschnitt, Begleitmaterial, Kurs, Lektion, Niveau, Uebungsantwort, Uebungsfrage
 from apps.exams.models import Antwort, Frage, Fragenkatalog, Pruefung
 from apps.organisations.models import LizenzTyp, Organisation
+from apps.payments.models import Zahlung, Zahlungseinstellungen, Zahlungsart
+from apps.payments.services import bestaetige_zahlung, erstelle_zahlung
 
 
 def quill_html(html):
@@ -47,6 +50,17 @@ class Command(BaseCommand):
                 "max_kurse": 25,
             },
         )
+        payment_settings = Zahlungseinstellungen.load()
+        payment_settings.stripe_aktiv = True
+        payment_settings.google_pay_aktiv = True
+        payment_settings.paypal_aktiv = True
+        payment_settings.ueberweisung_aktiv = True
+        payment_settings.demo_autoconfirm = True
+        payment_settings.kontoinhaber = "ABoroSoft"
+        payment_settings.iban = "DE02120300000000202051"
+        payment_settings.bic = "BYLADEM1001"
+        payment_settings.bankname = "Demo Bank"
+        payment_settings.save()
 
         demo_users = [
             ("orgadmin", Rolle.ORG_ADMIN),
@@ -92,7 +106,9 @@ class Command(BaseCommand):
             "<p>Ein kompakter Demo-Kurs zur Vorbereitung auf die ABoroLMS Grundlagen Zertifikatspruefung.</p>"
         )
         kurs.ist_veroeffentlicht = True
-        kurs.save(update_fields=["beschreibung", "ist_veroeffentlicht"])
+        kurs.ist_kostenlos = False
+        kurs.preis = 49
+        kurs.save(update_fields=["beschreibung", "ist_veroeffentlicht", "ist_kostenlos", "preis"])
 
         kursinhalte = [
             (
@@ -106,6 +122,7 @@ class Command(BaseCommand):
                         "Der Demo-Kurs zeigt den Grundfluss: Kurs ansehen, Lektionen bearbeiten, Fortschritt speichern und eine Abschlusspruefung starten.</p>"
                         "<p>Wichtig fuer die Pruefung: ABoroLMS trennt Lerninhalte, Pruefungsversuche und spaeter Zertifikate sauber voneinander.</p>",
                         True,
+                        Lektion.Typ.VIDEO,
                     ),
                     (
                         "Mandantenfaehigkeit verstehen",
@@ -116,6 +133,7 @@ class Command(BaseCommand):
                         "<p>Falsch waere: Alle Nutzer teilen automatisch dieselben Kurse oder jede Organisation braucht zwingend eine eigene Python-Installation. "
                         "Richtig ist die Datenisolierung ueber Organisationsbezug und gefilterte QuerySets.</p>",
                         False,
+                        Lektion.Typ.TEXT,
                     ),
                 ],
             ),
@@ -135,6 +153,7 @@ class Command(BaseCommand):
                         "</ul>"
                         "<p>Ein Nutzer kann mehrere Rollen gleichzeitig haben, zum Beispiel Trainer und Lernender.</p>",
                         False,
+                        Lektion.Typ.TEXT,
                     ),
                     (
                         "Rollen technisch abbilden",
@@ -144,6 +163,7 @@ class Command(BaseCommand):
                         "Dadurch kann derselbe Nutzer in einer Organisation Trainer sein und in einer anderen nur Lernender.</p>"
                         "<p>Fuer die Pruefung merken: Rollen ersetzen keine Mandantenfilter. Views muessen trotzdem nach Organisation filtern.</p>",
                         False,
+                        Lektion.Typ.TEXT,
                     ),
                 ],
             ),
@@ -158,6 +178,7 @@ class Command(BaseCommand):
                         "Die Reihenfolge wird gespeichert, damit Lernende einen klaren Lernpfad haben.</p>"
                         "<p>Ein professioneller Kursbereich braucht daher mindestens Kursdaten, strukturierte Lektionen und eine verstaendliche Navigation.</p>",
                         False,
+                        Lektion.Typ.TEXT,
                     ),
                     (
                         "Fortschritt speichern",
@@ -167,6 +188,7 @@ class Command(BaseCommand):
                         "Danach wird der Fortschritt in Prozent neu berechnet.</p>"
                         "<p>Wichtig: Der Abschluss einer Lektion loescht nichts und veraendert keine Rollen. Er dokumentiert nur den Lernstand dieses Nutzers in diesem Kurs.</p>",
                         False,
+                        Lektion.Typ.TEXT,
                     ),
                 ],
             ),
@@ -181,6 +203,7 @@ class Command(BaseCommand):
                         "So bleibt nachvollziehbar, wann ein Nutzer welche Pruefung absolviert hat.</p>"
                         "<p>Die Fragen bleiben im Katalog erhalten. Antworten des Teilnehmers werden separat am Versuch gespeichert.</p>",
                         False,
+                        Lektion.Typ.TEXT,
                     ),
                     (
                         "Bestehensgrenze und Zufall",
@@ -191,6 +214,7 @@ class Command(BaseCommand):
                         "<p>Falsch waere: Eine falsche Antwort erzeugt automatisch ein Zertifikat oder ein Zeitlimit loescht Daten. "
                         "Richtig ist: Bewertet wird anhand erreichter Punkte und der konfigurierten Bestehensgrenze.</p>",
                         False,
+                        Lektion.Typ.TEXT,
                     ),
                 ],
             ),
@@ -204,24 +228,141 @@ class Command(BaseCommand):
             if abschnitt.titel != abschnitt_titel:
                 abschnitt.titel = abschnitt_titel
                 abschnitt.save(update_fields=["titel"])
-            for lektion_position, (titel, dauer, html, ist_vorschau) in enumerate(lektionen, start=1):
+            for lektion_position, (titel, dauer, html, ist_vorschau, typ) in enumerate(lektionen, start=1):
                 lektion, _ = Lektion.objects.get_or_create(
                     abschnitt=abschnitt,
                     reihenfolge=lektion_position,
                     defaults={
                         "titel": titel,
-                        "typ": Lektion.Typ.TEXT,
+                        "typ": typ,
                         "inhalt": quill_html(html),
                         "dauer_minuten": dauer,
                         "ist_vorschau": ist_vorschau,
                     },
                 )
                 lektion.titel = titel
-                lektion.typ = Lektion.Typ.TEXT
+                lektion.typ = typ
                 lektion.inhalt = quill_html(html)
                 lektion.dauer_minuten = dauer
                 lektion.ist_vorschau = ist_vorschau
                 lektion.save(update_fields=["titel", "typ", "inhalt", "dauer_minuten", "ist_vorschau"])
+
+        uebungen = {
+            "Was ABoroLMS leisten soll": (
+                "Welche Aussage beschreibt den Demo-Kurs am besten?",
+                [
+                    ("Er zeigt Kurs, Lernfortschritt und Abschlusspruefung im Zusammenspiel.", True),
+                    ("Er ist nur eine statische Startseite ohne Lernlogik.", False),
+                    ("Er ersetzt die Benutzerrollen durch zufaellige Kursnamen.", False),
+                ],
+                "Der Kurs verbindet Lektionen, Fortschritt und Pruefung zu einem durchgehenden Lernfluss.",
+            ),
+            "Mandantenfaehigkeit verstehen": (
+                "Was bedeutet Mandantenfaehigkeit in ABoroLMS?",
+                [
+                    ("Organisationen nutzen dieselbe Installation, ihre Daten bleiben logisch getrennt.", True),
+                    ("Alle Organisationen muessen dieselben Nutzer und Kurse teilen.", False),
+                    ("Jede Organisation braucht zwingend eine eigene Datenbanktabelle pro Lektion.", False),
+                ],
+                "Mandantenfaehigkeit meint Datenisolation nach Organisation.",
+            ),
+            "Die fuenf Demo-Rollen": (
+                "Welche Rolle erstellt Kurse und Fragenkataloge?",
+                [
+                    ("Trainer", True),
+                    ("Lernender", False),
+                    ("Anonymer Besucher", False),
+                ],
+                "Trainer pflegen Kurse, Lektionen, Fragenkataloge und Pruefungen.",
+            ),
+            "Rollen technisch abbilden": (
+                "Welche Bausteine bilden Rollen und Organisationen ab?",
+                [
+                    ("Django Groups und UserProfile", True),
+                    ("Nur Browser-Cookies ohne Datenbankbezug", False),
+                    ("Ausschliesslich Dateinamen im Medienordner", False),
+                ],
+                "Groups liefern Rollennamen, UserProfile verknuepft Nutzer, Organisation und Rolle.",
+            ),
+            "Aufbau eines Kurses": (
+                "Woraus besteht ein strukturierter ABoroLMS-Kurs?",
+                [
+                    ("Aus Abschnitten und Lektionen in Reihenfolge.", True),
+                    ("Nur aus einer einzigen globalen Textdatei.", False),
+                    ("Aus Zertifikaten ohne Lerninhalte.", False),
+                ],
+                "Abschnitte gruppieren Lektionen und bilden den Lernpfad.",
+            ),
+            "Fortschritt speichern": (
+                "Was passiert beim Abschliessen einer Lektion?",
+                [
+                    ("Ein Lektionsfortschritt wird gespeichert und der Prozentwert aktualisiert.", True),
+                    ("Der Nutzer wird automatisch Super-Admin.", False),
+                    ("Die Lektion wird fuer alle geloescht.", False),
+                ],
+                "Der Fortschritt gehoert zur Einschreibung des Lernenden.",
+            ),
+            "Warum Pruefungsversuche gespeichert werden": (
+                "Warum wird ein PruefungsVersuch angelegt?",
+                [
+                    ("Damit Startzeit, Antworten, Punkte und Ergebnis nachvollziehbar bleiben.", True),
+                    ("Damit Fragen aus dem Katalog verschwinden.", False),
+                    ("Damit jede Antwort einen neuen Kurs erzeugt.", False),
+                ],
+                "Der Versuch dokumentiert einen konkreten Pruefungslauf.",
+            ),
+            "Bestehensgrenze und Zufall": (
+                "Welche Aussage zur Bestehensgrenze ist richtig?",
+                [
+                    ("Sie legt den Prozentwert fest, ab dem bestanden ist.", True),
+                    ("Sie loescht nach Ablauf automatisch die Datenbank.", False),
+                    ("Sie ersetzt alle richtigen Antworten durch Zufallstexte.", False),
+                ],
+                "In der Demo-Pruefung gilt eine Bestehensgrenze von 70 Prozent.",
+            ),
+        }
+        for titel, (frage_text, antworten, erklaerung) in uebungen.items():
+            lektion = Lektion.objects.get(abschnitt__kurs=kurs, titel=titel)
+            frage, _ = Uebungsfrage.objects.get_or_create(
+                lektion=lektion,
+                frage=frage_text,
+                defaults={
+                    "erklaerung": erklaerung,
+                    "reihenfolge": 1,
+                    "aktiv": True,
+                },
+            )
+            frage.erklaerung = erklaerung
+            frage.aktiv = True
+            frage.save(update_fields=["erklaerung", "aktiv"])
+            if not frage.antworten.exists():
+                for antwort_position, (antwort_text, ist_korrekt) in enumerate(antworten, start=1):
+                    Uebungsantwort.objects.create(
+                        frage=frage,
+                        antwort=antwort_text,
+                        ist_korrekt=ist_korrekt,
+                        reihenfolge=antwort_position,
+                    )
+
+        materialien = {
+            "Mandantenfaehigkeit verstehen": (
+                "Merkblatt Mandantenfaehigkeit.txt",
+                "Merksatz: Eine Selfhosting-Installation kann mehrere Organisationen bedienen. QuerySets und Profile sorgen fuer Datenisolation.\n",
+            ),
+            "Bestehensgrenze und Zufall": (
+                "Pruefungsvorbereitung.txt",
+                "Vor der Zertifikatspruefung wiederholen: Rollen, Mandantenfaehigkeit, Kursstruktur, Fortschritt und Pruefungsversuche.\n",
+            ),
+        }
+        for lektion_titel, (dateiname, inhalt) in materialien.items():
+            lektion = Lektion.objects.get(abschnitt__kurs=kurs, titel=lektion_titel)
+            material, created = Begleitmaterial.objects.get_or_create(
+                lektion=lektion,
+                titel=dateiname.replace(".txt", ""),
+                defaults={"reihenfolge": 1},
+            )
+            if created or not material.datei:
+                material.datei.save(dateiname, ContentFile(inhalt.encode("utf-8")), save=True)
 
         katalog, _ = Fragenkatalog.objects.get_or_create(
             titel="ABoroLMS Zertifikatsfragen",
@@ -249,6 +390,11 @@ class Command(BaseCommand):
         if kurs.pruefung_id != pruefung.id:
             kurs.pruefung = pruefung
             kurs.save(update_fields=["pruefung"])
+
+        learner = user_model.objects.get(username="learner")
+        if not Zahlung.objects.filter(nutzer=learner, kurs=kurs, status="bezahlt").exists():
+            zahlung = erstelle_zahlung(kurs, learner, Zahlungsart.STRIPE)
+            bestaetige_zahlung(zahlung, provider_referenz="demo-paid-course-access")
 
         fragen = [
             {

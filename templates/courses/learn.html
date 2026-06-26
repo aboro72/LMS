@@ -53,10 +53,26 @@
                     <span class="badge text-bg-light">{{ lektion.dauer_minuten }} Min.</span>
                 </div>
 
-                {% if lektion.typ == "VIDEO" and lektion.video_url %}
-                    <div class="ratio ratio-16x9 mb-3">
-                        <iframe src="{{ lektion.video_url }}" title="{{ lektion.titel }}" allowfullscreen></iframe>
-                    </div>
+                {% if lektion.typ == "VIDEO" %}
+                    {% if lektion.datei %}
+                        <div class="ratio ratio-16x9 mb-3 video-frame">
+                            <video controls preload="metadata">
+                                <source src="{{ lektion.datei.url }}">
+                                Dein Browser kann dieses Video nicht abspielen.
+                            </video>
+                        </div>
+                    {% elif lektion.video_url %}
+                        <div class="ratio ratio-16x9 mb-3 video-frame">
+                            <iframe src="{{ lektion.video_url }}" title="{{ lektion.titel }}" allowfullscreen></iframe>
+                        </div>
+                    {% else %}
+                        <div class="ratio ratio-16x9 mb-3 video-placeholder">
+                            <div>
+                                <strong>Video noch nicht hochgeladen</strong>
+                                <span>Trainer koennen in der Kursverwaltung eine MP4/WebM-Datei oder Video-URL hinterlegen.</span>
+                            </div>
+                        </div>
+                    {% endif %}
                 {% endif %}
 
                 {% if lektion.typ == "DOKUMENT" and lektion.datei %}
@@ -64,6 +80,58 @@
                 {% endif %}
 
                 <div class="lesson-content mb-4">{{ lektion.inhalt.html|safe }}</div>
+
+                {% if lektion.materialien.all %}
+                    <section class="lesson-block mb-4">
+                        <h3 class="h5 mb-3">Begleitmaterial</h3>
+                        <div class="list-group">
+                            {% for material in lektion.materialien.all %}
+                                <a class="list-group-item d-flex justify-content-between align-items-center" href="{{ material.datei.url }}" target="_blank" rel="noopener">
+                                    <span>{{ material.titel }}</span>
+                                    <span class="small text-secondary">Download</span>
+                                </a>
+                            {% endfor %}
+                        </div>
+                    </section>
+                {% endif %}
+
+                {% if lektion.uebungsfragen.all %}
+                    <section class="lesson-block mb-4">
+                        <h3 class="h5 mb-2">Lernfortschritt pruefen</h3>
+                        <p class="text-secondary">Diese Uebungsfragen zaehlen nicht zur Zertifikatspruefung.</p>
+                        {% if uebung_ergebnis %}
+                            <div class="alert alert-info">
+                                Ergebnis: {{ uebung_ergebnis.richtig }} von {{ uebung_ergebnis.gesamt }} richtig.
+                            </div>
+                            {% for detail in uebung_ergebnis.details %}
+                                <div class="exercise-result {% if detail.ist_richtig %}exercise-result--ok{% else %}exercise-result--bad{% endif %}">
+                                    <strong>{{ detail.frage }}</strong>
+                                    <span>{% if detail.ist_richtig %}Richtig{% else %}Noch einmal ansehen{% endif %}</span>
+                                    {% if detail.erklaerung %}
+                                        <p>{{ detail.erklaerung }}</p>
+                                    {% endif %}
+                                </div>
+                            {% endfor %}
+                        {% endif %}
+                        <form method="post" action="{% url 'course_lesson_exercise' kurs.slug lektion.id %}">
+                            {% csrf_token %}
+                            {% for frage in lektion.uebungsfragen.all %}
+                                {% if frage.aktiv %}
+                                    <fieldset class="exercise-question">
+                                        <legend>{{ frage.frage }}</legend>
+                                        {% for antwort in frage.antworten.all %}
+                                            <label class="exam-option">
+                                                <input type="checkbox" name="uebungsfrage_{{ frage.id }}" value="{{ antwort.id }}">
+                                                <span>{{ antwort.antwort }}</span>
+                                            </label>
+                                        {% endfor %}
+                                    </fieldset>
+                                {% endif %}
+                            {% endfor %}
+                            <button class="btn btn-outline-secondary" type="submit">Antworten pruefen</button>
+                        </form>
+                    </section>
+                {% endif %}
 
                 <div class="d-flex justify-content-between gap-2 flex-wrap">
                     {% if vorherige_lektion %}

@@ -26,6 +26,7 @@ INSTALLED_APPS = [
     "apps.organisations",
     "apps.courses",
     "apps.exams",
+    "apps.payments",
 ]
 
 MIDDLEWARE = [
@@ -102,5 +103,12 @@ EMAIL_BACKEND = config(
     default="django.core.mail.backends.console.EmailBackend",
 )
 DEFAULT_FROM_EMAIL = config("DEFAULT_FROM_EMAIL", default="noreply@aborosoft.de")
+
+PLATFORM_COMMISSION_PERCENT = config("PLATFORM_COMMISSION_PERCENT", default=15, cast=int)
+PAYMENT_DEMO_AUTOCONFIRM = config("PAYMENT_DEMO_AUTOCONFIRM", default=True, cast=bool)
+STRIPE_PUBLIC_KEY = config("STRIPE_PUBLIC_KEY", default="")
+STRIPE_SECRET_KEY = config("STRIPE_SECRET_KEY", default="")
+PAYPAL_CLIENT_ID = config("PAYPAL_CLIENT_ID", default="")
+PAYPAL_SECRET = config("PAYPAL_SECRET", default="")
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"

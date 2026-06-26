@@ -20,6 +20,9 @@
                 {% if user.is_authenticated %}
                     <li class="nav-item"><a class="nav-link" href="{% url 'course_catalog' %}">Kurse</a></li>
                     <li class="nav-item"><a class="nav-link" href="{% url 'trainer_course_list' %}">Trainer</a></li>
+                    {% if user.is_superuser %}
+                        <li class="nav-item"><a class="nav-link" href="{% url 'superadmin_payouts' %}">Auszahlungen</a></li>
+                    {% endif %}
                     <li class="nav-item"><a class="nav-link" href="{% url 'dashboard' %}">Dashboard</a></li>
                     <li class="nav-item">
                         <form method="post" action="{% url 'account_logout' %}">

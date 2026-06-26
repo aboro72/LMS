@@ -113,3 +113,91 @@ body {
     margin-bottom: 0.75rem;
     background: #fff;
 }
+
+.video-frame {
+    background: #05070c;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.video-frame video,
+.video-frame iframe {
+    width: 100%;
+    height: 100%;
+}
+
+.video-placeholder {
+    display: grid;
+    place-items: center;
+    background: #0c2448;
+    color: #fff;
+    border-radius: 8px;
+    text-align: center;
+}
+
+.video-placeholder span {
+    display: block;
+    color: rgba(255, 255, 255, 0.78);
+    margin-top: 0.35rem;
+}
+
+.lesson-block {
+    border-top: 1px solid rgba(18, 49, 95, 0.12);
+    padding-top: 1.25rem;
+}
+
+.exercise-question {
+    border: 0;
+    margin: 0 0 1.25rem;
+    padding: 0;
+}
+
+.exercise-question legend {
+    font-size: 1rem;
+    font-weight: 700;
+    margin-bottom: 0.75rem;
+}
+
+.exercise-result {
+    border-left: 4px solid #adb5bd;
+    background: #fff;
+    padding: 0.75rem 1rem;
+    margin-bottom: 0.75rem;
+}
+
+.exercise-result span {
+    display: block;
+    color: #6c757d;
+}
+
+.exercise-result p {
+    margin: 0.5rem 0 0;
+}
+
+.exercise-result--ok {
+    border-left-color: #198754;
+}
+
+.exercise-result--bad {
+    border-left-color: #dc3545;
+}
+
+.payment-summary {
+    border: 1px solid rgba(18, 49, 95, 0.12);
+    border-radius: 8px;
+    padding: 1rem;
+    background: #fff;
+}
+
+.payment-methods ul {
+    list-style: none;
+    padding-left: 0;
+    display: grid;
+    gap: 0.75rem;
+}
+
+.payment-methods li {
+    border: 1px solid rgba(18, 49, 95, 0.14);
+    border-radius: 8px;
+    padding: 0.85rem 1rem;
+}

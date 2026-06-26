@@ -85,6 +85,53 @@ class Lektion(models.Model):
         return f"{self.abschnitt}: {self.titel}"
 
 
+class Begleitmaterial(models.Model):
+    lektion = models.ForeignKey(Lektion, on_delete=models.CASCADE, related_name="materialien")
+    titel = models.CharField(max_length=200)
+    datei = models.FileField(upload_to="begleitmaterial/")
+    reihenfolge = models.PositiveIntegerField(default=0)
+    erstellt_am = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["reihenfolge", "titel"]
+        verbose_name = "Begleitmaterial"
+        verbose_name_plural = "Begleitmaterialien"
+
+    def __str__(self):
+        return f"{self.lektion}: {self.titel}"
+
+
+class Uebungsfrage(models.Model):
+    lektion = models.ForeignKey(Lektion, on_delete=models.CASCADE, related_name="uebungsfragen")
+    frage = models.TextField()
+    erklaerung = models.TextField(blank=True)
+    reihenfolge = models.PositiveIntegerField(default=0)
+    aktiv = models.BooleanField(default=True)
+
+    class Meta:
+        ordering = ["reihenfolge", "id"]
+        verbose_name = "Uebungsfrage"
+        verbose_name_plural = "Uebungsfragen"
+
+    def __str__(self):
+        return f"{self.lektion}: {self.frage[:80]}"
+
+
+class Uebungsantwort(models.Model):
+    frage = models.ForeignKey(Uebungsfrage, on_delete=models.CASCADE, related_name="antworten")
+    antwort = models.CharField(max_length=500)
+    ist_korrekt = models.BooleanField(default=False)
+    reihenfolge = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ["reihenfolge", "id"]
+        verbose_name = "Uebungsantwort"
+        verbose_name_plural = "Uebungsantworten"
+
+    def __str__(self):
+        return self.antwort[:80]
+
+
 class Einschreibung(models.Model):
     nutzer = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     kurs = models.ForeignKey(Kurs, on_delete=models.CASCADE)

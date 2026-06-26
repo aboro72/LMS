@@ -62,6 +62,9 @@
             {% if user.is_authenticated %}
                 {% if einschreibung %}
                     <a class="btn btn-aboro w-100" href="{% url 'course_learn' kurs.slug %}">Weiterlernen</a>
+                {% elif not kurs.ist_kostenlos and kurs.preis > 0 %}
+                    <a class="btn btn-aboro w-100" href="{% url 'course_checkout' kurs.slug %}">Kurs kaufen</a>
+                    <p class="small text-secondary mt-2 mb-0">Nach Zahlung dauerhaft freigeschaltet.</p>
                 {% else %}
                     <form method="post" action="{% url 'course_enroll' kurs.slug %}">
                         {% csrf_token %}
@@ -69,7 +72,7 @@
                     </form>
                 {% endif %}
             {% else %}
-                <a class="btn btn-aboro w-100" href="{% url 'account_login' %}">Einloggen zum Einschreiben</a>
+                <a class="btn btn-aboro w-100" href="{% url 'account_login' %}">Einloggen zum Kaufen</a>
             {% endif %}
         </div>
     </aside>

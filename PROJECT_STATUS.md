@@ -17,6 +17,7 @@
 - Kurs-Katalog, Kurs-Detailseite, Einschreibung, Lerninterface und Trainer-Kursverwaltung sind angelegt.
 - Demo-Daten enthalten jetzt eine Demo-Organisation, Rollen-Nutzer und einen veroeffentlichten Beispielkurs.
 - Demo-Daten enthalten einen Benutzer je Rolle; die Zugangsdaten werden auf der Startseite angezeigt.
+- Startseiteninhalt wurde produktnaeher ueberarbeitet; Demo-Benutzerbereich bleibt unveraendert sichtbar.
 - Phase 2 wurde validiert: `check`, Migration, Demo-Command und Smoke-Tests fuer Katalog, Detail, Lernen und Trainerseiten.
 - Demo-Kurs `ABoroLMS Grundlagen` ist mit der Zertifikatspruefung `ABoroLMS Grundlagen Zertifikatspruefung` verbunden.
 - Demo-Kurs `ABoroLMS Grundlagen` enthaelt 4 Abschnitte und 8 vorbereitende Lerneinheiten passend zur Zertifikatspruefung.

@@ -4,26 +4,71 @@
 
 {% block content %}
 <section class="aboro-hero py-5">
-    <div class="row align-items-center g-4">
+    <div class="row align-items-center g-5">
         <div class="col-lg-7">
-            <p class="text-uppercase text-aboro-orange fw-semibold mb-2">ABoroSoft</p>
-            <h1 class="display-5 fw-bold mb-3">Professionelles Learning Management fuer Organisationen</h1>
-            <p class="lead text-secondary mb-4">Mandantenfaehige Kurse, Rollenverwaltung und der Grundstein fuer Pruefungen und Zertifikate.</p>
+            <p class="text-uppercase text-aboro-orange fw-semibold mb-2">ABoroLMS Selfhosting</p>
+            <h1 class="display-5 fw-bold mb-3">Kurse verkaufen, Wissen vermitteln und Zertifikate ausstellen</h1>
+            <p class="lead text-secondary mb-4">
+                ABoroLMS ist eine serverseitige Django-Lernplattform fuer Video-Kurse, Begleitmaterial,
+                Uebungsfragen, Zertifikatspruefungen und bezahlte Kurszugriffe.
+            </p>
             <div class="d-flex gap-2 flex-wrap">
-                <a class="btn btn-aboro btn-lg" href="{% url 'register' %}">Jetzt starten</a>
+                <a class="btn btn-aboro btn-lg" href="{% url 'course_catalog' %}">Kurse ansehen</a>
                 <a class="btn btn-outline-secondary btn-lg" href="{% url 'account_login' %}">Einloggen</a>
+            </div>
+            <div class="home-kpis mt-4">
+                <div><strong>Video</strong><span>Upload oder externe URL</span></div>
+                <div><strong>85/15</strong><span>Trainer-Auszahlung vorbereitet</span></div>
+                <div><strong>Selfhosted</strong><span>Django, Templates, Bootstrap</span></div>
             </div>
         </div>
         <div class="col-lg-5">
-            <div class="aboro-panel">
-                <h2 class="h5 mb-3">Phase 1 Fundament</h2>
-                <ul class="list-unstyled mb-0">
-                    <li class="mb-2">Custom User Model</li>
-                    <li class="mb-2">Organisationen und Rollenprofile</li>
-                    <li class="mb-2">Django Admin und Auth-Routing</li>
-                    <li>Bootstrap 5 Basistemplate</li>
-                </ul>
+            <div class="home-product-panel">
+                <div class="home-product-panel__header">
+                    <span>Kursplattform</span>
+                    <strong>Demo aktiv</strong>
+                </div>
+                <div class="home-product-panel__screen">
+                    <div class="home-video-preview">
+                        <span>Video-Lektion</span>
+                    </div>
+                    <div class="home-progress">
+                        <span style="width: 68%"></span>
+                    </div>
+                    <div class="home-mini-list">
+                        <div>Begleitmaterial herunterladen</div>
+                        <div>Lernfortschritt pruefen</div>
+                        <div>Zertifikatspruefung starten</div>
+                    </div>
+                </div>
             </div>
+        </div>
+    </div>
+</section>
+
+<section class="row g-3 mb-4">
+    <div class="col-md-6 col-xl-3">
+        <div class="home-feature">
+            <h2>Kurse & Kapitel</h2>
+            <p>Trainer strukturieren Inhalte in Abschnitte, Lektionen, Videos, Dokumente und Downloads.</p>
+        </div>
+    </div>
+    <div class="col-md-6 col-xl-3">
+        <div class="home-feature">
+            <h2>Uebungen</h2>
+            <p>Optionale Multiple-Choice-Aufgaben pruefen den Lernstand direkt nach jeder Lektion.</p>
+        </div>
+    </div>
+    <div class="col-md-6 col-xl-3">
+        <div class="home-feature">
+            <h2>Pruefungen</h2>
+            <p>Zertifikatspruefungen nutzen Fragenkataloge, Zufallsreihenfolge und Bestehensgrenzen.</p>
+        </div>
+    </div>
+    <div class="col-md-6 col-xl-3">
+        <div class="home-feature">
+            <h2>Zahlungen</h2>
+            <p>Bezahlte Kurse werden zentral kassiert; Auszahlungen an Trainer werden transparent vorbereitet.</p>
         </div>
     </div>
 </section>

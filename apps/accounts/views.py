@@ -21,6 +21,11 @@ class DashboardView(LoginRequiredMixin, TemplateView):
             if self.request.user.is_authenticated
             else []
         )
+        context["zertifikate"] = (
+            self.request.user.zertifikate.filter(ist_widerrufen=False)
+            .select_related("pruefungsversuch__pruefung", "einschreibung__kurs")
+            .order_by("-ausgestellt_am")[:3]
+        )
         return context
 
 

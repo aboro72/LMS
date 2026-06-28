@@ -4,6 +4,7 @@ from datetime import timedelta
 from django.conf import settings
 from django.db import models
 from django.utils import timezone
+from django_quill.fields import QuillField
 
 from apps.accounts.models import Rolle
 
@@ -60,3 +61,137 @@ class Einladung(models.Model):
     @property
     def ist_abgelaufen(self):
         return timezone.now() >= self.abgelaufen_am
+
+
+# --------------------------------------------------------------------------- #
+# Organisations-E-Mail-Konfiguration
+# --------------------------------------------------------------------------- #
+class OrganisationEmailKonfiguration(models.Model):
+    organisation = models.OneToOneField(
+        Organisation, on_delete=models.CASCADE, related_name="email_konfiguration"
+    )
+    aktiv = models.BooleanField(
+        default=False,
+        verbose_name="Eigenen E-Mail-Server verwenden",
+        help_text="Wenn deaktiviert, wird der Plattform-Standard-SMTP genutzt.",
+    )
+    absender_name = models.CharField(max_length=200, blank=True, verbose_name="Absendername")
+    absender_email = models.EmailField(blank=True, verbose_name="Absender-E-Mail")
+    antwort_email = models.EmailField(
+        blank=True,
+        verbose_name="Antwort-E-Mail (Reply-To)",
+        help_text="Zweite Adresse – z.B. support@meinefirma.de",
+    )
+    smtp_host = models.CharField(max_length=200, blank=True, verbose_name="SMTP-Host")
+    smtp_port = models.PositiveIntegerField(default=587, verbose_name="SMTP-Port")
+    smtp_user = models.CharField(max_length=200, blank=True, verbose_name="SMTP-Benutzername")
+    smtp_password = models.CharField(max_length=500, blank=True, verbose_name="SMTP-Passwort")
+    smtp_use_tls = models.BooleanField(default=True, verbose_name="STARTTLS verwenden (Port 587)")
+    smtp_use_ssl = models.BooleanField(default=False, verbose_name="SSL verwenden (Port 465)")
+
+    class Meta:
+        verbose_name = "E-Mail-Konfiguration"
+        verbose_name_plural = "E-Mail-Konfigurationen"
+
+    def __str__(self):
+        return f"E-Mail-Konfiguration für {self.organisation}"
+
+    def get_from_email(self):
+        if self.absender_name and self.absender_email:
+            return f"{self.absender_name} <{self.absender_email}>"
+        return self.absender_email or None
+
+    def get_connection(self):
+        if not self.aktiv or not self.smtp_host:
+            return None
+        from django.core.mail import get_connection
+        return get_connection(
+            backend="django.core.mail.backends.smtp.EmailBackend",
+            host=self.smtp_host,
+            port=self.smtp_port,
+            username=self.smtp_user,
+            password=self.smtp_password,
+            use_tls=self.smtp_use_tls,
+            use_ssl=self.smtp_use_ssl,
+            fail_silently=False,
+        )
+
+
+# --------------------------------------------------------------------------- #
+# Organisations-Design (Kurs-Katalog, Kurs-Seiten, Navbar)
+# --------------------------------------------------------------------------- #
+class OrganisationDesign(models.Model):
+    organisation = models.OneToOneField(
+        Organisation, on_delete=models.CASCADE, related_name="design"
+    )
+    primary_color = models.CharField(
+        max_length=20, default="#12315f",
+        verbose_name="Primärfarbe",
+        help_text="Navigationselemente, Überschriften, Rahmen",
+    )
+    secondary_color = models.CharField(
+        max_length=20, default="#f28c28",
+        verbose_name="Akzentfarbe",
+        help_text="Buttons, Highlights, Fortschrittsbalken",
+    )
+    navbar_farbe = models.CharField(
+        max_length=20, default="#0c2448",
+        verbose_name="Navigationsleisten-Farbe",
+    )
+    hintergrund_farbe = models.CharField(
+        max_length=20, default="#f6f8fb",
+        verbose_name="Seiten-Hintergrundfarbe",
+    )
+    logo = models.ImageField(
+        upload_to="org_design/logos/", blank=True,
+        verbose_name="Organisations-Logo",
+        help_text="Wird in Navbar und Kurskatalog angezeigt (PNG/SVG empfohlen)",
+    )
+    favicon = models.ImageField(
+        upload_to="org_design/favicons/", blank=True,
+        verbose_name="Favicon (16×16 oder 32×32 px)",
+    )
+    custom_css = models.TextField(
+        blank=True,
+        verbose_name="Eigenes CSS",
+        help_text="Erweiterte Anpassungen – nur für erfahrene Nutzer",
+    )
+
+    class Meta:
+        verbose_name = "Organisations-Design"
+        verbose_name_plural = "Organisations-Designs"
+
+    def __str__(self):
+        return f"Design für {self.organisation}"
+
+
+# --------------------------------------------------------------------------- #
+# Organisations-Startseite (WYSIWYG Landing Page)
+# --------------------------------------------------------------------------- #
+class OrganisationStartseite(models.Model):
+    organisation = models.OneToOneField(
+        Organisation, on_delete=models.CASCADE, related_name="startseite"
+    )
+    aktiv = models.BooleanField(
+        default=False,
+        verbose_name="Eigene Startseite aktivieren",
+        help_text="Wenn deaktiviert, wird die Plattform-Standardseite angezeigt.",
+    )
+    hero_titel = models.CharField(max_length=200, blank=True, verbose_name="Haupt-Überschrift")
+    hero_untertitel = models.CharField(max_length=500, blank=True, verbose_name="Unter-Überschrift")
+    hero_bild = models.ImageField(
+        upload_to="org_design/hero/", blank=True,
+        verbose_name="Hero-Hintergrundbild",
+    )
+    hero_button_text = models.CharField(
+        max_length=100, blank=True, default="Kurse entdecken",
+        verbose_name="Schaltflächen-Text",
+    )
+    inhalt = QuillField(blank=True, verbose_name="Seiteninhalt (WYSIWYG)")
+
+    class Meta:
+        verbose_name = "Organisations-Startseite"
+        verbose_name_plural = "Organisations-Startseiten"
+
+    def __str__(self):
+        return f"Startseite für {self.organisation}"

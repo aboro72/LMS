@@ -1,0 +1,183 @@
+{% extends "base.html" %}
+
+{% block title %}{% if object %}{{ object.titel }}{% else %}Fragenkatalog erstellen{% endif %} - ABoroLMS{% endblock %}
+
+{% block extra_head %}
+{% if frage_form %}{{ frage_form.media }}{% endif %}
+{% endblock %}
+
+{% block breadcrumbs %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'home' %}">Start</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'trainer_catalog_list' %}">Fragenkataloge</a></li>
+        <li class="breadcrumb-item active" aria-current="page">{% if object %}{{ object.titel }}{% else %}Neu{% endif %}</li>
+    </ol>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+
+    {# ── Linke Spalte: Katalogstammdaten ── #}
+    <div class="col-lg-4">
+        <div class="aboro-panel mb-4">
+            <h1 class="h4 mb-4">{% if object %}Katalog bearbeiten{% else %}Katalog erstellen{% endif %}</h1>
+            <form method="post" novalidate>
+                {% csrf_token %}
+                {% for field in form %}
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                        {{ field }}
+                        {% for error in field.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                    </div>
+                {% endfor %}
+                <button class="btn btn-aboro w-100" type="submit">Speichern</button>
+            </form>
+        </div>
+
+        {% if object %}
+        {# ── CSV-Import ── #}
+        <div class="aboro-panel mb-4">
+            <h2 class="h5 mb-3">CSV-Import</h2>
+            <form method="post" action="{% url 'trainer_catalog_csv' object.pk %}" enctype="multipart/form-data">
+                {% csrf_token %}
+                {{ csv_form.as_p }}
+                <button class="btn btn-outline-secondary w-100" type="submit">Fragen importieren</button>
+            </form>
+            <details class="mt-3">
+                <summary class="small text-secondary" style="cursor:pointer;">CSV-Format anzeigen</summary>
+                <div class="mt-2 small">
+                    <p class="mb-1">Trennzeichen: Semikolon <code>;</code></p>
+                    <p class="mb-1">Pflichtfelder: <code>typ</code>, <code>fragetext</code></p>
+                    <p class="mb-1">Typen: <code>SC</code> (Single), <code>MC</code> (Multiple), <code>WF</code> (Wahr/Falsch), <code>FT</code> (Freitext), <code>ZO</code> (Zuordnung)</p>
+                    <p class="mb-1">Antworten SC/MC/WF: <code>antwort_1</code>…<code>antwort_8</code>, <code>korrekt_1</code>…<code>korrekt_8</code> (0 oder 1)</p>
+                    <p class="mb-0">Zuordnung: <code>links_1</code>…<code>links_5</code>, <code>rechts_1</code>…<code>rechts_5</code></p>
+                </div>
+            </details>
+        </div>
+
+        {# ── Neue Frage hinzufuegen ── #}
+        <div class="aboro-panel">
+            <h2 class="h5 mb-3">Frage hinzufuegen</h2>
+            <form method="post" action="{% url 'trainer_question_create' object.pk %}" novalidate>
+                {% csrf_token %}
+                {% for field in frage_form %}
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold small" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                        {{ field }}
+                        {% for error in field.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                    </div>
+                {% endfor %}
+                <button class="btn btn-outline-secondary w-100" type="submit">Frage erstellen</button>
+            </form>
+        </div>
+        {% endif %}
+    </div>
+
+    {# ── Rechte Spalte: Fragenliste ── #}
+    {% if object %}
+    <div class="col-lg-8">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h2 class="h4 mb-0">Fragen <span class="badge text-bg-light ms-1">{{ fragen|length }}</span></h2>
+        </div>
+
+        {% for frage in fragen %}
+        <div class="aboro-panel mb-3">
+            <div class="d-flex justify-content-between align-items-start gap-2 mb-3">
+                <div>
+                    <span class="badge text-bg-secondary me-1">{{ frage.get_typ_display }}</span>
+                    <span class="badge text-bg-light">{{ frage.get_schwierigkeit_display }}</span>
+                    <span class="badge text-bg-light">{{ frage.punkte }} Pkt.</span>
+                </div>
+                <span class="text-secondary small">#{{ frage.id }}</span>
+            </div>
+
+            <div class="mb-3 lesson-content">{{ frage.fragetext.html|safe }}</div>
+
+            {# Antworten / Zuordnungspaare #}
+            {% if frage.typ == "ZO" %}
+                {% if frage.zuordnungen.all %}
+                    <table class="table table-sm mb-3">
+                        <thead><tr><th>Links</th><th>Rechts</th></tr></thead>
+                        <tbody>
+                        {% for paar in frage.zuordnungen.all %}
+                            <tr>
+                                <td>{{ paar.linkes_element }}</td>
+                                <td>{{ paar.rechtes_element }}</td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                {% else %}
+                    <p class="text-secondary small">Noch keine Zuordnungspaare.</p>
+                {% endif %}
+
+                <details>
+                    <summary class="small text-secondary" style="cursor:pointer;">Zuordnungspaar hinzufuegen</summary>
+                    <form class="mt-3" method="post" action="{% url 'trainer_answer_create' frage.id %}">
+                        {% csrf_token %}
+                        {% for field in zuordnung_form %}
+                            <div class="mb-2">
+                                <label class="form-label small" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                                {{ field }}
+                            </div>
+                        {% endfor %}
+                        <button class="btn btn-sm btn-outline-secondary" type="submit">Paar speichern</button>
+                    </form>
+                </details>
+
+            {% elif frage.typ == "FT" or frage.typ == "SZ" %}
+                {% if frage.erklaerung.html %}
+                    <div class="text-secondary small lesson-content">{{ frage.erklaerung.html|safe }}</div>
+                {% else %}
+                    <p class="text-secondary small">Freitext – keine Antwortoptionen.</p>
+                {% endif %}
+
+            {% else %}
+                {% if frage.antworten.all %}
+                    <ul class="list-group list-group-flush mb-3">
+                        {% for antwort in frage.antworten.all %}
+                            <li class="list-group-item px-0 d-flex align-items-center gap-2">
+                                {% if antwort.ist_korrekt %}
+                                    <span class="badge text-bg-success">Richtig</span>
+                                {% else %}
+                                    <span class="badge text-bg-light text-secondary">Falsch</span>
+                                {% endif %}
+                                {{ antwort.antworttext }}
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p class="text-secondary small">Noch keine Antworten.</p>
+                {% endif %}
+
+                <details>
+                    <summary class="small text-secondary" style="cursor:pointer;">Antwort hinzufuegen</summary>
+                    <form class="mt-3" method="post" action="{% url 'trainer_answer_create' frage.id %}">
+                        {% csrf_token %}
+                        {% for field in antwort_form %}
+                            <div class="mb-2">
+                                <label class="form-label small" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                                {% if field.field.widget.input_type == 'checkbox' %}
+                                    <div class="form-check">{{ field }}</div>
+                                {% else %}
+                                    {{ field }}
+                                {% endif %}
+                            </div>
+                        {% endfor %}
+                        <button class="btn btn-sm btn-outline-secondary" type="submit">Antwort speichern</button>
+                    </form>
+                </details>
+            {% endif %}
+        </div>
+        {% empty %}
+            <div class="aboro-panel text-secondary text-center py-4">
+                Noch keine Fragen im Katalog. Frage ueber das Formular links hinzufuegen oder per CSV importieren.
+            </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}

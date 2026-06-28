@@ -30,7 +30,28 @@
             {% elif frage.typ == "FT" %}
                 <textarea class="form-control" name="freitext_antwort" rows="8">{{ bestehende_antwort.freitext_antwort }}</textarea>
             {% elif frage.typ == "ZO" %}
-                <p class="text-secondary">Zuordnungsantworten werden in einer spaeteren UI-Ausbaustufe per Drag and Drop gespeichert.</p>
+                <input type="hidden" name="zuordnung_json" id="zuordnungJsonInput">
+                <div class="mb-3">
+                    {% with zuordnungen=frage.zuordnungen.all %}
+                        {% for paar in zuordnungen %}
+                            <div class="d-flex align-items-center gap-3 mb-3">
+                                <div class="flex-grow-1 exam-option mb-0 py-2">
+                                    <span class="fw-semibold">{{ paar.linkes_element }}</span>
+                                </div>
+                                <span class="text-secondary">&rarr;</span>
+                                <select class="form-select flex-grow-1 zuordnung-select"
+                                        data-paar-id="{{ paar.id }}"
+                                        data-selected="{{ zuordnung_json }}"
+                                        style="max-width:50%;">
+                                    <option value="">-- Bitte waehlen --</option>
+                                    {% for r in zuordnungen %}
+                                        <option value="{{ r.rechtes_element }}">{{ r.rechtes_element }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        {% endfor %}
+                    {% endwith %}
+                </div>
             {% endif %}
             <div class="d-flex justify-content-end gap-2 mt-4">
                 {% if is_last %}
@@ -44,4 +65,37 @@
         {% endif %}
     </form>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+    const selects = document.querySelectorAll('.zuordnung-select');
+    if (!selects.length) return;
+
+    const raw = selects[0].dataset.selected || '{}';
+    let existing = {};
+    try { existing = JSON.parse(raw); } catch (e) {}
+    selects.forEach(function (sel) {
+        const val = existing[sel.dataset.paarId];
+        if (val) {
+            for (let i = 0; i < sel.options.length; i++) {
+                if (sel.options[i].value === val) { sel.selectedIndex = i; break; }
+            }
+        }
+    });
+
+    const form = document.querySelector('form');
+    const hidden = document.getElementById('zuordnungJsonInput');
+    if (form && hidden) {
+        form.addEventListener('submit', function () {
+            const mapping = {};
+            selects.forEach(function (sel) {
+                if (sel.value) mapping[sel.dataset.paarId] = sel.value;
+            });
+            hidden.value = JSON.stringify(mapping);
+        });
+    }
+})();
+</script>
 {% endblock %}

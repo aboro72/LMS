@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block title %}{% if object %}Pruefung bearbeiten{% else %}Pruefung erstellen{% endif %} - ABoroLMS{% endblock %}
+
+{% block breadcrumbs %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'home' %}">Start</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'trainer_exam_list' %}">Pruefungen</a></li>
+        <li class="breadcrumb-item active" aria-current="page">{% if object %}{{ object.titel }}{% else %}Neu{% endif %}</li>
+    </ol>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+    <div class="col-lg-7">
+        <div class="aboro-panel">
+            <h1 class="h3 mb-4">{% if object %}Pruefung bearbeiten{% else %}Pruefung erstellen{% endif %}</h1>
+            <form method="post" novalidate>
+                {% csrf_token %}
+                {% for field in form %}
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                        {% if field.field.widget.input_type == 'checkbox' %}
+                            <div class="form-check">
+                                {{ field }}
+                                {% if field.help_text %}<div class="form-text">{{ field.help_text }}</div>{% endif %}
+                            </div>
+                        {% else %}
+                            {{ field }}
+                            {% if field.help_text %}<div class="form-text">{{ field.help_text }}</div>{% endif %}
+                        {% endif %}
+                        {% for error in field.errors %}
+                            <div class="text-danger small">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                {% endfor %}
+                <div class="d-flex gap-2 mt-4">
+                    <button class="btn btn-aboro" type="submit">Speichern</button>
+                    <a class="btn btn-outline-secondary" href="{% url 'trainer_exam_list' %}">Abbrechen</a>
+                </div>
+            </form>
+        </div>
+    </div>
+    <div class="col-lg-5">
+        <div class="aboro-panel">
+            <h2 class="h5 mb-3">Hinweise</h2>
+            <ul class="text-secondary small mb-0">
+                <li class="mb-2">Der <strong>Fragenkatalog</strong> muss zuerst unter "Fragenkataloge" angelegt und befuellt sein.</li>
+                <li class="mb-2"><strong>Anzahl Fragen</strong> darf die Gesamtzahl der Katalogeintrage nicht ueberschreiten.</li>
+                <li class="mb-2">Mit <strong>Zufaellige Reihenfolge</strong> werden Fragen und Antworten pro Versuch neu gemischt.</li>
+                <li class="mb-2"><strong>Kein Zurueck</strong> verhindert, dass Teilnehmer bereits beantwortete Fragen erneut aufrufen.</li>
+                <li><strong>Max. Versuche</strong> leer lassen fuer unbegrenzte Wiederholungen.</li>
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -27,6 +27,7 @@ INSTALLED_APPS = [
     "apps.courses",
     "apps.exams",
     "apps.payments",
+    "apps.certificates",
 ]
 
 MIDDLEWARE = [
@@ -52,6 +53,7 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                "apps.accounts.context_processors.rollen_context",
             ],
         },
     },
@@ -74,6 +76,7 @@ LOGOUT_REDIRECT_URL = "home"
 ACCOUNT_LOGIN_METHODS = {"email", "username"}
 ACCOUNT_SIGNUP_FIELDS = ["email*", "username*", "password1*", "password2*"]
 ACCOUNT_EMAIL_VERIFICATION = "optional"
+ACCOUNT_FORMS = {"login": "apps.accounts.forms.BootstrapLoginForm"}
 
 MESSAGE_TAGS = {
     messages.ERROR: "danger",

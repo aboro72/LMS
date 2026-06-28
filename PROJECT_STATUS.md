@@ -35,13 +35,28 @@
 - Pruefungsdetail, Pruefungsstart, Durchfuehrungsseite und Ergebnisansicht sind fuer den Demo-Fluss angelegt.
 - RollenMixin leitet anonyme Nutzer jetzt korrekt zum Login weiter, statt auf `AnonymousUser.profile` zuzugreifen.
 
+- Phase 3 abgeschlossen: Trainer-Fragenkatalog-UI, Trainer-Pruefungs-UI, CSV-Import-UI, Examiner-Queue und Freitext-Bewertung fertiggestellt.
+- Zuordnungsfragen (ZO) haben jetzt eine vollstaendige Dropdown-UI im Pruefungsablauf.
+- Navbar zeigt rollenbasierte Links: Trainer-Dropdown, Examiner-Queue, Org-Admin-Dropdown, Superadmin-Dropdown.
+- Phase 4 abgeschlossen: Zertifikate (app `certificates`) mit automatischer Ausstellung nach bestandener Pruefung,
+  QR-Code, WeasyPrint-PDF-Download und oeffentlicher Verifikationsseite.
+  WeasyPrint-PDF benoetigt GTK3-Runtime unter Windows (https://doc.courtbouillon.org/weasyprint/stable/first_steps.html#windows).
+- Phase 5 abgeschlossen: SaaS-Features – Organisation-Selbstregistrierung, OrgAdmin-Dashboard mit KPIs,
+  Mitgliederverwaltung mit Einladung, Lizenzlimit-Pruefung bei Kurs-Erstellung und Nutzer-Einladung,
+  Superadmin-Organisationsuebersicht.
+- Zertifikats-Design je Organisation: Org-Admins koennen Hauptfarbe, Akzentfarbe, Logo, Anzeigename,
+  Fusszeile und Unterschriftenzeile individuell konfigurieren. PDF-Export verwendet die Org-Einstellungen.
+  Demo-Kurs um Lektion "Zertifikats-Design individualisieren" und zugehoerige Pruefungsfrage ergaenzt.
+
 ## Aktuell in Arbeit
 
-- Phase 2 ist abgeschlossen.
+- Phase 5 und Zertifikats-Design sind abgeschlossen.
+
+- Installationsskripte erstellt: deploy/install-linux.sh (Debian/Ubuntu, Apache2 oder Nginx),
+  deploy/install-windows.ps1 (Windows Server, IIS + Waitress + NSSM + GTK3).
 
 ## Noch offen
 
-- Installationsskripte fuer Selfhosting: Linux Apache2, Linux Nginx, optional Windows IIS.
-- Phase 3: Pruefungssystem weiter ausbauen, insbesondere Trainer-Templates, CSV-Import-UI, Examiner-Queue und Tests.
-- Phase 4: Zertifizierung.
-- Phase 5: SaaS-Features.
+- GTK3-Runtime fuer WeasyPrint-PDF-Export unter Windows (install-windows.ps1 laed sie automatisch herunter).
+- Echte Zahlungsintegration (Stripe, PayPal, Google Pay) mit Webhooks.
+- Einladungstoken-Flow: E-Mail-Versand und Annahme-View fuer eingeladene Nutzer.

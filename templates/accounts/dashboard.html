@@ -17,9 +17,12 @@
         <h1 class="h3 mb-1">Dashboard</h1>
         <p class="text-secondary mb-0">Willkommen, {{ user.get_full_name|default:user.username }}.</p>
     </div>
+    {% if not profile %}
+        <a class="btn btn-aboro" href="{% url 'org_signup' %}">Organisation erstellen</a>
+    {% endif %}
 </div>
 
-<div class="row g-3">
+<div class="row g-3 mb-3">
     <div class="col-lg-8">
         <div class="aboro-panel h-100">
             <h2 class="h5 mb-3">Meine Organisationen</h2>
@@ -27,13 +30,18 @@
                 <div class="list-group list-group-flush">
                     {% for item in profile %}
                         <div class="list-group-item px-0 d-flex justify-content-between align-items-center">
-                            <span>{{ item.organisation.name }}</span>
-                            <span class="badge text-bg-light">{{ item.get_rolle_display }}</span>
+                            <div>
+                                <span class="fw-semibold">{{ item.organisation.name }}</span>
+                                <span class="badge text-bg-light ms-2">{{ item.get_rolle_display }}</span>
+                            </div>
+                            {% if item.rolle == "org_admin" %}
+                                <a class="btn btn-sm btn-outline-secondary" href="{% url 'org_admin_dashboard' item.organisation.slug %}">Dashboard</a>
+                            {% endif %}
                         </div>
                     {% endfor %}
                 </div>
             {% else %}
-                <p class="text-secondary mb-0">Noch keine Organisation zugeordnet.</p>
+                <p class="text-secondary mb-0">Noch keine Organisation zugeordnet. <a href="{% url 'org_signup' %}">Jetzt erstellen</a>.</p>
             {% endif %}
         </div>
     </div>
@@ -56,5 +64,28 @@
             {% endif %}
         </div>
     </div>
+</div>
+
+{# Zertifikate #}
+<div class="aboro-panel">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="h5 mb-0">Meine Zertifikate</h2>
+        <a class="btn btn-sm btn-outline-secondary" href="{% url 'cert_list' %}">Alle anzeigen</a>
+    </div>
+    {% if zertifikate %}
+        <div class="list-group list-group-flush">
+            {% for zert in zertifikate %}
+                <div class="list-group-item px-0 d-flex justify-content-between align-items-center">
+                    <div>
+                        <span class="fw-semibold">{{ zert.get_titel }}</span>
+                        <span class="text-secondary small ms-2">{{ zert.ausgestellt_am|date:"d.m.Y" }}</span>
+                    </div>
+                    <a class="btn btn-sm btn-aboro" href="{% url 'cert_download' zert.code %}">PDF</a>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p class="text-secondary mb-0">Noch keine Zertifikate. Bestehe eine Pruefung, um dein erstes zu erhalten.</p>
+    {% endif %}
 </div>
 {% endblock %}

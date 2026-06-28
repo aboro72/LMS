@@ -277,6 +277,15 @@ class TrainerKursCreateView(RollenMixin, CreateView):
         return kwargs
 
     def form_valid(self, form):
+        org = form.cleaned_data.get("organisation")
+        if org and org.max_kurse and org.max_kurse > 0:
+            if Kurs.objects.filter(organisation=org).count() >= org.max_kurse:
+                messages.error(
+                    self.request,
+                    f"Kurslimit ({org.max_kurse}) dieser Organisation erreicht. "
+                    "Bitte upgraden Sie die Lizenz.",
+                )
+                return self.form_invalid(form)
         form.instance.erstellt_von = self.request.user
         messages.success(self.request, "Kurs wurde erstellt.")
         return super().form_valid(form)

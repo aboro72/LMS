@@ -105,6 +105,14 @@ def werte_versuch_aus(versuch):
     versuch.status = PruefungsVersuch.Status.AUSSTEHEND if freitext_offen else PruefungsVersuch.Status.ABGESCHLOSSEN
     versuch.abgeschlossen_am = timezone.now()
     versuch.save()
+
+    if versuch.bestanden and versuch.status == PruefungsVersuch.Status.ABGESCHLOSSEN:
+        try:
+            from apps.certificates.services import stelle_zertifikat_aus
+            stelle_zertifikat_aus(versuch)
+        except Exception:
+            pass
+
     return versuch
 
 

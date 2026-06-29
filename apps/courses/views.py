@@ -1,6 +1,6 @@
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.db.models import Prefetch, Q
+from django.db.models import Avg, Count, Prefetch, Q, Sum
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
 from django.views import View
@@ -12,6 +12,7 @@ from apps.accounts.models import Rolle
 from .forms import (
     AbschnittForm,
     BegleitmaterialForm,
+    KursBewertungForm,
     KursForm,
     LektionForm,
     UebungsantwortForm,
@@ -22,12 +23,14 @@ from .models import (
     Begleitmaterial,
     Einschreibung,
     Kurs,
+    KursBewertung,
     Lektion,
+    Lernpfad,
+    LernpfadEinschreibung,
     LektionsFortschritt,
     Uebungsantwort,
     Uebungsfrage,
 )
-
 
 def trainer_course_queryset(user):
     queryset = Kurs.objects.select_related("organisation", "erstellt_von")
@@ -35,7 +38,7 @@ def trainer_course_queryset(user):
         return queryset.none()
     if user.is_superuser:
         return queryset
-    organisation_ids = user.profile.filter(aktiv=True).values_list("organisation_id", flat=True)
+    organisation_ids = user.profile.filter(rolle=Rolle.TRAINER, aktiv=True).values_list("organisation_id", flat=True)
     return queryset.filter(organisation_id__in=organisation_ids)
 
 
@@ -68,7 +71,7 @@ class KursKatalogView(ListView):
         queryset = (
             Kurs.objects.filter(ist_veroeffentlicht=True, organisation__aktiv=True)
             .select_related("organisation", "erstellt_von")
-            .prefetch_related("abschnitte__lektionen")
+            .prefetch_related("abschnitte__lektionen", "bewertungen")
         )
         query = self.request.GET.get("q", "").strip()
         niveau = self.request.GET.get("niveau", "").strip()
@@ -103,7 +106,7 @@ class KursDetailView(DetailView):
         return (
             Kurs.objects.filter(ist_veroeffentlicht=True, organisation__aktiv=True)
             .select_related("organisation", "erstellt_von")
-            .prefetch_related("abschnitte__lektionen")
+            .prefetch_related("abschnitte__lektionen", "bewertungen")
         )
 
     def get_context_data(self, **kwargs):
@@ -409,3 +412,95 @@ class TrainerUebungsantwortCreateView(RollenMixin, View):
         else:
             messages.error(request, "Uebungsantwort konnte nicht gespeichert werden.")
         return redirect("trainer_course_edit", slug=kurs.slug)
+
+
+class KursBewertungCreateView(LoginRequiredMixin, View):
+    def post(self, request, slug):
+        kurs = get_object_or_404(Kurs, slug=slug, ist_veroeffentlicht=True, organisation__aktiv=True)
+        if not Einschreibung.objects.filter(nutzer=request.user, kurs=kurs, bezahlt=True).exists():
+            messages.error(request, "Nur eingeschriebene Nutzer koennen diesen Kurs bewerten.")
+            return redirect("course_detail", slug=kurs.slug)
+        form = KursBewertungForm(request.POST)
+        if form.is_valid():
+            KursBewertung.objects.update_or_create(
+                kurs=kurs,
+                nutzer=request.user,
+                defaults=form.cleaned_data,
+            )
+            messages.success(request, "Bewertung wurde gespeichert.")
+        else:
+            messages.error(request, "Bewertung konnte nicht gespeichert werden.")
+        return redirect("course_detail", slug=kurs.slug)
+
+
+class LernpfadListView(ListView):
+    model = Lernpfad
+    template_name = "courses/learning_path_list.html"
+    context_object_name = "lernpfade"
+    paginate_by = 12
+
+    def get_queryset(self):
+        return Lernpfad.objects.filter(
+            ist_veroeffentlicht=True,
+            organisation__aktiv=True,
+        ).select_related("organisation").prefetch_related("pfad_kurse__kurs")
+
+
+class LernpfadDetailView(DetailView):
+    model = Lernpfad
+    template_name = "courses/learning_path_detail.html"
+    context_object_name = "lernpfad"
+    slug_url_kwarg = "slug"
+
+    def get_queryset(self):
+        return Lernpfad.objects.filter(
+            ist_veroeffentlicht=True,
+            organisation__aktiv=True,
+        ).select_related("organisation").prefetch_related("pfad_kurse__kurs")
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        einschreibung = None
+        if self.request.user.is_authenticated:
+            einschreibung = LernpfadEinschreibung.objects.filter(
+                nutzer=self.request.user,
+                lernpfad=self.object,
+            ).first()
+        context["einschreibung"] = einschreibung
+        return context
+
+
+class LernpfadEinschreibenView(LoginRequiredMixin, View):
+    def post(self, request, slug):
+        lernpfad = get_object_or_404(Lernpfad, slug=slug, ist_veroeffentlicht=True, organisation__aktiv=True)
+        LernpfadEinschreibung.objects.get_or_create(nutzer=request.user, lernpfad=lernpfad)
+        for pfad_kurs in lernpfad.pfad_kurse.select_related("kurs"):
+            if pfad_kurs.kurs.ist_kostenlos or pfad_kurs.kurs.preis <= 0:
+                Einschreibung.objects.update_or_create(
+                    nutzer=request.user,
+                    kurs=pfad_kurs.kurs,
+                    defaults={"bezahlt": True},
+                )
+        messages.success(request, "Du bist in den Lernpfad eingeschrieben.")
+        return redirect("learning_path_detail", slug=lernpfad.slug)
+
+
+class TrainerUmsatzDashboardView(RollenMixin, TemplateView):
+    rolle = Rolle.TRAINER
+    template_name = "courses/trainer/revenue_dashboard.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        from apps.payments.models import Zahlung, Zahlungsstatus
+
+        zahlungen = Zahlung.objects.filter(trainer=self.request.user, status=Zahlungsstatus.BEZAHLT)
+        context["summe_brutto"] = zahlungen.aggregate(total=Sum("betrag_brutto"))["total"] or 0
+        context["summe_trainer"] = zahlungen.aggregate(total=Sum("trainer_anteil"))["total"] or 0
+        context["zahlungen_count"] = zahlungen.count()
+        context["kurs_summen"] = (
+            zahlungen.values("kurs__titel")
+            .annotate(brutto=Sum("betrag_brutto"), trainer=Sum("trainer_anteil"), anzahl=Count("id"))
+            .order_by("-trainer")
+        )
+        context["letzte_zahlungen"] = zahlungen.select_related("kurs", "nutzer").order_by("-bezahlt_am")[:10]
+        return context

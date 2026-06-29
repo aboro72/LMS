@@ -10,8 +10,8 @@ from django.views.generic import DetailView, FormView, ListView
 from apps.courses.models import Einschreibung, Kurs
 
 from .forms import CheckoutForm
-from .models import Auszahlungsstatus, Zahlung, Zahlungsart, Zahlungsstatus
-from .services import bestaetige_zahlung, erstelle_zahlung, lade_zahlungseinstellungen, zahlungsart_ist_automatisch
+from .models import AuditLog, Auszahlungsstatus, Rechnung, Zahlung, Zahlungsart, Zahlungsstatus
+from .services import bestaetige_zahlung, erstelle_zahlung, lade_zahlungseinstellungen, log_audit, zahlungsart_ist_automatisch
 
 
 class SuperadminRequiredMixin(LoginRequiredMixin, UserPassesTestMixin):
@@ -50,7 +50,7 @@ class CheckoutView(LoginRequiredMixin, FormView):
             return self.form_invalid(form)
         zahlung = erstelle_zahlung(self.kurs, self.request.user, zahlungsart)
         if zahlungsart_ist_automatisch(zahlungsart) and self.payment_settings.demo_autoconfirm:
-            bestaetige_zahlung(zahlung, provider_referenz=f"demo-{zahlungsart}-{zahlung.zahlung_id}")
+            bestaetige_zahlung(zahlung, provider_referenz=f"demo-{zahlungsart}-{zahlung.zahlung_id}", actor=self.request.user)
             messages.success(self.request, "Zahlung wurde bestaetigt. Der Kurs ist freigeschaltet.")
             return redirect("course_learn", slug=self.kurs.slug)
         if zahlungsart == Zahlungsart.BANK_TRANSFER:
@@ -90,6 +90,7 @@ class PaymentCancelView(LoginRequiredMixin, View):
         if zahlung.status == Zahlungsstatus.OFFEN:
             zahlung.status = Zahlungsstatus.STORNIERT
             zahlung.save(update_fields=["status"])
+            log_audit(actor=request.user, organisation=zahlung.kurs.organisation, action="zahlung_storniert", obj=zahlung, message="Zahlung wurde durch Nutzer storniert.")
         messages.warning(request, "Zahlung wurde abgebrochen.")
         return redirect("course_detail", slug=zahlung.kurs.slug)
 
@@ -130,7 +131,7 @@ class TrainerPayoutListView(SuperadminRequiredMixin, ListView):
 class BankTransferConfirmView(SuperadminRequiredMixin, View):
     def post(self, request, zahlung_id):
         zahlung = get_object_or_404(Zahlung, zahlung_id=zahlung_id, zahlungsart=Zahlungsart.BANK_TRANSFER)
-        bestaetige_zahlung(zahlung, provider_referenz="manual-bank-transfer")
+        bestaetige_zahlung(zahlung, provider_referenz="manual-bank-transfer", actor=request.user)
         messages.success(request, "Ueberweisung bestaetigt und Kurs freigeschaltet.")
         return redirect("superadmin_payouts")
 
@@ -141,6 +142,7 @@ class PayoutMarkNotifiedView(SuperadminRequiredMixin, View):
         zahlung.auszahlungsstatus = Auszahlungsstatus.GEMELDET
         zahlung.betreiber_notiz = "Betreiber wurde ueber die auszuzahlende Summe informiert."
         zahlung.save(update_fields=["auszahlungsstatus", "betreiber_notiz"])
+        log_audit(actor=request.user, organisation=zahlung.kurs.organisation, action="auszahlung_gemeldet", obj=zahlung, message="Auszahlung wurde als gemeldet markiert.")
         messages.success(request, "Zahlung wurde als gemeldet markiert.")
         return redirect("superadmin_payouts")
 
@@ -151,5 +153,34 @@ class PayoutMarkPaidView(SuperadminRequiredMixin, View):
         zahlung.auszahlungsstatus = Auszahlungsstatus.AUSGEZAHLT
         zahlung.ausgezahlt_am = timezone.now()
         zahlung.save(update_fields=["auszahlungsstatus", "ausgezahlt_am"])
+        log_audit(actor=request.user, organisation=zahlung.kurs.organisation, action="auszahlung_ausgezahlt", obj=zahlung, message="Auszahlung wurde als ausgezahlt markiert.")
         messages.success(request, "Zahlung wurde als ausgezahlt markiert.")
         return redirect("superadmin_payouts")
+
+
+class RechnungDetailView(LoginRequiredMixin, DetailView):
+    model = Rechnung
+    template_name = "payments/invoice.html"
+    context_object_name = "rechnung"
+    slug_field = "rechnungsnummer"
+    slug_url_kwarg = "rechnungsnummer"
+
+    def get_queryset(self):
+        queryset = Rechnung.objects.select_related("zahlung", "zahlung__kurs", "zahlung__nutzer")
+        if self.request.user.is_superuser:
+            return queryset
+        return queryset.filter(zahlung__nutzer=self.request.user)
+
+
+class AuditLogListView(SuperadminRequiredMixin, ListView):
+    model = AuditLog
+    template_name = "payments/superadmin/audit_log.html"
+    context_object_name = "logs"
+    paginate_by = 50
+
+    def get_queryset(self):
+        queryset = AuditLog.objects.select_related("actor", "organisation")
+        action = self.request.GET.get("action", "").strip()
+        if action:
+            queryset = queryset.filter(action=action)
+        return queryset

@@ -7,6 +7,7 @@ from decouple import Csv, config
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 SECRET_KEY = config("SECRET_KEY", default="django-insecure-change-me-in-production")
+FIELD_ENCRYPTION_KEY = config("FIELD_ENCRYPTION_KEY", default="")
 DEBUG = config("DEBUG", default=False, cast=bool)
 ALLOWED_HOSTS = config("ALLOWED_HOSTS", default="localhost,127.0.0.1", cast=Csv())
 
@@ -28,6 +29,7 @@ INSTALLED_APPS = [
     "apps.exams",
     "apps.payments",
     "apps.certificates",
+    "apps.security",
 ]
 
 MIDDLEWARE = [
@@ -100,6 +102,12 @@ STATICFILES_DIRS = [BASE_DIR / "static"]
 
 MEDIA_URL = config("MEDIA_URL", default="/media/")
 MEDIA_ROOT = Path(config("MEDIA_ROOT", default=str(BASE_DIR / "media")))
+MAX_VIDEO_UPLOAD_MB = config("MAX_VIDEO_UPLOAD_MB", default=500, cast=int)
+MAX_DOCUMENT_UPLOAD_MB = config("MAX_DOCUMENT_UPLOAD_MB", default=50, cast=int)
+MAX_IMAGE_UPLOAD_MB = config("MAX_IMAGE_UPLOAD_MB", default=10, cast=int)
+ALLOWED_VIDEO_EXTENSIONS = config("ALLOWED_VIDEO_EXTENSIONS", default=".mp4,.webm,.mov,.m4v", cast=Csv())
+ALLOWED_DOCUMENT_EXTENSIONS = config("ALLOWED_DOCUMENT_EXTENSIONS", default=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt,.zip", cast=Csv())
+ALLOWED_IMAGE_EXTENSIONS = config("ALLOWED_IMAGE_EXTENSIONS", default=".jpg,.jpeg,.png,.webp,.svg", cast=Csv())
 
 EMAIL_BACKEND = config(
     "EMAIL_BACKEND",

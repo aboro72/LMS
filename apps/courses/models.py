@@ -174,3 +174,86 @@ class LektionsFortschritt(models.Model):
 
     def __str__(self):
         return f"{self.einschreibung} - {self.lektion}"
+
+class KursBewertung(models.Model):
+    kurs = models.ForeignKey(Kurs, on_delete=models.CASCADE, related_name="bewertungen")
+    nutzer = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="kursbewertungen")
+    sterne = models.PositiveSmallIntegerField(default=5)
+    kommentar = models.TextField(blank=True)
+    erstellt_am = models.DateTimeField(auto_now_add=True)
+    geaendert_am = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=["kurs", "nutzer"], name="unique_course_review_user"),
+            models.CheckConstraint(check=models.Q(sterne__gte=1, sterne__lte=5), name="course_review_stars_1_5"),
+        ]
+        ordering = ["-erstellt_am"]
+        verbose_name = "Kursbewertung"
+        verbose_name_plural = "Kursbewertungen"
+
+    def __str__(self):
+        return f"{self.kurs} - {self.nutzer}: {self.sterne}/5"
+
+
+class Lernpfad(models.Model):
+    titel = models.CharField(max_length=300)
+    slug = models.SlugField(unique=True)
+    beschreibung = models.TextField(blank=True)
+    organisation = models.ForeignKey("organisations.Organisation", on_delete=models.CASCADE, related_name="lernpfade")
+    erstellt_von = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True)
+    ist_veroeffentlicht = models.BooleanField(default=False)
+    erstellt_am = models.DateTimeField(auto_now_add=True)
+    geaendert_am = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["titel"]
+        verbose_name = "Lernpfad"
+        verbose_name_plural = "Lernpfade"
+
+    def __str__(self):
+        return self.titel
+
+
+class LernpfadKurs(models.Model):
+    lernpfad = models.ForeignKey(Lernpfad, on_delete=models.CASCADE, related_name="pfad_kurse")
+    kurs = models.ForeignKey(Kurs, on_delete=models.CASCADE, related_name="lernpfad_links")
+    reihenfolge = models.PositiveIntegerField(default=0)
+    pflichtkurs = models.BooleanField(default=True)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=["lernpfad", "kurs"], name="unique_learning_path_course")]
+        ordering = ["reihenfolge", "kurs__titel"]
+        verbose_name = "Lernpfad-Kurs"
+        verbose_name_plural = "Lernpfad-Kurse"
+
+    def __str__(self):
+        return f"{self.lernpfad}: {self.kurs}"
+
+
+class LernpfadEinschreibung(models.Model):
+    nutzer = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="lernpfad_einschreibungen")
+    lernpfad = models.ForeignKey(Lernpfad, on_delete=models.CASCADE, related_name="einschreibungen")
+    eingeschrieben_am = models.DateTimeField(auto_now_add=True)
+    abgeschlossen_am = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=["nutzer", "lernpfad"], name="unique_user_learning_path")]
+        ordering = ["-eingeschrieben_am"]
+        verbose_name = "Lernpfad-Einschreibung"
+        verbose_name_plural = "Lernpfad-Einschreibungen"
+
+    def __str__(self):
+        return f"{self.nutzer} - {self.lernpfad}"
+
+    @property
+    def fortschritt_prozent(self):
+        kurs_ids = list(self.lernpfad.pfad_kurse.values_list("kurs_id", flat=True))
+        if not kurs_ids:
+            return 0
+        abgeschlossene = Einschreibung.objects.filter(
+            nutzer=self.nutzer,
+            kurs_id__in=kurs_ids,
+            fortschritt_prozent__gte=100,
+        ).count()
+        return round((abgeschlossene / len(kurs_ids)) * 100)

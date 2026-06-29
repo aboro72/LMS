@@ -5,7 +5,11 @@ from .models import (
     Begleitmaterial,
     Einschreibung,
     Kurs,
+    KursBewertung,
     Lektion,
+    Lernpfad,
+    LernpfadEinschreibung,
+    LernpfadKurs,
     LektionsFortschritt,
     Uebungsantwort,
     Uebungsfrage,
@@ -94,3 +98,34 @@ class EinschreibungAdmin(admin.ModelAdmin):
 class LektionsFortschrittAdmin(admin.ModelAdmin):
     list_display = ("einschreibung", "lektion", "abgeschlossen_am")
     search_fields = ("einschreibung__nutzer__username", "lektion__titel")
+
+
+class LernpfadKursInline(admin.TabularInline):
+    model = LernpfadKurs
+    extra = 1
+    autocomplete_fields = ("kurs",)
+    fields = ("kurs", "reihenfolge", "pflichtkurs")
+
+
+@admin.register(KursBewertung)
+class KursBewertungAdmin(admin.ModelAdmin):
+    list_display = ("kurs", "nutzer", "sterne", "erstellt_am")
+    list_filter = ("sterne", "kurs__organisation")
+    search_fields = ("kurs__titel", "nutzer__username", "kommentar")
+
+
+@admin.register(Lernpfad)
+class LernpfadAdmin(admin.ModelAdmin):
+    list_display = ("titel", "organisation", "ist_veroeffentlicht", "erstellt_von")
+    list_filter = ("ist_veroeffentlicht", "organisation")
+    search_fields = ("titel", "beschreibung", "organisation__name")
+    prepopulated_fields = {"slug": ("titel",)}
+    autocomplete_fields = ("organisation", "erstellt_von")
+    inlines = (LernpfadKursInline,)
+
+
+@admin.register(LernpfadEinschreibung)
+class LernpfadEinschreibungAdmin(admin.ModelAdmin):
+    list_display = ("nutzer", "lernpfad", "eingeschrieben_am", "abgeschlossen_am")
+    list_filter = ("lernpfad__organisation",)
+    search_fields = ("nutzer__username", "lernpfad__titel")

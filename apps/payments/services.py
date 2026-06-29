@@ -3,13 +3,13 @@ from django.utils import timezone
 
 from apps.courses.models import Einschreibung
 
-from .models import Zahlung, Zahlungsart, Zahlungseinstellungen, Zahlungsstatus
+from .models import AuditLog, Rechnung, Zahlung, Zahlungsart, Zahlungseinstellungen, Zahlungsstatus
 
 
 @transaction.atomic
 def erstelle_zahlung(kurs, nutzer, zahlungsart):
     gebuehr, trainer_anteil = Zahlung.berechne_aufteilung(kurs.preis)
-    return Zahlung.objects.create(
+    zahlung = Zahlung.objects.create(
         nutzer=nutzer,
         kurs=kurs,
         trainer=kurs.erstellt_von,
@@ -18,10 +18,19 @@ def erstelle_zahlung(kurs, nutzer, zahlungsart):
         plattform_gebuehr=gebuehr,
         trainer_anteil=trainer_anteil,
     )
+    log_audit(
+        actor=nutzer,
+        organisation=kurs.organisation,
+        action="zahlung_erstellt",
+        obj=zahlung,
+        message=f"Zahlung fuer Kurs '{kurs.titel}' erstellt.",
+        metadata={"zahlungsart": zahlungsart, "betrag": str(kurs.preis)},
+    )
+    return zahlung
 
 
 @transaction.atomic
-def bestaetige_zahlung(zahlung, provider_referenz=""):
+def bestaetige_zahlung(zahlung, provider_referenz="", actor=None):
     if zahlung.status == Zahlungsstatus.BEZAHLT:
         return zahlung
     zahlung.status = Zahlungsstatus.BEZAHLT
@@ -33,7 +42,45 @@ def bestaetige_zahlung(zahlung, provider_referenz=""):
         kurs=zahlung.kurs,
         defaults={"bezahlt": True},
     )
+    erstelle_rechnung(zahlung)
+    log_audit(
+        actor=actor or zahlung.nutzer,
+        organisation=zahlung.kurs.organisation,
+        action="zahlung_bestaetigt",
+        obj=zahlung,
+        message=f"Zahlung {zahlung.zahlung_id} wurde bestaetigt.",
+        metadata={"provider_referenz": zahlung.provider_referenz},
+    )
     return zahlung
+
+
+@transaction.atomic
+def erstelle_rechnung(zahlung):
+    rechnung, _ = Rechnung.objects.get_or_create(
+        zahlung=zahlung,
+        defaults={
+            "rechnungsnummer": Rechnung.naechste_nummer(),
+            "empfaenger_name": zahlung.nutzer.get_full_name() or zahlung.nutzer.username,
+            "empfaenger_email": zahlung.nutzer.email or "noreply@aborosoft.de",
+            "betrag_netto": zahlung.betrag_brutto,
+            "steuerbetrag": 0,
+            "betrag_brutto": zahlung.betrag_brutto,
+            "waehrung": zahlung.waehrung,
+        },
+    )
+    return rechnung
+
+
+def log_audit(actor=None, organisation=None, action="", obj=None, message="", metadata=None):
+    return AuditLog.objects.create(
+        actor=actor if getattr(actor, "is_authenticated", True) else None,
+        organisation=organisation,
+        action=action,
+        object_type=obj.__class__.__name__ if obj is not None else "",
+        object_id=str(getattr(obj, "pk", "")) if obj is not None else "",
+        message=message,
+        metadata=metadata or {},
+    )
 
 
 def zahlungsart_ist_automatisch(zahlungsart):

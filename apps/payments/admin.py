@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Auszahlungsstatus, Zahlung, Zahlungseinstellungen, Zahlungsstatus
+from .models import AuditLog, Auszahlungsstatus, Rechnung, Zahlung, Zahlungseinstellungen, Zahlungsstatus
 
 
 @admin.register(Zahlungseinstellungen)
@@ -47,3 +47,18 @@ class ZahlungAdmin(admin.ModelAdmin):
             auszahlungsstatus=Auszahlungsstatus.AUSGEZAHLT,
             ausgezahlt_am=timezone.now(),
         )
+
+
+@admin.register(Rechnung)
+class RechnungAdmin(admin.ModelAdmin):
+    list_display = ("rechnungsnummer", "zahlung", "empfaenger_email", "betrag_brutto", "rechnungsdatum")
+    search_fields = ("rechnungsnummer", "zahlung__zahlung_id", "empfaenger_email")
+    readonly_fields = ("rechnungsnummer", "rechnungsdatum")
+
+
+@admin.register(AuditLog)
+class AuditLogAdmin(admin.ModelAdmin):
+    list_display = ("erstellt_am", "action", "actor", "organisation", "object_type", "object_id")
+    list_filter = ("action", "organisation", "erstellt_am")
+    search_fields = ("action", "message", "actor__username", "object_type", "object_id")
+    readonly_fields = ("erstellt_am",)

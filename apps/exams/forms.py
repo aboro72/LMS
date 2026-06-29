@@ -5,6 +5,7 @@ from io import TextIOWrapper
 from django import forms
 from django_quill.quill import Quill
 
+from apps.accounts.models import Rolle
 from apps.organisations.models import Organisation
 
 from .models import Antwort, Frage, Fragenkatalog, Pruefung, TeilnehmerAntwort, ZuordnungsPaar
@@ -18,7 +19,7 @@ class FragenkatalogForm(forms.ModelForm):
     def __init__(self, *args, user=None, **kwargs):
         super().__init__(*args, **kwargs)
         if user and not user.is_superuser:
-            organisation_ids = user.profile.filter(aktiv=True).values_list("organisation_id", flat=True)
+            organisation_ids = user.profile.filter(rolle=Rolle.TRAINER, aktiv=True).values_list("organisation_id", flat=True)
             self.fields["organisation"].queryset = Organisation.objects.filter(id__in=organisation_ids)
 
 
@@ -66,7 +67,7 @@ class PruefungForm(forms.ModelForm):
     def __init__(self, *args, user=None, **kwargs):
         super().__init__(*args, **kwargs)
         if user and not user.is_superuser:
-            organisation_ids = user.profile.filter(aktiv=True).values_list("organisation_id", flat=True)
+            organisation_ids = user.profile.filter(rolle=Rolle.TRAINER, aktiv=True).values_list("organisation_id", flat=True)
             self.fields["organisation"].queryset = Organisation.objects.filter(id__in=organisation_ids)
             self.fields["fragenkatalog"].queryset = Fragenkatalog.objects.filter(organisation_id__in=organisation_ids)
 

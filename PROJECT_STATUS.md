@@ -60,3 +60,13 @@
 - GTK3-Runtime fuer WeasyPrint-PDF-Export unter Windows (install-windows.ps1 laed sie automatisch herunter).
 - Echte Zahlungsintegration (Stripe, PayPal, Google Pay) mit Webhooks.
 - Einladungstoken-Flow: E-Mail-Versand und Annahme-View fuer eingeladene Nutzer.
+
+## Aktualisierung 2026-06-29
+
+- Basisqualitaet erweitert: erste Django-Tests fuer Upload-Validierung, Org-Dashboard-Umsaetze, Einladungsannahme, Zahlungsbelege/Audit und Kursbewertungen hinzugefuegt.
+- Upload-Validierung ergaenzt: konfigurierbare Limits und erlaubte Dateiendungen fuer Videos, Dokumente und Bilder.
+- Repository-Hygiene ergaenzt: `.gitignore` fuer Python-, Django-, Env- und IDE-Artefakte angelegt.
+- Org-Admin-Dashboard korrigiert: Zahlungsstatus verwendet jetzt die Modell-Konstante statt eines falschen Grossbuchstaben-Strings.
+- Erweiterungen umgesetzt: Lernpfade, Kursbewertungen, Trainer-Umsatzdashboard, Pruefungsstatistiken, Einladungsannahme per Token, Rechnungen/Belege und Audit-Log.
+- Production-Settings fuer optionalen S3-kompatiblen Medien-Storage auf Django-5-`STORAGES` aktualisiert.
+- Payment-Provider-Integration mit echten Stripe-/PayPal-/Google-Pay-Webhooks bleibt bewusst offen, bis API-Keys verfuegbar sind.

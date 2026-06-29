@@ -16,6 +16,7 @@
     </dl>
     {% if zahlung.status == "bezahlt" %}
         <a class="btn btn-aboro" href="{% url 'course_learn' zahlung.kurs.slug %}">Zum Kurs</a>
+        {% if zahlung.rechnung %}<a class="btn btn-outline-secondary ms-2" href="{% url 'invoice_detail' zahlung.rechnung.rechnungsnummer %}">Beleg anzeigen</a>{% endif %}
     {% elif zahlung.zahlungsart == "bank_transfer" %}
         <div class="alert alert-warning">
             Bitte ueberweise den Betrag an das zentrale ABoroSoft-Konto. Der Betreiber bestaetigt den Zahlungseingang manuell.

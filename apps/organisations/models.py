@@ -7,6 +7,7 @@ from django.utils import timezone
 from django_quill.fields import QuillField
 
 from apps.accounts.models import Rolle
+from apps.security.fields import EncryptedCharField
 
 
 class LizenzTyp(models.TextChoices):
@@ -85,7 +86,7 @@ class OrganisationEmailKonfiguration(models.Model):
     smtp_host = models.CharField(max_length=200, blank=True, verbose_name="SMTP-Host")
     smtp_port = models.PositiveIntegerField(default=587, verbose_name="SMTP-Port")
     smtp_user = models.CharField(max_length=200, blank=True, verbose_name="SMTP-Benutzername")
-    smtp_password = models.CharField(max_length=500, blank=True, verbose_name="SMTP-Passwort")
+    smtp_password = EncryptedCharField(blank=True, verbose_name="SMTP-Passwort")
     smtp_use_tls = models.BooleanField(default=True, verbose_name="STARTTLS verwenden (Port 587)")
     smtp_use_ssl = models.BooleanField(default=False, verbose_name="SSL verwenden (Port 465)")
 

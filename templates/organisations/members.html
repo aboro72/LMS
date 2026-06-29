@@ -65,6 +65,7 @@
                         <th>Rolle</th>
                         <th>Eingeladen am</th>
                         <th>Laeuft ab</th>
+                        <th>Link</th>
                     </tr>
                     </thead>
                     <tbody>
@@ -77,6 +78,7 @@
                                 {{ einladung.abgelaufen_am|date:"d.m.Y" }}
                                 {% if einladung.ist_abgelaufen %}<span class="badge text-bg-danger ms-1">Abgelaufen</span>{% endif %}
                             </td>
+                            <td class="small"><a href="{% url 'org_invitation_accept' einladung.token %}">Annehmen</a></td>
                         </tr>
                     {% endfor %}
                     </tbody>

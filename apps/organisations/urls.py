@@ -4,6 +4,7 @@ from .views import (
     OffentlicheStartseiteView,
     OrgAdminDashboardView,
     OrgDesignView,
+    EinladungAnnehmenView,
     OrgEinladungCreateView,
     OrgEmailKonfigView,
     OrgMemberListView,
@@ -22,6 +23,7 @@ urlpatterns = [
     # Org-Admin-Bereich
     path("organisationen/<slug:slug>/", OrgAdminDashboardView.as_view(), name="org_admin_dashboard"),
     path("organisationen/<slug:slug>/mitglieder/", OrgMemberListView.as_view(), name="org_members"),
+    path("organisationen/einladung/<uuid:token>/", EinladungAnnehmenView.as_view(), name="org_invitation_accept"),
     path("organisationen/<slug:slug>/einladen/", OrgEinladungCreateView.as_view(), name="org_invite"),
     path("organisationen/<slug:slug>/email-konfiguration/", OrgEmailKonfigView.as_view(), name="org_email_config"),
     path("organisationen/<slug:slug>/design/", OrgDesignView.as_view(), name="org_design"),

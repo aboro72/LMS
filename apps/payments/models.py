@@ -3,6 +3,9 @@ from decimal import Decimal
 
 from django.conf import settings
 from django.db import models
+from django.utils import timezone
+
+from apps.security.fields import EncryptedCharField, EncryptedTextField
 
 
 class Zahlungsart(models.TextChoices):
@@ -28,16 +31,16 @@ class Auszahlungsstatus(models.TextChoices):
 class Zahlungseinstellungen(models.Model):
     stripe_aktiv = models.BooleanField(default=False)
     stripe_public_key = models.CharField(max_length=255, blank=True)
-    stripe_secret_key = models.CharField(max_length=255, blank=True)
+    stripe_secret_key = EncryptedCharField(blank=True)
     google_pay_aktiv = models.BooleanField(default=False)
     paypal_aktiv = models.BooleanField(default=False)
     paypal_client_id = models.CharField(max_length=255, blank=True)
-    paypal_secret = models.CharField(max_length=255, blank=True)
+    paypal_secret = EncryptedCharField(blank=True)
     ueberweisung_aktiv = models.BooleanField(default=True)
-    kontoinhaber = models.CharField(max_length=200, blank=True)
-    iban = models.CharField(max_length=34, blank=True)
-    bic = models.CharField(max_length=20, blank=True)
-    bankname = models.CharField(max_length=200, blank=True)
+    kontoinhaber = EncryptedCharField(blank=True)
+    iban = EncryptedCharField(blank=True)
+    bic = EncryptedCharField(blank=True)
+    bankname = EncryptedCharField(blank=True)
     demo_autoconfirm = models.BooleanField(default=True)
     aktualisiert_am = models.DateTimeField(auto_now=True)
 
@@ -83,8 +86,8 @@ class Zahlung(models.Model):
     plattform_gebuehr = models.DecimalField(max_digits=10, decimal_places=2)
     trainer_anteil = models.DecimalField(max_digits=10, decimal_places=2)
     waehrung = models.CharField(max_length=3, default="EUR")
-    provider_referenz = models.CharField(max_length=255, blank=True)
-    betreiber_notiz = models.TextField(blank=True)
+    provider_referenz = EncryptedCharField(blank=True)
+    betreiber_notiz = EncryptedTextField(blank=True)
     erstellt_am = models.DateTimeField(auto_now_add=True)
     bezahlt_am = models.DateTimeField(null=True, blank=True)
     ausgezahlt_am = models.DateTimeField(null=True, blank=True)
@@ -103,3 +106,51 @@ class Zahlung(models.Model):
         gebuehr = (brutto * Decimal(settings.PLATFORM_COMMISSION_PERCENT) / Decimal("100")).quantize(Decimal("0.01"))
         trainer_anteil = brutto - gebuehr
         return gebuehr, trainer_anteil
+
+class Rechnung(models.Model):
+    zahlung = models.OneToOneField(Zahlung, on_delete=models.CASCADE, related_name="rechnung")
+    rechnungsnummer = models.CharField(max_length=40, unique=True)
+    rechnungsdatum = models.DateTimeField(auto_now_add=True)
+    empfaenger_name = models.CharField(max_length=255)
+    empfaenger_email = models.EmailField()
+    betrag_netto = models.DecimalField(max_digits=10, decimal_places=2)
+    steuerbetrag = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal("0.00"))
+    betrag_brutto = models.DecimalField(max_digits=10, decimal_places=2)
+    waehrung = models.CharField(max_length=3, default="EUR")
+
+    class Meta:
+        ordering = ["-rechnungsdatum"]
+        verbose_name = "Rechnung/Beleg"
+        verbose_name_plural = "Rechnungen/Belege"
+
+    def __str__(self):
+        return self.rechnungsnummer
+
+    @classmethod
+    def naechste_nummer(cls):
+        jahr = timezone.now().year
+        prefix = f"RE-{jahr}-"
+        letzte = cls.objects.filter(rechnungsnummer__startswith=prefix).order_by("-rechnungsnummer").first()
+        if not letzte:
+            return f"{prefix}0001"
+        nummer = int(letzte.rechnungsnummer.rsplit("-", 1)[-1]) + 1
+        return f"{prefix}{nummer:04d}"
+
+
+class AuditLog(models.Model):
+    actor = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True)
+    organisation = models.ForeignKey("organisations.Organisation", on_delete=models.SET_NULL, null=True, blank=True)
+    action = models.CharField(max_length=100)
+    object_type = models.CharField(max_length=100, blank=True)
+    object_id = models.CharField(max_length=100, blank=True)
+    message = models.TextField(blank=True)
+    metadata = models.JSONField(default=dict, blank=True)
+    erstellt_am = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-erstellt_am"]
+        verbose_name = "Audit-Log"
+        verbose_name_plural = "Audit-Logs"
+
+    def __str__(self):
+        return f"{self.erstellt_am:%Y-%m-%d %H:%M} - {self.action}"

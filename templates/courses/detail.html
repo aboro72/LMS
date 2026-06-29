@@ -53,6 +53,34 @@
                 <p class="text-secondary mb-0">Noch keine Inhalte veroeffentlicht.</p>
             {% endfor %}
         </div>
+
+        <div class="aboro-panel mt-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h2 class="h5 mb-0">Bewertungen</h2>
+                {% if bewertung_avg %}<span class="course-stars">{{ bewertung_avg|floatformat:1 }} / 5</span>{% endif %}
+            </div>
+            {% if einschreibung %}
+                <form method="post" action="{% url 'course_review' kurs.slug %}" class="mb-4">
+                    {% csrf_token %}
+                    <div class="row g-2">
+                        <div class="col-sm-3">{{ bewertung_form.sterne }}</div>
+                        <div class="col-sm-7">{{ bewertung_form.kommentar }}</div>
+                        <div class="col-sm-2"><button class="btn btn-aboro w-100" type="submit">Speichern</button></div>
+                    </div>
+                </form>
+            {% endif %}
+            {% for bewertung in bewertungen %}
+                <div class="border-top pt-3 mt-3">
+                    <div class="d-flex justify-content-between">
+                        <strong>{{ bewertung.nutzer }}</strong>
+                        <span class="course-stars">{{ bewertung.sterne }} / 5</span>
+                    </div>
+                    {% if bewertung.kommentar %}<p class="text-secondary mb-0">{{ bewertung.kommentar }}</p>{% endif %}
+                </div>
+            {% empty %}
+                <p class="text-secondary mb-0">Noch keine Bewertungen.</p>
+            {% endfor %}
+        </div>
     </div>
     <aside class="col-lg-4">
         <div class="aboro-panel sticky-lg-top course-action-panel">

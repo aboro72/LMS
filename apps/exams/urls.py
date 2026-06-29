@@ -15,6 +15,7 @@ from .views import (
     TrainerFragenkatalogUpdateView,
     TrainerPruefungCreateView,
     TrainerPruefungListView,
+    TrainerPruefungStatistikView,
     TrainerPruefungUpdateView,
 )
 
@@ -33,6 +34,7 @@ urlpatterns = [
     path("trainer/pruefungen/", TrainerPruefungListView.as_view(), name="trainer_exam_list"),
     path("trainer/pruefungen/neu/", TrainerPruefungCreateView.as_view(), name="trainer_exam_create"),
     path("trainer/pruefungen/<int:pk>/", TrainerPruefungUpdateView.as_view(), name="trainer_exam_edit"),
+    path("trainer/pruefungen/<int:pk>/statistik/", TrainerPruefungStatistikView.as_view(), name="trainer_exam_stats"),
     path("examiner/queue/", ExaminerQueueView.as_view(), name="examiner_queue"),
     path("examiner/queue/<int:pk>/", ExaminerBewertungView.as_view(), name="examiner_review"),
 ]

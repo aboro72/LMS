@@ -4,11 +4,12 @@ from django.core.exceptions import PermissionDenied
 from django.db.models import Count, Sum
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views import View
+from django.utils import timezone
 from django.views.generic import CreateView, ListView, TemplateView
 
 from apps.accounts.mixins import RollenMixin
 from apps.accounts.models import Rolle, UserProfile
-from apps.payments.models import Zahlung
+from apps.payments.models import Zahlung, Zahlungsstatus
 
 from .forms import (
     EinladungForm,
@@ -73,11 +74,11 @@ class OrgAdminDashboardView(RollenMixin, TemplateView):
             kurs__organisation=org, bezahlt=True
         ).count()
         umsatz = (
-            Zahlung.objects.filter(kurs__organisation=org, status="BEZAHLT")
+            Zahlung.objects.filter(kurs__organisation=org, status=Zahlungsstatus.BEZAHLT)
             .aggregate(total=Sum("betrag_brutto"))["total"] or 0
         )
         trainer_anteil = (
-            Zahlung.objects.filter(kurs__organisation=org, status="BEZAHLT")
+            Zahlung.objects.filter(kurs__organisation=org, status=Zahlungsstatus.BEZAHLT)
             .aggregate(total=Sum("trainer_anteil"))["total"] or 0
         )
         top_kurse = (
@@ -92,6 +93,7 @@ class OrgAdminDashboardView(RollenMixin, TemplateView):
             "einschreibungen_count": einschreibungen_count,
             "umsatz": umsatz,
             "trainer_anteil": trainer_anteil,
+            "plattform_anteil": umsatz - trainer_anteil,
             "top_kurse": top_kurse,
         })
         return context
@@ -141,20 +143,30 @@ class OrgEinladungCreateView(RollenMixin, View):
 
         form = EinladungForm(request.POST)
         if form.is_valid():
-            Einladung.objects.create(
+            einladung = Einladung.objects.create(
                 organisation=org,
                 email=form.cleaned_data["email"],
                 rolle=form.cleaned_data["rolle"],
                 eingeladen_von=request.user,
             )
-            messages.success(request, f"Einladung für {form.cleaned_data['email']} erstellt.")
+            try:
+                from apps.payments.services import log_audit
+                log_audit(
+                    actor=request.user,
+                    organisation=org,
+                    action="einladung_erstellt",
+                    obj=einladung,
+                    message=f"Einladung fuer {einladung.email} erstellt.",
+                    metadata={"rolle": einladung.rolle},
+                )
+            except Exception:
+                pass
+            messages.success(request, f"Einladung fuer {form.cleaned_data['email']} erstellt.")
         else:
             messages.error(request, "Einladung konnte nicht erstellt werden.")
         return redirect("org_members", slug=slug)
 
 
-# --------------------------------------------------------------------------- #
-# E-Mail-Konfiguration
 # --------------------------------------------------------------------------- #
 class OrgEmailKonfigView(RollenMixin, View):
     rolle = Rolle.ORG_ADMIN
@@ -281,3 +293,44 @@ class SuperadminOrganisationenView(LoginRequiredMixin, ListView):
             mitglieder_count=Count("userprofile", distinct=True),
             kurs_count=Count("kurs", distinct=True),
         ).order_by("name")
+
+
+class EinladungAnnehmenView(LoginRequiredMixin, View):
+    def get(self, request, token):
+        einladung = get_object_or_404(Einladung, token=token, akzeptiert_am__isnull=True)
+        if einladung.ist_abgelaufen:
+            messages.error(request, "Diese Einladung ist abgelaufen.")
+            return redirect("dashboard")
+        if request.user.email and request.user.email.lower() != einladung.email.lower():
+            messages.error(request, "Diese Einladung ist fuer eine andere E-Mail-Adresse ausgestellt.")
+            return redirect("dashboard")
+        if einladung.organisation.max_nutzer and einladung.organisation.max_nutzer > 0:
+            aktuell = UserProfile.objects.filter(
+                organisation=einladung.organisation,
+                aktiv=True,
+            ).values("nutzer").distinct().count()
+            if aktuell >= einladung.organisation.max_nutzer:
+                messages.error(request, "Das Nutzerlimit dieser Organisation ist erreicht.")
+                return redirect("dashboard")
+        UserProfile.objects.get_or_create(
+            nutzer=request.user,
+            organisation=einladung.organisation,
+            rolle=einladung.rolle,
+            defaults={"aktiv": True},
+        )
+        einladung.akzeptiert_am = timezone.now()
+        einladung.save(update_fields=["akzeptiert_am"])
+        try:
+            from apps.payments.services import log_audit
+            log_audit(
+                actor=request.user,
+                organisation=einladung.organisation,
+                action="einladung_angenommen",
+                obj=einladung,
+                message=f"Einladung fuer {einladung.email} wurde angenommen.",
+                metadata={"rolle": einladung.rolle},
+            )
+        except Exception:
+            pass
+        messages.success(request, f"Du wurdest der Organisation {einladung.organisation.name} hinzugefuegt.")
+        return redirect("org_admin_dashboard", slug=einladung.organisation.slug) if einladung.rolle == Rolle.ORG_ADMIN else redirect("dashboard")

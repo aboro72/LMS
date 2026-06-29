@@ -117,7 +117,7 @@
                 <dt class="col-7">Trainer-Anteil (85%)</dt>
                 <dd class="col-5">{{ trainer_anteil|floatformat:2 }} EUR</dd>
                 <dt class="col-7">Plattform (15%)</dt>
-                <dd class="col-5">{{ umsatz|floatformat:2|add:"-"|add:trainer_anteil|floatformat:2 }}</dd>
+                <dd class="col-5">{{ plattform_anteil|floatformat:2 }} EUR</dd>
             </dl>
             {% if user.is_superuser %}
                 <a class="btn btn-sm btn-outline-secondary mt-3" href="{% url 'superadmin_payouts' %}">Auszahlungen verwalten</a>

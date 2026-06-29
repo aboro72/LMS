@@ -2,6 +2,7 @@ import json
 
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.db.models import Avg, Count
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
 from django.utils import timezone
@@ -22,7 +23,7 @@ def trainer_catalog_queryset(user):
         return queryset.none()
     if user.is_superuser:
         return queryset
-    organisation_ids = user.profile.filter(aktiv=True).values_list("organisation_id", flat=True)
+    organisation_ids = user.profile.filter(rolle=Rolle.TRAINER, aktiv=True).values_list("organisation_id", flat=True)
     return queryset.filter(organisation_id__in=organisation_ids)
 
 
@@ -32,7 +33,7 @@ def trainer_exam_queryset(user):
         return queryset.none()
     if user.is_superuser:
         return queryset
-    organisation_ids = user.profile.filter(aktiv=True).values_list("organisation_id", flat=True)
+    organisation_ids = user.profile.filter(rolle=Rolle.TRAINER, aktiv=True).values_list("organisation_id", flat=True)
     return queryset.filter(organisation_id__in=organisation_ids)
 
 
@@ -319,3 +320,35 @@ class ExaminerBewertungView(RollenMixin, UpdateView):
 
     def get_success_url(self):
         return reverse("examiner_queue")
+
+
+class TrainerPruefungStatistikView(RollenMixin, TemplateView):
+    rolle = Rolle.TRAINER
+    template_name = "exams/trainer/exam_stats.html"
+
+    def dispatch(self, request, *args, **kwargs):
+        self.pruefung = get_object_or_404(trainer_exam_queryset(request.user), pk=kwargs["pk"])
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        versuche = PruefungsVersuch.objects.filter(pruefung=self.pruefung)
+        abgeschlossen = versuche.filter(status=PruefungsVersuch.Status.ABGESCHLOSSEN)
+        total = versuche.count()
+        bestanden = versuche.filter(bestanden=True).count()
+        frage_stats = (
+            TeilnehmerAntwort.objects.filter(versuch__pruefung=self.pruefung)
+            .values("frage_id", "frage__typ")
+            .annotate(antworten=Count("id"), punkte_avg=Avg("punkte_vergeben"))
+            .order_by("frage_id")
+        )
+        context.update({
+            "pruefung": self.pruefung,
+            "versuche_count": total,
+            "abgeschlossen_count": abgeschlossen.count(),
+            "bestanden_count": bestanden,
+            "bestehensquote": round((bestanden / total) * 100) if total else 0,
+            "durchschnitt": versuche.aggregate(avg=Avg("prozent_erreicht"))["avg"] or 0,
+            "frage_stats": frage_stats,
+        })
+        return context

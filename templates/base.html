@@ -44,11 +44,13 @@
             <ul class="navbar-nav ms-auto align-items-lg-center gap-lg-2">
                 {% if user.is_authenticated %}
                     <li class="nav-item"><a class="nav-link" href="{% url 'course_catalog' %}">Kurse</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{% url 'learning_path_list' %}">Lernpfade</a></li>
                     {% if ist_trainer %}
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">Trainer</a>
                             <ul class="dropdown-menu dropdown-menu-end">
                                 <li><a class="dropdown-item" href="{% url 'trainer_course_list' %}">Kursverwaltung</a></li>
+                                <li><a class="dropdown-item" href="{% url 'trainer_revenue_dashboard' %}">Umsatz</a></li>
                                 <li><hr class="dropdown-divider"></li>
                                 <li><a class="dropdown-item" href="{% url 'trainer_catalog_list' %}">Fragenkataloge</a></li>
                                 <li><a class="dropdown-item" href="{% url 'trainer_exam_list' %}">Prüfungen</a></li>
@@ -80,6 +82,7 @@
                             <ul class="dropdown-menu dropdown-menu-end">
                                 <li><a class="dropdown-item" href="{% url 'superadmin_orgs' %}">Organisationen</a></li>
                                 <li><a class="dropdown-item" href="{% url 'superadmin_payouts' %}">Auszahlungen</a></li>
+                                <li><a class="dropdown-item" href="{% url 'superadmin_audit_log' %}">Audit-Log</a></li>
                             </ul>
                         </li>
                     {% endif %}
@@ -92,6 +95,7 @@
                     </li>
                 {% else %}
                     <li class="nav-item"><a class="nav-link" href="{% url 'course_catalog' %}">Kurse</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{% url 'learning_path_list' %}">Lernpfade</a></li>
                     <li class="nav-item"><a class="nav-link" href="{% url 'account_login' %}">Login</a></li>
                     <li class="nav-item"><a class="btn btn-sm btn-aboro" href="{% url 'register' %}">Registrieren</a></li>
                 {% endif %}

@@ -173,12 +173,12 @@ Weitere zuvor getestete Flows:
 - Ueberweisungsdaten sind Demo-Daten. Fuer Produktion braucht es saubere Admin-Pflege, Anzeige und rechtliche Texte.
 - Trainer-Auszahlungen sind manuell geplant; es gibt noch keinen automatischen Payout-Provider.
 - Pruefungs-Trainer-Templates, CSV-Import-UI und Examiner-Queue sind noch nicht vollstaendig produktreif.
-- Zertifikatsgenerierung mit PDF, QR-Code und Verify-URL ist noch offen.
-- Tests sind noch zu duenn; bisher wurde viel per Smoke-Test geprueft.
+- Zertifikatsgenerierung mit PDF, QR-Code und Verify-URL ist umgesetzt; WeasyPrint benoetigt unter Windows GTK3-Runtime.
+- Erste automatisierte Tests sind vorhanden; die Abdeckung ist noch fokussiert und sollte weiter ausgebaut werden.
 - Datei-Uploads brauchen fuer Produktion Limits, Validierung, Speicherstrategie und ggf. Virenscan.
 - Video-Uploads brauchen fuer groessere Dateien Webserver-Konfiguration, max upload size und ggf. Transcoding-Strategie.
 - Kein echtes Berechtigungs-Audit fuer alle Views abgeschlossen.
-- Installation/Deployment-Skripte fehlen noch.
+- Installation/Deployment-Skripte fuer Linux und Windows sind vorhanden; produktive Umgebungen muessen je Server validiert werden.
 
 ## Empfohlene naechste Schritte
 
@@ -250,3 +250,30 @@ Weitere zuvor getestete Flows:
 ## Hinweis zur Arbeitsweise
 
 Das Projekt ist noch ein Prototyp mit funktionierenden Kernfluesse. Bei der Weiterarbeit zuerst `python manage.py check`, `python manage.py migrate` und `python manage.py create_demo_data` ausfuehren. Danach die wichtigsten Seiten im Browser pruefen: `/`, `/kurse/`, `/kurse/aborolms-grundlagen/`, `/trainer/kurse/`, `/superadmin/auszahlungen/`.
+
+## Aktualisierung 2026-06-29
+
+Neu hinzugekommen:
+
+- Einladungsannahme per Token unter `/organisationen/einladung/<token>/` fuer eingeloggte Nutzer.
+- Lernpfade unter `/lernpfade/` mit Einschreibung und Fortschrittsanzeige.
+- Kursbewertungen fuer bezahlte/eingeschriebene Nutzer.
+- Trainer-Umsatzdashboard unter `/trainer/umsatz/`.
+- Pruefungsstatistiken je Trainer-Pruefung.
+- Rechnungen/Belege fuer bestaetigte Zahlungen.
+- Superadmin-Audit-Log unter `/superadmin/audit-log/`.
+- Upload-Limits und erlaubte Dateiendungen sind ueber `.env` konfigurierbar.
+- Optionaler S3-kompatibler Medien-Storage ist in `config.settings.production` vorbereitet.
+
+Validierung:
+
+```bash
+python manage.py check
+python manage.py makemigrations --check --dry-run
+python manage.py test
+```
+
+Bewusst offen:
+
+- Echte Stripe-/PayPal-/Google-Pay-Provider-Flows und Webhooks, bis die API-Keys fuer Tests verfuegbar sind.
+- Ausbau der Testabdeckung ueber die jetzt ergaenzten Kernfluss-Tests hinaus.

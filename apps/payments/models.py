@@ -29,6 +29,7 @@ class Auszahlungsstatus(models.TextChoices):
 
 
 class Zahlungseinstellungen(models.Model):
+    payment_aktiv = models.BooleanField("Zahlungen aktivieren", default=False)
     stripe_aktiv = models.BooleanField(default=False)
     stripe_public_key = models.CharField(max_length=255, blank=True)
     stripe_secret_key = EncryptedCharField(blank=True)
@@ -41,7 +42,7 @@ class Zahlungseinstellungen(models.Model):
     iban = EncryptedCharField(blank=True)
     bic = EncryptedCharField(blank=True)
     bankname = EncryptedCharField(blank=True)
-    demo_autoconfirm = models.BooleanField(default=True)
+    demo_autoconfirm = models.BooleanField(default=False)
     aktualisiert_am = models.DateTimeField(auto_now=True)
 
     class Meta:
@@ -62,12 +63,16 @@ class Zahlungseinstellungen(models.Model):
 
     def aktive_zahlungsarten(self):
         choices = []
-        if self.stripe_aktiv:
+        if not self.payment_aktiv:
+            return choices
+        # Online-Anbieter sind bis zur echten Integration nur lokal im Demo-Modus verfuegbar.
+        demo = settings.DEBUG and self.demo_autoconfirm
+        if demo and self.stripe_aktiv:
             choices.append((Zahlungsart.STRIPE, Zahlungsart.STRIPE.label))
             choices.append((Zahlungsart.GOOGLE_PAY, Zahlungsart.GOOGLE_PAY.label))
-        elif self.google_pay_aktiv:
+        elif demo and self.google_pay_aktiv:
             choices.append((Zahlungsart.GOOGLE_PAY, Zahlungsart.GOOGLE_PAY.label))
-        if self.paypal_aktiv:
+        if demo and self.paypal_aktiv:
             choices.append((Zahlungsart.PAYPAL, Zahlungsart.PAYPAL.label))
         if self.ueberweisung_aktiv:
             choices.append((Zahlungsart.BANK_TRANSFER, Zahlungsart.BANK_TRANSFER.label))

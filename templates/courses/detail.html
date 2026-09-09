@@ -91,7 +91,11 @@
                 {% if einschreibung %}
                     <a class="btn btn-aboro w-100" href="{% url 'course_learn' kurs.slug %}">Weiterlernen</a>
                 {% elif not kurs.ist_kostenlos and kurs.preis > 0 %}
+                    {% if payment_aktiv %}
                     <a class="btn btn-aboro w-100" href="{% url 'course_checkout' kurs.slug %}">Kurs kaufen</a>
+                    {% else %}
+                    <p class="text-secondary">Der Kauf ist derzeit nicht verfügbar.</p>
+                    {% endif %}
                     <p class="small text-secondary mt-2 mb-0">Nach Zahlung dauerhaft freigeschaltet.</p>
                 {% else %}
                     <form method="post" action="{% url 'course_enroll' kurs.slug %}">

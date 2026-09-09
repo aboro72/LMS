@@ -1,6 +1,35 @@
 # Fehlerbericht ABoroLMS
 
-Stand: 2026-06-29
+Stand: 2026-09-09
+
+## Nachpruefung und ergaenzende Korrektur am 2026-09-09
+
+Die unten dokumentierte Erstkorrektur war unvollstaendig: Die Kursliste war
+rollenbewusst gefiltert, die direkte Kursbearbeitung verwendete aber weiterhin
+`OrganisationMixin` und damit alle aktiven Organisationsprofile. Der GET-Zugriff
+auf einen fremden Kurs lieferte fuer Lernende und Organisationsadministratoren
+mit Trainerrolle in einer anderen Organisation weiterhin HTTP 200 statt 404.
+Neue Regressionstests haben diesen Fehler vor der Korrektur reproduziert.
+
+`TrainerKursUpdateView.get_queryset()` verwendet jetzt ebenfalls
+`trainer_course_queryset()`. Damit werden sowohl direkte GET-Zugriffe als auch
+manipulierte POST-Anfragen auf Kurse ausserhalb der aktiven Trainerorganisationen
+mit HTTP 404 abgewiesen. Dies verhindert auch das Verschieben eines fremden
+Kurses in eine eigene Organisation durch Manipulation des Formulars.
+
+Die neue Testklasse `TrainerCourseEditIsolationTests` prueft fremde Lernenden-
+und Organisationsadministratorprofile, inaktive Trainerprofile sowie den
+weiterhin erlaubten Zugriff aktiver Trainer und Superuser.
+
+Abschliessende Validierung mit `.venv/Scripts/python.exe`:
+
+- `manage.py check`: keine Probleme.
+- `manage.py makemigrations --check --dry-run`: keine ausstehenden Modellaenderungen.
+- `manage.py test --noinput`: 40 Tests in 85.136 Sekunden, alle erfolgreich.
+
+Die nachfolgenden Angaben zu 30 Tests beschreiben die historische Erstpruefung.
+Die aufgefuehrten Rest-Risiken bleiben gesonderte Integrations-, Betriebs- und
+Pruefaufgaben; sie sind durch diese Mandantenkorrektur nicht erledigt.
 
 ## Zusammenfassung
 

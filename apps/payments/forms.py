@@ -1,6 +1,6 @@
 from django import forms
 
-from .models import Zahlungsart
+from .models import Zahlungsart, Zahlungseinstellungen
 
 
 class CheckoutForm(forms.Form):
@@ -14,3 +14,9 @@ class CheckoutForm(forms.Form):
         super().__init__(*args, **kwargs)
         if payment_settings:
             self.fields["zahlungsart"].choices = payment_settings.aktive_zahlungsarten()
+
+
+class PaymentSwitchForm(forms.ModelForm):
+    class Meta:
+        model = Zahlungseinstellungen
+        fields = ("payment_aktiv",)

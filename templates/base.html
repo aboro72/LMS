@@ -76,11 +76,12 @@
                             </ul>
                         </li>
                     {% endif %}
-                    {% if user.is_superuser %}
+                    {% if ist_superadmin %}
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">Superadmin</a>
                             <ul class="dropdown-menu dropdown-menu-end">
-                                <li><a class="dropdown-item" href="{% url 'superadmin_orgs' %}">Organisationen</a></li>
+                                {% if user.is_superuser %}<li><a class="dropdown-item" href="{% url 'superadmin_orgs' %}">Organisationen</a></li>{% endif %}
+                                <li><a class="dropdown-item" href="{% url 'superadmin_payment_settings' %}">Zahlungseinstellungen</a></li>
                                 <li><a class="dropdown-item" href="{% url 'superadmin_payouts' %}">Auszahlungen</a></li>
                                 <li><a class="dropdown-item" href="{% url 'superadmin_audit_log' %}">Audit-Log</a></li>
                             </ul>

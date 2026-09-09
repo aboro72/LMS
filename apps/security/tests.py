@@ -36,3 +36,37 @@ class FieldEncryptionTests(SimpleTestCase):
         with override_settings(FIELD_ENCRYPTION_KEY="not-a-fernet-key"):
             with self.assertRaises(ImproperlyConfigured):
                 encrypt_text("secret")
+
+class ProductionReadinessTests(SimpleTestCase):
+    @override_settings(PRODUCTION=False, FIELD_ENCRYPTION_KEY="j3BQv31KKjfteqM5y4LTfhQf3ru51qCz_02cxydQaDI=", ALLOWED_HOSTS=["*"], EMAIL_BACKEND="django.core.mail.backends.console.EmailBackend")
+    def test_development_configuration_is_rejected(self):
+        from .checks import production_readiness_check
+        ids = {issue.id for issue in production_readiness_check(None)}
+        self.assertTrue({"aborolms.E010", "aborolms.E011", "aborolms.E012", "aborolms.W010"} <= ids)
+
+    @override_settings(PRODUCTION=True, FIELD_ENCRYPTION_KEY="", ALLOWED_HOSTS=["lms.example.com"], EMAIL_BACKEND="django.core.mail.backends.smtp.EmailBackend", EMAIL_HOST="smtp.example.com", EMAIL_USE_TLS=True, EMAIL_USE_SSL=True)
+    def test_conflicting_smtp_modes_are_rejected(self):
+        from .checks import production_readiness_check
+        self.assertIn("aborolms.E014", {issue.id for issue in production_readiness_check(None)})
+
+    @override_settings(SECURE_SSL_REDIRECT=True, SECURE_HSTS_SECONDS=3600, SECURE_CONTENT_TYPE_NOSNIFF=True, SECURE_REFERRER_POLICY="same-origin", ALLOWED_HOSTS=["testserver"])
+    def test_https_redirect_and_security_headers(self):
+        from django.http import HttpResponse
+        from django.middleware.security import SecurityMiddleware
+        from django.test import RequestFactory
+        middleware = SecurityMiddleware(lambda request: HttpResponse("ok"))
+        factory = RequestFactory()
+        response = middleware(factory.get("/"))
+        self.assertEqual(response.status_code, 301)
+        self.assertEqual(response["Location"], "https://testserver/")
+        response = middleware(factory.get("/", secure=True))
+        self.assertEqual(response["Strict-Transport-Security"], "max-age=3600")
+        self.assertEqual(response["X-Content-Type-Options"], "nosniff")
+        self.assertEqual(response["Referrer-Policy"], "same-origin")
+
+
+    @override_settings(DEBUG=False)
+    def test_demo_command_is_blocked_before_database_writes(self):
+        from django.core.management import call_command, CommandError
+        with self.assertRaisesMessage(CommandError, "Entwicklungsumgebung"):
+            call_command("create_demo_data")

@@ -1,7 +1,8 @@
+from django.conf import settings as django_settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.core.files.base import ContentFile
-from django.core.management.base import BaseCommand
+from django.core.management.base import BaseCommand, CommandError
 from django_quill.quill import Quill
 
 from apps.accounts.models import Rolle, UserProfile
@@ -1060,6 +1061,8 @@ class Command(BaseCommand):
     help = "Erstellt / aktualisiert die Demo-Organisation mit vollstaendigen LMS-Inhalten."
 
     def handle(self, *args, **options):
+        if not django_settings.DEBUG:
+            raise CommandError("Demo-Daten duerfen nur in der Entwicklungsumgebung erstellt werden.")
         self._setup_gruppen_und_nutzer()
         organisation = self._setup_organisation()
         self._setup_zahlungseinstellungen()
@@ -1303,7 +1306,7 @@ class Command(BaseCommand):
             einschreibung.bezahlt = True
             einschreibung.save(update_fields=["bezahlt"])
 
-        if not Zahlung.objects.filter(nutzer=learner, kurs=kurs, status=Zahlungsstatus.BEZAHLT).exists():
+        if Zahlungseinstellungen.load().payment_aktiv and not Zahlung.objects.filter(nutzer=learner, kurs=kurs, status=Zahlungsstatus.BEZAHLT).exists():
             zahlung = erstelle_zahlung(kurs, learner, Zahlungsart.STRIPE)
             bestaetige_zahlung(zahlung, provider_referenz="demo-paid-course-access")
 

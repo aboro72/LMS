@@ -7,6 +7,7 @@ def rollen_context(request):
 
     if request.user.is_superuser:
         return {
+            "ist_superadmin": True,
             "ist_trainer": True,
             "ist_examiner": True,
             "ist_org_admin": True,
@@ -46,6 +47,7 @@ def rollen_context(request):
             org_design = None
 
     return {
+        "ist_superadmin": request.user.groups.filter(name=Rolle.SUPERADMIN).exists(),
         "ist_trainer": bool(rollen & {Rolle.TRAINER, Rolle.ORG_ADMIN, Rolle.SUPERADMIN}),
         "ist_examiner": bool(rollen & {Rolle.EXAMINER, Rolle.ORG_ADMIN, Rolle.SUPERADMIN}),
         "ist_org_admin": Rolle.ORG_ADMIN in rollen,

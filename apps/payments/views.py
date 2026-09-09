@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.db.models import Q, Sum
@@ -9,7 +10,7 @@ from django.views.generic import DetailView, FormView, ListView
 
 from apps.courses.models import Einschreibung, Kurs
 
-from .forms import CheckoutForm
+from .forms import CheckoutForm, PaymentSwitchForm
 from .models import AuditLog, Auszahlungsstatus, Rechnung, Zahlung, Zahlungsart, Zahlungsstatus
 from .services import bestaetige_zahlung, erstelle_zahlung, lade_zahlungseinstellungen, log_audit, zahlungsart_ist_automatisch
 
@@ -24,6 +25,8 @@ class CheckoutView(LoginRequiredMixin, FormView):
     template_name = "payments/checkout.html"
 
     def dispatch(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return self.handle_no_permission()
         self.kurs = get_object_or_404(Kurs, slug=kwargs["slug"], ist_veroeffentlicht=True, organisation__aktiv=True)
         if self.kurs.ist_kostenlos or self.kurs.preis <= 0:
             Einschreibung.objects.update_or_create(
@@ -49,7 +52,7 @@ class CheckoutView(LoginRequiredMixin, FormView):
             messages.error(self.request, "Diese Zahlungsart ist aktuell nicht aktiviert.")
             return self.form_invalid(form)
         zahlung = erstelle_zahlung(self.kurs, self.request.user, zahlungsart)
-        if zahlungsart_ist_automatisch(zahlungsart) and self.payment_settings.demo_autoconfirm:
+        if settings.DEBUG and zahlungsart_ist_automatisch(zahlungsart) and self.payment_settings.demo_autoconfirm:
             bestaetige_zahlung(zahlung, provider_referenz=f"demo-{zahlungsart}-{zahlung.zahlung_id}", actor=self.request.user)
             messages.success(self.request, "Zahlung wurde bestaetigt. Der Kurs ist freigeschaltet.")
             return redirect("course_learn", slug=self.kurs.slug)
@@ -184,3 +187,19 @@ class AuditLogListView(SuperadminRequiredMixin, ListView):
         if action:
             queryset = queryset.filter(action=action)
         return queryset
+
+class PaymentSettingsView(SuperadminRequiredMixin, FormView):
+    template_name = "payments/superadmin/settings.html"
+    form_class = PaymentSwitchForm
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs["instance"] = lade_zahlungseinstellungen()
+        return kwargs
+
+    def form_valid(self, form):
+        form.save()
+        log_audit(actor=self.request.user, action="payment_schalter_geaendert",
+                  obj=form.instance, metadata={"payment_aktiv": form.instance.payment_aktiv})
+        messages.success(self.request, "Zahlungseinstellungen gespeichert.")
+        return redirect("superadmin_payment_settings")

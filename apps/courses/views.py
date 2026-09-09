@@ -6,7 +6,7 @@ from django.urls import reverse
 from django.views import View
 from django.views.generic import CreateView, DetailView, ListView, TemplateView, UpdateView
 
-from apps.accounts.mixins import OrganisationMixin, RollenMixin
+from apps.accounts.mixins import RollenMixin
 from apps.accounts.models import Rolle
 
 from .forms import (
@@ -111,6 +111,8 @@ class KursDetailView(DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        from apps.payments.models import Zahlungseinstellungen
+        context["payment_aktiv"] = Zahlungseinstellungen.load().payment_aktiv
         if self.request.user.is_authenticated:
             context["einschreibung"] = Einschreibung.objects.filter(
                 nutzer=self.request.user,
@@ -297,12 +299,15 @@ class TrainerKursCreateView(RollenMixin, CreateView):
         return reverse("trainer_course_edit", kwargs={"slug": self.object.slug})
 
 
-class TrainerKursUpdateView(RollenMixin, OrganisationMixin, UpdateView):
+class TrainerKursUpdateView(RollenMixin, UpdateView):
     rolle = Rolle.TRAINER
     model = Kurs
     form_class = KursForm
     template_name = "courses/trainer/course_form.html"
     slug_url_kwarg = "slug"
+
+    def get_queryset(self):
+        return trainer_course_queryset(self.request.user)
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()

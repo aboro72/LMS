@@ -1,3 +1,4 @@
+from django.core.exceptions import PermissionDenied
 from django.db import transaction
 from django.utils import timezone
 
@@ -8,6 +9,8 @@ from .models import AuditLog, Rechnung, Zahlung, Zahlungsart, Zahlungseinstellun
 
 @transaction.atomic
 def erstelle_zahlung(kurs, nutzer, zahlungsart):
+    if zahlungsart not in dict(lade_zahlungseinstellungen().aktive_zahlungsarten()):
+        raise PermissionDenied("Zahlungen oder diese Zahlungsart sind derzeit deaktiviert.")
     gebuehr, trainer_anteil = Zahlung.berechne_aufteilung(kurs.preis)
     zahlung = Zahlung.objects.create(
         nutzer=nutzer,

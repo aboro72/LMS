@@ -4,6 +4,7 @@ from .views import (
     AuditLogListView,
     BankTransferConfirmView,
     CheckoutView,
+    PaymentSettingsView,
     PaymentCancelView,
     PaymentSuccessView,
     PayoutMarkNotifiedView,
@@ -14,6 +15,7 @@ from .views import (
 
 
 urlpatterns = [
+    path("superadmin/zahlungseinstellungen/", PaymentSettingsView.as_view(), name="superadmin_payment_settings"),
     path("kurse/<slug:slug>/checkout/", CheckoutView.as_view(), name="course_checkout"),
     path("zahlungen/<uuid:zahlung_id>/success/", PaymentSuccessView.as_view(), name="payment_success"),
     path("zahlungen/<uuid:zahlung_id>/cancel/", PaymentCancelView.as_view(), name="payment_cancel"),

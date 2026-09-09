@@ -240,6 +240,12 @@ class OrganisationInvitationTests(BaseLmsTestCase):
 
 
 class PaymentAndInvoiceTests(BaseLmsTestCase):
+    def setUp(self):
+        super().setUp()
+        payment_settings = Zahlungseinstellungen.load()
+        payment_settings.payment_aktiv = True
+        payment_settings.save()
+
     def test_payment_split_uses_configured_commission(self):
         with override_settings(PLATFORM_COMMISSION_PERCENT=20):
             gebuehr, trainer = Zahlung.berechne_aufteilung(Decimal("49.99"))
@@ -305,7 +311,10 @@ class PaymentAndInvoiceTests(BaseLmsTestCase):
         settings_obj.paypal_aktiv = True
         settings_obj.save()
         self.assertEqual(Zahlungseinstellungen.objects.count(), 1)
-        methods = dict(Zahlungseinstellungen.load().aktive_zahlungsarten())
+        settings_obj.demo_autoconfirm = True
+        settings_obj.save()
+        with override_settings(DEBUG=True):
+            methods = dict(Zahlungseinstellungen.load().aktive_zahlungsarten())
         self.assertIn(Zahlungsart.STRIPE, methods)
         self.assertIn(Zahlungsart.GOOGLE_PAY, methods)
         self.assertIn(Zahlungsart.PAYPAL, methods)
@@ -436,6 +445,51 @@ class TrainerExamTenantIsolationTests(BaseLmsTestCase):
         response = self.client.get(reverse("trainer_exam_list"))
         self.assertContains(response, own_exam.titel)
         self.assertNotContains(response, other_exam.titel)
+
+class TrainerCourseEditIsolationTests(BaseLmsTestCase):
+    def test_other_roles_cannot_read_or_modify_course(self):
+        self.client.force_login(self.trainer)
+        url = reverse("trainer_course_edit", kwargs={"slug": self.other_course.slug})
+        for role in (Rolle.LEARNER, Rolle.ORG_ADMIN):
+            with self.subTest(role=role):
+                profile = UserProfile.objects.create(
+                    nutzer=self.trainer, organisation=self.other_org, rolle=role,
+                )
+                self.assertEqual(self.client.get(url).status_code, 404)
+                # A forged POST must not move the foreign course into an allowed organisation.
+                response = self.client.post(url, {
+                    "titel": "Uebernommener Kurs",
+                    "slug": self.other_course.slug,
+                    "beschreibung": json.dumps({"delta": "", "html": "<p>Test</p>"}),
+                    "organisation": self.org.pk,
+                    "sprache": "de",
+                    "niveau": "mittel",
+                    "ist_kostenlos": True,
+                    "preis": "0.00",
+                })
+                self.assertEqual(response.status_code, 404)
+                self.other_course.refresh_from_db()
+                self.assertEqual(self.other_course.organisation_id, self.other_org.pk)
+                self.assertEqual(self.other_course.titel, "Fremder Kurs")
+                profile.delete()
+
+    def test_inactive_trainer_cannot_edit_course(self):
+        UserProfile.objects.create(
+            nutzer=self.trainer, organisation=self.other_org, rolle=Rolle.TRAINER, aktiv=False,
+        )
+        self.client.force_login(self.trainer)
+        url = reverse("trainer_course_edit", kwargs={"slug": self.other_course.slug})
+        self.assertEqual(self.client.get(url).status_code, 404)
+        self.assertEqual(self.client.post(url, {}).status_code, 404)
+
+    def test_active_trainer_and_superuser_can_edit_course(self):
+        self.client.force_login(self.trainer)
+        url = reverse("trainer_course_edit", kwargs={"slug": self.kurs.slug})
+        self.assertEqual(self.client.get(url).status_code, 200)
+        self.client.force_login(self.superuser)
+        url = reverse("trainer_course_edit", kwargs={"slug": self.other_course.slug})
+        self.assertEqual(self.client.get(url).status_code, 200)
+
 
 class EncryptedModelFieldTests(BaseLmsTestCase):
     def test_payment_settings_secrets_are_encrypted_in_database(self):

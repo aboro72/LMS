@@ -35,7 +35,7 @@
                 </form>
             {% else %}
                 <div class="alert alert-warning">
-                    Es ist noch keine Zahlungsart aktiviert. Ein Administrator kann Zahlungsanbieter im Django Admin konfigurieren.
+                    Zahlungen sind derzeit nicht verfügbar. Bitte versuche es später erneut.
                 </div>
                 <a class="btn btn-outline-secondary" href="{% url 'course_detail' kurs.slug %}">Zurueck</a>
             {% endif %}

@@ -6,14 +6,23 @@ from .models import AuditLog, Auszahlungsstatus, Rechnung, Zahlung, Zahlungseins
 @admin.register(Zahlungseinstellungen)
 class ZahlungseinstellungenAdmin(admin.ModelAdmin):
     fieldsets = (
-        ("Allgemein", {"fields": ("demo_autoconfirm", "ueberweisung_aktiv")}),
+        ("Allgemein", {"fields": ("payment_aktiv", "demo_autoconfirm", "ueberweisung_aktiv")}),
         ("Stripe und Google Pay", {"fields": ("stripe_aktiv", "stripe_public_key", "stripe_secret_key", "google_pay_aktiv")}),
         ("PayPal", {"fields": ("paypal_aktiv", "paypal_client_id", "paypal_secret")}),
         ("Ueberweisung", {"fields": ("kontoinhaber", "iban", "bic", "bankname")}),
     )
 
     def has_add_permission(self, request):
-        return not Zahlungseinstellungen.objects.exists()
+        return request.user.is_superuser and not Zahlungseinstellungen.objects.exists()
+
+    def has_view_permission(self, request, obj=None):
+        return request.user.is_superuser
+
+    def has_change_permission(self, request, obj=None):
+        return request.user.is_superuser
+
+    def has_delete_permission(self, request, obj=None):
+        return False
 
 
 @admin.register(Zahlung)

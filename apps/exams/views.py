@@ -2,19 +2,32 @@ import json
 
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.core.exceptions import ValidationError
+from django.db import transaction
 from django.db.models import Avg, Count
-from django.shortcuts import get_object_or_404, redirect
+from django.http import HttpResponse, JsonResponse
+from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
 from django.views import View
-from django.views.generic import CreateView, DetailView, FormView, ListView, TemplateView, UpdateView
+from django.views.generic import CreateView, DeleteView, DetailView, FormView, ListView, TemplateView, UpdateView
 
 from apps.accounts.mixins import RollenMixin
 from apps.accounts.models import Rolle
 
-from .forms import AntwortForm, CSVImportForm, FrageForm, FragenkatalogForm, FreitextBewertungForm, PruefungForm, ZuordnungsPaarForm
-from .models import Antwort, Frage, Fragenkatalog, Pruefung, PruefungsVersuch, TeilnehmerAntwort, ZuordnungsPaar
-from .services import MaxVersucheErreicht, pruefe_zeitlimit, speichere_antwort, starte_pruefung, werte_versuch_aus
+from .forms import (
+    AntwortForm,
+    CSVImportForm,
+    FrageForm,
+    FragenkatalogForm,
+    FreitextBewertungForm,
+    PruefungForm,
+    PruefungsThemenquoteFormSet,
+    ZuordnungsPaarForm,
+)
+from .models import Antwort, Frage, Fragenkatalog, FragenTag, Pruefung, PruefungsAnmeldung, PruefungsVersuch, TeilnehmerAntwort, ZuordnungsPaar
+from .pdf import generiere_pruefungsbogen_pdf
+from .services import NichtGenugFragenInThema, MaxVersucheErreicht, pruefe_zeitlimit, speichere_antwort, starte_pruefung, waehle_pruefungsfragen, werte_versuch_aus
 
 
 def trainer_catalog_queryset(user):
@@ -83,29 +96,109 @@ class TrainerFragenkatalogUpdateView(RollenMixin, UpdateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["fragen"] = self.object.fragen.prefetch_related("antworten", "zuordnungen")
-        context["frage_form"] = FrageForm(fragenkatalog=self.object)
+        context["fragen"] = self.object.fragen.prefetch_related("antworten", "zuordnungen", "tags")
+        frage_form = FrageForm(fragenkatalog=self.object)
+        frage_form.fields["themen"].widget.attrs["list"] = "vorhandene-themen"
+        context["frage_form"] = frage_form
+        context["themen"] = FragenTag.objects.filter(
+            organisation=self.object.organisation,
+            frage__fragenkatalog=self.object,
+        ).distinct().order_by("name")
         context["antwort_form"] = AntwortForm()
         context["zuordnung_form"] = ZuordnungsPaarForm()
         context["csv_form"] = CSVImportForm()
         return context
 
 
+class TrainerFragenkatalogDeleteView(RollenMixin, DeleteView):
+    rolle = Rolle.TRAINER
+    model = Fragenkatalog
+    template_name = "exams/trainer/catalog_confirm_delete.html"
+
+    def get_queryset(self):
+        return trainer_catalog_queryset(self.request.user)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["fragen_anzahl"] = self.object.fragen.count()
+        context["pruefungen_anzahl"] = Pruefung.objects.filter(fragenkatalog=self.object).count()
+        return context
+
+    def get_success_url(self):
+        return reverse("trainer_catalog_list")
+
+    def form_valid(self, form):
+        titel = self.object.titel
+        response = super().form_valid(form)
+        messages.success(self.request, f"Fragenkatalog „{titel}“ wurde gelöscht.")
+        return response
+
+
 class TrainerFrageCreateView(RollenMixin, View):
     rolle = Rolle.TRAINER
 
+    def get_katalog(self):
+        return get_object_or_404(trainer_catalog_queryset(self.request.user), id=self.kwargs["katalog_id"])
+
+    def get_context(self, katalog, form=None):
+        form = form or FrageForm(fragenkatalog=katalog)
+        form.fields["themen"].widget.attrs["list"] = "vorhandene-themen"
+        return {
+            "katalog": katalog,
+            "form": form,
+            "themen": FragenTag.objects.filter(
+                organisation=katalog.organisation,
+                frage__fragenkatalog=katalog,
+            ).distinct().order_by("name"),
+        }
+
+    def get(self, request, *args, **kwargs):
+        katalog = self.get_katalog()
+        return render(request, "exams/trainer/question_create.html", self.get_context(katalog))
+
+    def _is_correct(self, value):
+        return str(value or "").strip().lower() in {"1", "true", "wahr", "richtig", "ja", "yes", "x", "on"}
+
+    def _save_entries(self, frage, post_data):
+        if frage.typ in [Frage.Typ.SINGLE_CHOICE, Frage.Typ.MULTIPLE_CHOICE, Frage.Typ.WAHR_FALSCH]:
+            for index in range(1, 9):
+                antworttext = post_data.get(f"antwort_{index}", "").strip()
+                if antworttext:
+                    Antwort.objects.create(
+                        frage=frage,
+                        antworttext=antworttext,
+                        ist_korrekt=self._is_correct(post_data.get(f"korrekt_{index}")),
+                        reihenfolge=index,
+                    )
+        elif frage.typ == Frage.Typ.ZUORDNUNG:
+            for index in range(1, 6):
+                links = post_data.get(f"links_{index}", "").strip()
+                rechts = post_data.get(f"rechts_{index}", "").strip()
+                if links and rechts:
+                    ZuordnungsPaar.objects.create(
+                        frage=frage,
+                        linkes_element=links,
+                        rechtes_element=rechts,
+                        reihenfolge=index,
+                    )
+
     def post(self, request, katalog_id):
-        katalog = get_object_or_404(trainer_catalog_queryset(request.user), id=katalog_id)
+        katalog = self.get_katalog()
         form = FrageForm(request.POST, fragenkatalog=katalog)
         if form.is_valid():
             frage = form.save(commit=False)
             frage.fragenkatalog = katalog
             frage.save()
             form.save_m2m()
-            messages.success(request, "Frage wurde erstellt.")
+            form.save_themen(frage)
+            self._save_entries(frage, request.POST)
+            messages.success(request, "Frage wurde mit Antworten erstellt.")
+            if "weitere_frage" in request.POST:
+                return redirect("trainer_question_create", katalog_id=katalog.pk)
+            return redirect("trainer_catalog_edit", pk=katalog.pk)
         else:
             messages.error(request, "Frage konnte nicht erstellt werden.")
-        return redirect("trainer_catalog_edit", pk=katalog.pk)
+            return render(request, "exams/trainer/question_create.html", self.get_context(katalog, form))
 
 
 class TrainerAntwortCreateView(RollenMixin, View):
@@ -132,8 +225,13 @@ class TrainerCSVImportView(RollenMixin, View):
         katalog = get_object_or_404(trainer_catalog_queryset(request.user), id=katalog_id)
         form = CSVImportForm(request.POST, request.FILES)
         if form.is_valid():
-            erstellt = form.importiere(katalog)
-            messages.success(request, f"{erstellt} Fragen wurden importiert.")
+            try:
+                with transaction.atomic():
+                    erstellt = form.importiere(katalog)
+            except (ValidationError, ValueError) as exc:
+                messages.error(request, f"CSV-Datei konnte nicht importiert werden: {exc}")
+            else:
+                messages.success(request, f"{erstellt} Fragen mit Antworten wurden importiert.")
         else:
             messages.error(request, "CSV-Datei konnte nicht importiert werden.")
         return redirect("trainer_catalog_edit", pk=katalog.pk)
@@ -148,7 +246,52 @@ class TrainerPruefungListView(RollenMixin, ListView):
         return trainer_exam_queryset(self.request.user)
 
 
-class TrainerPruefungCreateView(RollenMixin, CreateView):
+class TrainerKatalogThemenView(RollenMixin, View):
+    rolle = Rolle.TRAINER
+
+    def get(self, request, pk):
+        katalog = get_object_or_404(trainer_catalog_queryset(request.user), pk=pk)
+        themen = FragenTag.objects.filter(
+            organisation=katalog.organisation,
+            frage__fragenkatalog=katalog,
+        ).distinct().order_by("name")
+        return JsonResponse({"themen": [{"id": thema.pk, "name": thema.name} for thema in themen]})
+
+
+class TrainerPruefungFormMixin:
+    themen_formset_class = PruefungsThemenquoteFormSet
+
+    def get_themen_formset(self, data=None):
+        return self.themen_formset_class(
+            data=data,
+            instance=self.object or Pruefung(),
+            form_kwargs={"pruefung": self.object},
+        )
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["themen_formset"] = kwargs.get("themen_formset") or self.get_themen_formset()
+        return context
+
+    def form_valid(self, form):
+        self.object = form.save(commit=False)
+        themen_formset = self.get_themen_formset(data=self.request.POST)
+        if not themen_formset.is_valid():
+            return self.render_to_response(self.get_context_data(form=form, themen_formset=themen_formset))
+        with transaction.atomic():
+            self.object.save()
+            form.save_m2m()
+            themen_formset.instance = self.object
+            themen_formset.save()
+        return redirect(self.get_success_url())
+
+    def form_invalid(self, form):
+        return self.render_to_response(
+            self.get_context_data(form=form, themen_formset=self.get_themen_formset(data=self.request.POST))
+        )
+
+
+class TrainerPruefungCreateView(TrainerPruefungFormMixin, RollenMixin, CreateView):
     rolle = Rolle.TRAINER
     form_class = PruefungForm
     template_name = "exams/trainer/exam_form.html"
@@ -163,7 +306,7 @@ class TrainerPruefungCreateView(RollenMixin, CreateView):
         return reverse("trainer_exam_list")
 
 
-class TrainerPruefungUpdateView(RollenMixin, UpdateView):
+class TrainerPruefungUpdateView(TrainerPruefungFormMixin, RollenMixin, UpdateView):
     rolle = Rolle.TRAINER
     form_class = PruefungForm
     template_name = "exams/trainer/exam_form.html"
@@ -181,6 +324,24 @@ class TrainerPruefungUpdateView(RollenMixin, UpdateView):
         return reverse("trainer_exam_list")
 
 
+class TrainerPruefungsbogenPDFView(RollenMixin, View):
+    rolle = Rolle.TRAINER
+
+    def get(self, request, pk, variante):
+        pruefung = get_object_or_404(trainer_exam_queryset(request.user), pk=pk)
+        try:
+            fragen = waehle_pruefungsfragen(pruefung)
+        except NichtGenugFragenInThema as exc:
+            messages.error(request, f"Prüfungsbogen konnte nicht erzeugt werden: {exc}")
+            return redirect("trainer_exam_edit", pk=pruefung.pk)
+        mit_loesungen = variante == "trainer"
+        pdf_bytes = generiere_pruefungsbogen_pdf(pruefung, fragen, mit_loesungen=mit_loesungen)
+        response = HttpResponse(pdf_bytes, content_type="application/pdf")
+        name = "trainer-loesungen" if mit_loesungen else "teilnehmer"
+        response["Content-Disposition"] = f'attachment; filename="pruefungsbogen-{pruefung.pk}-{name}.pdf"'
+        return response
+
+
 class PruefungDetailView(LoginRequiredMixin, DetailView):
     model = Pruefung
     template_name = "exams/detail.html"
@@ -189,14 +350,33 @@ class PruefungDetailView(LoginRequiredMixin, DetailView):
     def get_queryset(self):
         return Pruefung.objects.filter(ist_aktiv=True, organisation__aktiv=True)
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["angemeldet"] = PruefungsAnmeldung.objects.filter(nutzer=self.request.user, pruefung=self.object).exists()
+        return context
+
+
+class PruefungEinschreibenView(LoginRequiredMixin, View):
+    def post(self, request, pk):
+        pruefung = get_object_or_404(Pruefung, pk=pk, ist_aktiv=True, organisation__aktiv=True)
+        PruefungsAnmeldung.objects.get_or_create(nutzer=request.user, pruefung=pruefung)
+        messages.success(request, "Sie sind zur Prüfung angemeldet.")
+        return redirect("exam_detail", pk=pruefung.pk)
+
 
 class PruefungStartView(LoginRequiredMixin, View):
     def post(self, request, pk):
         pruefung = get_object_or_404(Pruefung, pk=pk, ist_aktiv=True, organisation__aktiv=True)
+        if not PruefungsAnmeldung.objects.filter(nutzer=request.user, pruefung=pruefung).exists():
+            messages.error(request, "Bitte melden Sie sich zuerst zur Prüfung an.")
+            return redirect("exam_detail", pk=pruefung.pk)
         try:
             versuch = starte_pruefung(pruefung, request.user)
         except MaxVersucheErreicht:
             messages.error(request, "Maximale Anzahl an Versuchen erreicht.")
+            return redirect("exam_detail", pk=pruefung.pk)
+        except NichtGenugFragenInThema as exc:
+            messages.error(request, f"Prüfung kann nicht gestartet werden: {exc}")
             return redirect("exam_detail", pk=pruefung.pk)
         request.session[f"exam_{versuch.id}_max_index"] = 0
         messages.success(request, "Pruefung wurde gestartet.")
@@ -274,7 +454,18 @@ class PruefungErgebnisView(LoginRequiredMixin, DetailView):
     pk_url_kwarg = "versuch_id"
 
     def get_queryset(self):
-        return PruefungsVersuch.objects.filter(nutzer=self.request.user).select_related("pruefung")
+        return PruefungsVersuch.objects.filter(nutzer=self.request.user, einsehbar_bis__gte=timezone.now()).select_related("pruefung")
+
+
+class PruefungErgebnisListeView(LoginRequiredMixin, ListView):
+    template_name = "exams/result_list.html"
+    context_object_name = "versuche"
+
+    def get_queryset(self):
+        return PruefungsVersuch.objects.filter(
+            nutzer=self.request.user,
+            status__in=[PruefungsVersuch.Status.ABGESCHLOSSEN, PruefungsVersuch.Status.AUSSTEHEND, PruefungsVersuch.Status.ABGELAUFEN],
+        ).filter(einsehbar_bis__gte=timezone.now()).select_related("pruefung")
 
 
 class ExaminerQueueView(RollenMixin, ListView):
@@ -284,7 +475,7 @@ class ExaminerQueueView(RollenMixin, ListView):
 
     def get_queryset(self):
         queryset = TeilnehmerAntwort.objects.filter(
-            frage__typ=Frage.Typ.FREITEXT,
+            frage__typ__in=[Frage.Typ.FREITEXT, Frage.Typ.SZENARIO],
             freitext_punkte__isnull=True,
             versuch__status=PruefungsVersuch.Status.AUSSTEHEND,
         ).select_related("versuch", "versuch__pruefung", "frage", "versuch__nutzer")
@@ -304,7 +495,7 @@ class ExaminerBewertungView(RollenMixin, UpdateView):
         return ExaminerQueueView().get_queryset()
 
     def get_object(self, queryset=None):
-        queryset = TeilnehmerAntwort.objects.filter(frage__typ=Frage.Typ.FREITEXT).select_related("versuch", "frage", "versuch__nutzer")
+        queryset = TeilnehmerAntwort.objects.filter(frage__typ__in=[Frage.Typ.FREITEXT, Frage.Typ.SZENARIO]).select_related("versuch", "frage", "versuch__nutzer")
         if not self.request.user.is_superuser:
             organisation_ids = self.request.user.profile.filter(aktiv=True).values_list("organisation_id", flat=True)
             queryset = queryset.filter(versuch__pruefung__organisation_id__in=organisation_ids)

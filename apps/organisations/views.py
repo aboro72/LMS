@@ -1,11 +1,14 @@
+import json
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import PermissionDenied
 from django.db.models import Count, Sum
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from django.views import View
 from django.utils import timezone
 from django.views.generic import CreateView, ListView, TemplateView
+from django_quill.quill import Quill
 
 from apps.accounts.mixins import RollenMixin
 from apps.accounts.models import Rolle, UserProfile
@@ -17,6 +20,7 @@ from .forms import (
     OrganisationEmailKonfigForm,
     OrganisationSignupForm,
     OrganisationStartseiteForm,
+    OrganisationWeiterleitungForm,
 )
 from .models import (
     Einladung,
@@ -223,8 +227,12 @@ class OrgDesignView(RollenMixin, View):
 class OrgStartseiteView(RollenMixin, View):
     rolle = Rolle.ORG_ADMIN
 
-    def _ctx(self, org, form):
-        return {"form": form, "org": org}
+    def _ctx(self, org, form, weiterleitung_form=None):
+        return {
+            "form": form,
+            "weiterleitung_form": weiterleitung_form or OrganisationWeiterleitungForm(instance=org),
+            "org": org,
+        }
 
     def get(self, request, slug):
         org = _get_org_for_admin(request, slug)
@@ -236,16 +244,67 @@ class OrgStartseiteView(RollenMixin, View):
         org = _get_org_for_admin(request, slug)
         seite, _ = OrganisationStartseite.objects.get_or_create(organisation=org)
         form = OrganisationStartseiteForm(request.POST, request.FILES, instance=seite)
-        if form.is_valid():
+        weiterleitung_form = OrganisationWeiterleitungForm(request.POST, instance=org)
+        if form.is_valid() and weiterleitung_form.is_valid():
             form.save()
+            weiterleitung_form.save()
             messages.success(request, "Startseite gespeichert.")
             return redirect("org_startseite", slug=slug)
-        return render(request, "organisations/startseite_editor.html", self._ctx(org, form))
+        return render(request, "organisations/startseite_editor.html", self._ctx(org, form, weiterleitung_form))
+
+
+class OrgStartseitePageBuilderView(RollenMixin, View):
+    rolle = Rolle.ORG_ADMIN
+
+    def _ctx(self, org, seite):
+        try:
+            builder_html = seite.inhalt.html
+        except Exception:
+            builder_html = ""
+        return {
+            "org": org,
+            "seite": seite,
+            "builder_html": builder_html or "",
+            "weiterleitung_form": OrganisationWeiterleitungForm(instance=org),
+        }
+
+    def get(self, request, slug):
+        org = _get_org_for_admin(request, slug)
+        seite, _ = OrganisationStartseite.objects.get_or_create(organisation=org)
+        return render(request, "organisations/startseite_pagebuilder.html", self._ctx(org, seite))
+
+    def post(self, request, slug):
+        org = _get_org_for_admin(request, slug)
+        seite, _ = OrganisationStartseite.objects.get_or_create(organisation=org)
+        weiterleitung_form = OrganisationWeiterleitungForm(request.POST, instance=org)
+        if not weiterleitung_form.is_valid():
+            messages.error(request, "Weiterleitungs-URL konnte nicht gespeichert werden.")
+            context = self._ctx(org, seite)
+            context["weiterleitung_form"] = weiterleitung_form
+            return render(request, "organisations/startseite_pagebuilder.html", context)
+
+        seite.aktiv = request.POST.get("aktiv") == "on"
+        seite.hero_titel = request.POST.get("hero_titel", "").strip()
+        seite.hero_untertitel = request.POST.get("hero_untertitel", "").strip()
+        seite.hero_button_text = request.POST.get("hero_button_text", "").strip() or "Kurse entdecken"
+        if request.FILES.get("hero_bild"):
+            seite.hero_bild = request.FILES["hero_bild"]
+        html = request.POST.get("builder_html", "").strip()
+        seite.inhalt = Quill(json.dumps({"delta": "", "html": html}))
+        seite.save()
+        weiterleitung_form.save()
+        messages.success(request, "PageBuilder-Inhalt gespeichert.")
+        return redirect("org_startseite_pagebuilder", slug=org.slug)
 
 
 # --------------------------------------------------------------------------- #
 # Öffentliche Organisations-Startseite
 # --------------------------------------------------------------------------- #
+class OffentlicheStartseiteRedirectView(View):
+    def get(self, request, slug):
+        return redirect("org_public_home", slug=slug, permanent=True)
+
+
 class OffentlicheStartseiteView(TemplateView):
     template_name = "organisations/public_home.html"
 
@@ -269,6 +328,8 @@ class OffentlicheStartseiteView(TemplateView):
         )
         context.update({
             "org": org,
+            "tenant_org": org,
+            "meine_org": org,
             "startseite": startseite,
             "org_design": org_design,
             "kurse": kurse,

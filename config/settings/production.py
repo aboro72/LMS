@@ -62,7 +62,17 @@ else:
 
 CSRF_COOKIE_SECURE = True
 SESSION_COOKIE_SECURE = True
+CSRF_TRUSTED_ORIGINS = config(
+    "CSRF_TRUSTED_ORIGINS",
+    default=",".join(
+        f"https://{host}"
+        for host in ALLOWED_HOSTS  # noqa: F405
+        if host not in {"localhost", "127.0.0.1"}
+    ),
+    cast=Csv(),  # noqa: F405
+)
 SECURE_SSL_REDIRECT = config("SECURE_SSL_REDIRECT", default=True, cast=bool)  # noqa: F405
+ALLAUTH_TRUSTED_PROXY_COUNT = config("ALLAUTH_TRUSTED_PROXY_COUNT", default=1, cast=int)  # noqa: F405
 
 if config("AWS_STORAGE_BUCKET_NAME", default=""):  # noqa: F405
     INSTALLED_APPS += ["storages"]  # noqa: F405

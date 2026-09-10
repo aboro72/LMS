@@ -26,6 +26,11 @@ class Organisation(models.Model):
     logo = models.ImageField(upload_to="logos/", blank=True)
     kontakt_email = models.EmailField()
     website = models.URLField(blank=True)
+    weiterleitungs_url = models.URLField(
+        blank=True,
+        verbose_name="Weiterleitungs-URL",
+        help_text="Optionale externe oder alte URL, die auf die Mandanten-Startseite weiterleitet.",
+    )
     lizenz_typ = models.CharField(max_length=20, choices=LizenzTyp.choices, default=LizenzTyp.BASIC)
     max_nutzer = models.PositiveIntegerField(default=50)
     max_kurse = models.PositiveIntegerField(default=10)

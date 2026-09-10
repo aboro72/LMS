@@ -27,12 +27,12 @@
 <nav class="navbar navbar-expand-lg navbar-dark aboro-navbar">
     <div class="container">
         {% if org_design and org_design.logo %}
-            <a class="navbar-brand" href="{% url 'home' %}">
+            <a class="navbar-brand" href="{% if tenant_org %}{% url 'org_public_home' tenant_org.slug %}{% else %}{% url 'home' %}{% endif %}">
                 <img src="{{ org_design.logo.url }}" alt="{{ meine_org.name|default:'ABoroLMS' }}"
                      style="max-height:36px; max-width:160px; object-fit:contain;">
             </a>
         {% else %}
-            <a class="navbar-brand fw-semibold" href="{% url 'home' %}">
+            <a class="navbar-brand fw-semibold" href="{% if tenant_org %}{% url 'org_public_home' tenant_org.slug %}{% else %}{% url 'home' %}{% endif %}">
                 {% if meine_org %}{{ meine_org.name }}{% else %}ABoroLMS{% endif %}
             </a>
         {% endif %}
@@ -43,13 +43,14 @@
         <div class="collapse navbar-collapse" id="mainNav">
             <ul class="navbar-nav ms-auto align-items-lg-center gap-lg-2">
                 {% if user.is_authenticated %}
-                    <li class="nav-item"><a class="nav-link" href="{% url 'course_catalog' %}">Kurse</a></li>
-                    <li class="nav-item"><a class="nav-link" href="{% url 'learning_path_list' %}">Lernpfade</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{% if tenant_org %}{% url 'tenant_course_catalog' tenant_org.slug %}{% else %}{% url 'course_catalog' %}{% endif %}">Kurse</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{% if tenant_org %}{% url 'tenant_learning_path_list' tenant_org.slug %}{% else %}{% url 'learning_path_list' %}{% endif %}">Lernpfade</a></li>
                     {% if ist_trainer %}
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">Trainer</a>
                             <ul class="dropdown-menu dropdown-menu-end">
                                 <li><a class="dropdown-item" href="{% url 'trainer_course_list' %}">Kursverwaltung</a></li>
+                                <li><a class="dropdown-item" href="{% url 'trainer_learning_path_list' %}">Lernpfade</a></li>
                                 <li><a class="dropdown-item" href="{% url 'trainer_revenue_dashboard' %}">Umsatz</a></li>
                                 <li><hr class="dropdown-divider"></li>
                                 <li><a class="dropdown-item" href="{% url 'trainer_catalog_list' %}">Fragenkataloge</a></li>
@@ -87,6 +88,7 @@
                             </ul>
                         </li>
                     {% endif %}
+                    <li class="nav-item"><a class="nav-link" href="{% url 'role_help' %}">Hilfe</a></li>
                     <li class="nav-item"><a class="nav-link" href="{% url 'dashboard' %}">Dashboard</a></li>
                     <li class="nav-item">
                         <form method="post" action="{% url 'account_logout' %}">
@@ -95,8 +97,8 @@
                         </form>
                     </li>
                 {% else %}
-                    <li class="nav-item"><a class="nav-link" href="{% url 'course_catalog' %}">Kurse</a></li>
-                    <li class="nav-item"><a class="nav-link" href="{% url 'learning_path_list' %}">Lernpfade</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{% if tenant_org %}{% url 'tenant_course_catalog' tenant_org.slug %}{% else %}{% url 'course_catalog' %}{% endif %}">Kurse</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{% if tenant_org %}{% url 'tenant_learning_path_list' tenant_org.slug %}{% else %}{% url 'learning_path_list' %}{% endif %}">Lernpfade</a></li>
                     <li class="nav-item"><a class="nav-link" href="{% url 'account_login' %}">Login</a></li>
                     <li class="nav-item"><a class="btn btn-sm btn-aboro" href="{% url 'register' %}">Registrieren</a></li>
                 {% endif %}

@@ -1061,8 +1061,10 @@ class Command(BaseCommand):
     help = "Erstellt / aktualisiert die Demo-Organisation mit vollstaendigen LMS-Inhalten."
 
     def handle(self, *args, **options):
-        if not django_settings.DEBUG:
-            raise CommandError("Demo-Daten duerfen nur in der Entwicklungsumgebung erstellt werden.")
+        if not django_settings.DEBUG and not getattr(django_settings, "DEMO_DATA_ALLOW_PRODUCTION", False):
+            raise CommandError(
+                "Demo-Daten duerfen nur mit DEBUG=True oder DEMO_DATA_ALLOW_PRODUCTION=True erstellt werden."
+            )
         self._setup_gruppen_und_nutzer()
         organisation = self._setup_organisation()
         self._setup_zahlungseinstellungen()

@@ -11,13 +11,18 @@ from .models import (
 )
 
 
+RESERVIERTE_MANDANTEN_SLUGS = {"admin", "accounts", "kurse", "lernpfade", "trainer", "examiner", "pruefungen", "zahlungen", "rechnungen", "organisationen", "superadmin", "media", "static", "o", "dashboard", "hilfe"}
+
+
 class OrganisationSignupForm(forms.ModelForm):
     class Meta:
         model = Organisation
-        fields = ("name", "slug", "kontakt_email", "website")
+        fields = ("name", "slug", "kontakt_email", "website", "weiterleitungs_url")
 
     def clean_slug(self):
-        slug = self.cleaned_data["slug"]
+        slug = self.cleaned_data["slug"].strip().lower()
+        if slug in RESERVIERTE_MANDANTEN_SLUGS:
+            raise forms.ValidationError("Dieser Slug ist fuer Systemseiten reserviert.")
         if Organisation.objects.filter(slug=slug).exists():
             raise forms.ValidationError("Dieser Slug ist bereits vergeben.")
         return slug
@@ -33,6 +38,15 @@ class EinladungForm(forms.Form):
         ],
         label="Rolle",
     )
+
+
+class OrganisationWeiterleitungForm(forms.ModelForm):
+    class Meta:
+        model = Organisation
+        fields = ["weiterleitungs_url"]
+        widgets = {
+            "weiterleitungs_url": forms.URLInput(attrs={"class": "form-control", "placeholder": "https://kunde.example/"}),
+        }
 
 
 class OrganisationEmailKonfigForm(forms.ModelForm):

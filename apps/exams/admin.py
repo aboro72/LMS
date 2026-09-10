@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Antwort, Frage, Fragenkatalog, FragenTag, Pruefung, PruefungsVersuch, TeilnehmerAntwort, ZuordnungsPaar
+from .models import Antwort, Frage, Fragenkatalog, FragenTag, Pruefung, PruefungsThemenquote, PruefungsVersuch, TeilnehmerAntwort, ZuordnungsPaar
 
 
 class AntwortInline(admin.TabularInline):
@@ -11,6 +11,11 @@ class AntwortInline(admin.TabularInline):
 class ZuordnungsPaarInline(admin.TabularInline):
     model = ZuordnungsPaar
     extra = 2
+
+
+class PruefungsThemenquoteInline(admin.TabularInline):
+    model = PruefungsThemenquote
+    extra = 1
 
 
 @admin.register(Fragenkatalog)
@@ -54,6 +59,7 @@ class PruefungAdmin(admin.ModelAdmin):
     list_display = ("titel", "organisation", "fragenkatalog", "anzahl_fragen", "ist_aktiv")
     list_filter = ("ist_aktiv", "organisation")
     search_fields = ("titel", "beschreibung", "fragenkatalog__titel")
+    inlines = (PruefungsThemenquoteInline,)
 
 
 @admin.register(PruefungsVersuch)

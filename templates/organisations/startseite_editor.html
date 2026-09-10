@@ -24,11 +24,12 @@
         <p class="text-secondary mb-0">
             Öffentliche Adresse:
             <a href="{% url 'org_public_home' org.slug %}" target="_blank">
-                /o/{{ org.slug }}/
+                /{{ org.slug }}/
             </a>
         </p>
     </div>
     <div class="d-flex gap-2">
+        <a class="btn btn-outline-secondary" href="{% url 'org_startseite_pagebuilder' org.slug %}">PageBuilder</a>
         <a class="btn btn-outline-secondary" href="{% url 'org_public_home' org.slug %}" target="_blank">Vorschau</a>
         <a class="btn btn-outline-secondary" href="{% url 'org_admin_dashboard' org.slug %}">Zurück</a>
     </div>
@@ -41,7 +42,7 @@
         <div class="col-lg-8">
 
             <div class="aboro-panel mb-4">
-                <div class="form-check form-switch mb-0">
+                <div class="form-check form-switch mb-3">
                     {{ form.aktiv }}
                     <label class="form-check-label fw-semibold" for="{{ form.aktiv.id_for_label }}">
                         {{ form.aktiv.label }}
@@ -49,6 +50,10 @@
                     <div class="form-text">{{ form.aktiv.help_text }}</div>
                     {% if form.aktiv.errors %}<div class="text-danger small">{{ form.aktiv.errors }}</div>{% endif %}
                 </div>
+                <label class="form-label fw-semibold" for="{{ weiterleitung_form.weiterleitungs_url.id_for_label }}">{{ weiterleitung_form.weiterleitungs_url.label }}</label>
+                {{ weiterleitung_form.weiterleitungs_url }}
+                <div class="form-text">{{ weiterleitung_form.weiterleitungs_url.help_text }}</div>
+                {% if weiterleitung_form.weiterleitungs_url.errors %}<div class="text-danger small mt-1">{{ weiterleitung_form.weiterleitungs_url.errors }}</div>{% endif %}
             </div>
 
             <div class="aboro-panel mb-4">

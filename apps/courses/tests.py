@@ -13,7 +13,7 @@ from django_quill.quill import Quill
 
 from apps.accounts.models import Rolle, User, UserProfile
 from apps.certificates.models import Zertifikat
-from apps.courses.forms import BegleitmaterialForm, LektionForm
+from apps.courses.forms import BegleitmaterialForm, KursForm, LektionForm
 from apps.courses.models import (
     Abschnitt,
     Einschreibung,
@@ -143,10 +143,59 @@ class UploadValidationTests(BaseLmsTestCase):
 
 
 class CourseAccessAndReviewTests(BaseLmsTestCase):
+    def test_reine_zertifikatspruefung_benoetigt_eine_zugeordnete_pruefung(self):
+        katalog, _, pruefung = self.create_exam()
+        form = KursForm(data={
+            "titel": "Netzwerk Zertifikat",
+            "beschreibung": "",
+            "organisation": self.org.pk,
+            "sprache": "de",
+            "niveau": "anfaenger",
+            "angebotstyp": Kurs.Angebotstyp.ZERTIFIKAT,
+            "pruefung": pruefung.pk,
+            "ist_kostenlos": "on",
+            "preis": "0",
+        })
+
+        self.assertTrue(form.is_valid(), form.errors)
+        self.assertEqual(form.save(commit=False).angebotstyp, Kurs.Angebotstyp.ZERTIFIKAT)
+
+    def test_trainer_can_create_course_with_title_only_and_automatic_slug(self):
+        self.client.force_login(self.trainer)
+
+        response = self.client.post(
+            reverse("trainer_course_create"),
+            {
+                "titel": "Netzwerk Technik",
+                "organisation": self.org.pk,
+                "sprache": "de",
+                "niveau": "anfaenger",
+                "angebotstyp": Kurs.Angebotstyp.KURS,
+                "ist_kostenlos": "on",
+                "preis": "0",
+            },
+        )
+
+        kurs = Kurs.objects.get(titel="Netzwerk Technik")
+        self.assertRedirects(response, reverse("trainer_course_edit", kwargs={"slug": "netzwerk-technik"}))
+        self.assertEqual(kurs.slug, "netzwerk-technik")
+
     def test_unpaid_user_is_redirected_to_checkout_for_paid_course(self):
         self.client.force_login(self.learner)
         response = self.client.get(reverse("course_learn", kwargs={"slug": self.kurs.slug}))
         self.assertRedirects(response, reverse("course_checkout", kwargs={"slug": self.kurs.slug}))
+
+    def test_free_course_is_immediately_accessible_and_enrolled(self):
+        self.client.force_login(self.learner)
+        response = self.client.get(reverse("course_learn", kwargs={"slug": self.free_course.slug}))
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(
+            Einschreibung.objects.filter(
+                nutzer=self.learner,
+                kurs=self.free_course,
+                bezahlt=True,
+            ).exists()
+        )
 
     def test_paid_user_can_open_course_learning_view(self):
         Einschreibung.objects.create(nutzer=self.learner, kurs=self.kurs, bezahlt=True)

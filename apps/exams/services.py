@@ -1,4 +1,6 @@
 import random
+import json
+from datetime import timedelta
 from decimal import Decimal
 
 from django.db import transaction
@@ -11,16 +13,48 @@ class MaxVersucheErreicht(Exception):
     pass
 
 
+class NichtGenugFragenInThema(Exception):
+    pass
+
+
+def waehle_pruefungsfragen(pruefung):
+    fragen_queryset = Frage.objects.filter(fragenkatalog=pruefung.fragenkatalog, eltern_szenario__isnull=True).prefetch_related("antworten", "zuordnungen")
+    themenquoten = list(pruefung.themenquoten.select_related("thema"))
+    if not themenquoten:
+        fragen = list(fragen_queryset)
+        random.shuffle(fragen)
+        return fragen[:pruefung.anzahl_fragen]
+    fragen, bereits_gewaehlt = [], set()
+    for quote in themenquoten:
+        kandidaten = list(fragen_queryset.filter(tags=quote.thema).exclude(id__in=bereits_gewaehlt).distinct())
+        random.shuffle(kandidaten)
+        if len(kandidaten) < quote.anzahl_fragen:
+            raise NichtGenugFragenInThema(f"Für das Thema „{quote.thema}“ stehen nur {len(kandidaten)} passende Fragen zur Verfügung.")
+        auswahl = kandidaten[:quote.anzahl_fragen]
+        fragen.extend(auswahl)
+        bereits_gewaehlt.update(frage.id for frage in auswahl)
+    rest_anzahl = pruefung.anzahl_fragen - len(fragen)
+    if rest_anzahl < 0:
+        raise NichtGenugFragenInThema("Die Summe der Themenquoten ist größer als die Gesamtzahl der Prüfung.")
+    weitere_kandidaten = list(fragen_queryset.exclude(id__in=bereits_gewaehlt))
+    if len(weitere_kandidaten) < rest_anzahl:
+        raise NichtGenugFragenInThema(
+            f"Für die Gesamtzahl von {pruefung.anzahl_fragen} Fragen stehen nur {len(fragen) + len(weitere_kandidaten)} Fragen zur Verfügung."
+        )
+    fragen.extend(random.sample(weitere_kandidaten, rest_anzahl))
+    random.shuffle(fragen)
+    return fragen
+
+
 @transaction.atomic
 def starte_pruefung(pruefung, nutzer):
     bisherige_versuche = PruefungsVersuch.objects.filter(pruefung=pruefung, nutzer=nutzer).count()
     if pruefung.max_versuche is not None and bisherige_versuche >= pruefung.max_versuche:
         raise MaxVersucheErreicht("Maximale Anzahl an Versuchen erreicht.")
 
-    fragen = list(Frage.objects.filter(fragenkatalog=pruefung.fragenkatalog, eltern_szenario__isnull=True))
-    if pruefung.zufaellige_fragenreihenfolge:
-        random.shuffle(fragen)
-    fragen = fragen[: pruefung.anzahl_fragen]
+    fragen = waehle_pruefungsfragen(pruefung)
+    if not pruefung.zufaellige_fragenreihenfolge:
+        fragen.sort(key=lambda frage: frage.id)
 
     return PruefungsVersuch.objects.create(
         nutzer=nutzer,
@@ -37,7 +71,7 @@ def speichere_antwort(versuch, frage, daten):
         erlaubte_ids = list(frage.antworten.values_list("id", flat=True))
         antworten = Antwort.objects.filter(id__in=antwort_ids).filter(id__in=erlaubte_ids)
         teilnehmer_antwort.ausgewaehlte_antworten.set(antworten)
-    elif frage.typ == Frage.Typ.FREITEXT:
+    elif frage.typ in [Frage.Typ.FREITEXT, Frage.Typ.SZENARIO]:
         teilnehmer_antwort.freitext_antwort = daten.get("freitext_antwort", "")
     elif frage.typ == Frage.Typ.ZUORDNUNG:
         teilnehmer_antwort.zuordnung_json = daten.get("zuordnung_json", {})
@@ -78,7 +112,7 @@ def werte_versuch_aus(versuch):
             korrekt = sum(1 for paar in paare if mapping.get(str(paar.id)) == paar.rechtes_element)
             punkte = Decimal(frage.punkte) * Decimal(korrekt) / Decimal(len(paare) or 1)
             ist_korrekt = korrekt == len(paare)
-        elif frage.typ == Frage.Typ.FREITEXT:
+        elif frage.typ in [Frage.Typ.FREITEXT, Frage.Typ.SZENARIO]:
             if antwort.freitext_punkte is None:
                 freitext_offen = True
                 ist_korrekt = None
@@ -86,11 +120,6 @@ def werte_versuch_aus(versuch):
             else:
                 punkte = min(Decimal(antwort.freitext_punkte), Decimal(frage.punkte))
                 ist_korrekt = punkte > Decimal("0")
-        elif frage.typ == Frage.Typ.SZENARIO:
-            teilfragen = frage.teilfragen.all()
-            punkte_gesamt -= Decimal(frage.punkte)
-            for teilfrage in teilfragen:
-                punkte_gesamt += Decimal(teilfrage.punkte)
 
         antwort.ist_korrekt = ist_korrekt
         antwort.punkte_vergeben = punkte
@@ -104,6 +133,15 @@ def werte_versuch_aus(versuch):
     versuch.bestanden = versuch.prozent_erreicht >= Decimal(versuch.pruefung.bestehensgrenze_prozent)
     versuch.status = PruefungsVersuch.Status.AUSSTEHEND if freitext_offen else PruefungsVersuch.Status.ABGESCHLOSSEN
     versuch.abgeschlossen_am = timezone.now()
+    versuch.einsehbar_bis = versuch.abgeschlossen_am + timedelta(days=365)
+    versuch.ergebnis_verschluesselt = json.dumps({
+        "status": versuch.status,
+        "bestanden": versuch.bestanden,
+        "punkte_erreicht": str(versuch.punkte_erreicht),
+        "punkte_gesamt": str(versuch.punkte_gesamt),
+        "prozent_erreicht": str(versuch.prozent_erreicht),
+        "abgeschlossen_am": versuch.abgeschlossen_am.isoformat(),
+    })
     versuch.save()
 
     if versuch.bestanden and versuch.status == PruefungsVersuch.Status.ABGESCHLOSSEN:
@@ -124,5 +162,6 @@ def pruefe_zeitlimit(versuch):
         return False
     versuch.status = PruefungsVersuch.Status.ABGELAUFEN
     versuch.abgeschlossen_am = timezone.now()
-    versuch.save(update_fields=["status", "abgeschlossen_am"])
+    versuch.einsehbar_bis = versuch.abgeschlossen_am + timedelta(days=365)
+    versuch.save(update_fields=["status", "abgeschlossen_am", "einsehbar_bis"])
     return True

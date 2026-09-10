@@ -42,6 +42,7 @@
                     <td>{{ katalog.erstellt_von|default:"-" }}</td>
                     <td class="text-end">
                         <a class="btn btn-sm btn-outline-secondary" href="{% url 'trainer_catalog_edit' katalog.pk %}">Bearbeiten</a>
+                        <a class="btn btn-sm btn-outline-danger" href="{% url 'trainer_catalog_delete' katalog.pk %}">Löschen</a>
                     </td>
                 </tr>
             {% empty %}

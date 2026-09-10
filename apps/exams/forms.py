@@ -1,20 +1,27 @@
 import csv
 import json
+import re
 from io import TextIOWrapper
 
 from django import forms
+from django.forms import BaseInlineFormSet, inlineformset_factory
 from django_quill.quill import Quill
 
 from apps.accounts.models import Rolle
 from apps.organisations.models import Organisation
 
-from .models import Antwort, Frage, Fragenkatalog, Pruefung, TeilnehmerAntwort, ZuordnungsPaar
+from .models import Antwort, Frage, Fragenkatalog, FragenTag, Pruefung, PruefungsThemenquote, TeilnehmerAntwort, ZuordnungsPaar
 
 
 class FragenkatalogForm(forms.ModelForm):
     class Meta:
         model = Fragenkatalog
         fields = ("titel", "beschreibung", "organisation")
+        widgets = {
+            "titel": forms.TextInput(attrs={"class": "form-control", "placeholder": "z. B. Zertifikatsprüfung Grundlagen"}),
+            "beschreibung": forms.Textarea(attrs={"class": "form-control", "rows": 3, "placeholder": "Optional: Zweck und Inhalt des Katalogs"}),
+            "organisation": forms.Select(attrs={"class": "form-select"}),
+        }
 
     def __init__(self, *args, user=None, **kwargs):
         super().__init__(*args, **kwargs)
@@ -24,14 +31,50 @@ class FragenkatalogForm(forms.ModelForm):
 
 
 class FrageForm(forms.ModelForm):
+    themen = forms.CharField(
+        required=False,
+        label="Themengebiete",
+        help_text="Mehrere Themen mit Komma trennen, z. B. Datenschutz, Grundlagen.",
+        widget=forms.TextInput(
+            attrs={
+                "class": "form-control",
+                "placeholder": "z. B. Datenschutz, Grundlagen",
+                "autocomplete": "off",
+            }
+        ),
+    )
+
     class Meta:
         model = Frage
         fields = ("typ", "fragetext", "erklaerung", "schwierigkeit", "punkte", "eltern_szenario")
 
     def __init__(self, *args, fragenkatalog=None, **kwargs):
         super().__init__(*args, **kwargs)
+        self.fragenkatalog = fragenkatalog
+        self.fields["typ"].widget.attrs["class"] = "form-select"
+        self.fields["schwierigkeit"].widget.attrs["class"] = "form-select"
+        self.fields["punkte"].widget.attrs.update({"class": "form-control", "min": 1})
+        self.fields["eltern_szenario"].widget.attrs["class"] = "form-select"
         if fragenkatalog:
             self.fields["eltern_szenario"].queryset = fragenkatalog.fragen.filter(typ=Frage.Typ.SZENARIO)
+            if self.instance.pk:
+                self.initial["themen"] = ", ".join(self.instance.tags.values_list("name", flat=True))
+
+    def save(self, commit=True):
+        frage = super().save(commit=commit)
+        if commit:
+            self.save_themen(frage)
+        return frage
+
+    def save_themen(self, frage):
+        if not self.fragenkatalog:
+            return
+        themen = {name.strip() for name in self.cleaned_data["themen"].split(",") if name.strip()}
+        tags = [
+            FragenTag.objects.get_or_create(name=name, organisation=self.fragenkatalog.organisation)[0]
+            for name in sorted(themen)
+        ]
+        frage.tags.set(tags)
 
 
 class AntwortForm(forms.ModelForm):
@@ -64,6 +107,10 @@ class PruefungForm(forms.ModelForm):
             "ist_aktiv",
         )
 
+        help_texts = {
+            "anzahl_fragen": "Gesamtzahl der Prüfungsfragen. Themenquoten reservieren einen Teil dieser Gesamtzahl; die übrigen Fragen werden zufällig aus dem Katalog ergänzt.",
+        }
+
     def __init__(self, *args, user=None, **kwargs):
         super().__init__(*args, **kwargs)
         if user and not user.is_superuser:
@@ -72,21 +119,120 @@ class PruefungForm(forms.ModelForm):
             self.fields["fragenkatalog"].queryset = Fragenkatalog.objects.filter(organisation_id__in=organisation_ids)
 
 
+class PruefungsThemenquoteForm(forms.ModelForm):
+    class Meta:
+        model = PruefungsThemenquote
+        fields = ("thema", "anzahl_fragen")
+        widgets = {
+            "thema": forms.Select(attrs={"class": "form-select form-select-sm", "data-topic-select": "true"}),
+            "anzahl_fragen": forms.NumberInput(attrs={"class": "form-control form-control-sm", "min": 1}),
+        }
+
+    def __init__(self, *args, pruefung=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        if pruefung and pruefung.fragenkatalog_id:
+            self.fields["thema"].queryset = FragenTag.objects.filter(
+                organisation=pruefung.organisation,
+                frage__fragenkatalog=pruefung.fragenkatalog,
+            ).distinct()
+
+
+class BasePruefungsThemenquoteFormSet(BaseInlineFormSet):
+    def clean(self):
+        super().clean()
+        if any(self.errors):
+            return
+        for form in self.forms:
+            if not form.cleaned_data or form.cleaned_data.get("DELETE"):
+                continue
+            thema = form.cleaned_data.get("thema")
+            anzahl = form.cleaned_data.get("anzahl_fragen")
+            if thema and anzahl:
+                vorhanden = Frage.objects.filter(
+                    fragenkatalog=self.instance.fragenkatalog,
+                    eltern_szenario__isnull=True,
+                    tags=thema,
+                ).count()
+                if anzahl > vorhanden:
+                    raise forms.ValidationError(
+                        f"Für das Thema „{thema}“ sind nur {vorhanden} Fragen im gewählten Katalog vorhanden."
+                    )
+        quoten_summe = sum(
+            form.cleaned_data.get("anzahl_fragen") or 0
+            for form in self.forms
+            if form.cleaned_data and not form.cleaned_data.get("DELETE")
+        )
+        if quoten_summe > self.instance.anzahl_fragen:
+            raise forms.ValidationError(
+                f"Die Themenquoten ergeben {quoten_summe} Fragen, die Prüfung enthält aber nur {self.instance.anzahl_fragen} Fragen insgesamt."
+            )
+
+
+PruefungsThemenquoteFormSet = inlineformset_factory(
+    Pruefung,
+    PruefungsThemenquote,
+    form=PruefungsThemenquoteForm,
+    formset=BasePruefungsThemenquoteFormSet,
+    extra=0,
+    can_delete=True,
+)
+
+
 class CSVImportForm(forms.Form):
     datei = forms.FileField()
+    legacy_themen_prefix = re.compile(r"^\s*\[(?:\d+\s+)?(?P<thema>[^\]]+)\]\s*")
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["datei"].widget.attrs["class"] = "form-control"
+
+    def _quill_from_html(self, html):
+        return Quill(json.dumps({"delta": "", "html": html or ""}))
+
+    def _is_correct(self, value):
+        return str(value or "").strip().lower() in {"1", "true", "wahr", "richtig", "ja", "yes", "x"}
 
     def importiere(self, fragenkatalog):
-        handle = TextIOWrapper(self.cleaned_data["datei"].file, encoding="utf-8")
+        handle = TextIOWrapper(self.cleaned_data["datei"].file, encoding="utf-8-sig")
         reader = csv.DictReader(handle, delimiter=";")
+        required_columns = {"typ", "fragetext"}
+        missing_columns = required_columns.difference(reader.fieldnames or [])
+        if missing_columns:
+            raise forms.ValidationError("CSV-Spalten fehlen: " + ", ".join(sorted(missing_columns)))
+
         erstellt = 0
-        for row in reader:
+        valid_types = {choice[0] for choice in Frage.Typ.choices}
+        for line_number, row in enumerate(reader, start=2):
+            typ = (row.get("typ") or "").strip().upper()
+            fragetext = (row.get("fragetext") or "").strip()
+            if not typ and not fragetext:
+                continue
+            if typ not in valid_types:
+                raise forms.ValidationError(f"Zeile {line_number}: Unbekannter Fragetyp '{typ}'.")
+            if not fragetext:
+                raise forms.ValidationError(f"Zeile {line_number}: Fragetext fehlt.")
+
+            themen = {name.strip() for name in (row.get("thema") or row.get("themen") or "").split(",") if name.strip()}
+            if not themen:
+                thema_match = self.legacy_themen_prefix.match(fragetext)
+                if thema_match:
+                    themen = {thema_match.group("thema").strip()}
+                    fragetext = fragetext[thema_match.end():].strip()
+
             frage = Frage.objects.create(
                 fragenkatalog=fragenkatalog,
-                typ=row["typ"],
-                fragetext=Quill(json.dumps({"delta": "", "html": row["fragetext"]})),
+                typ=typ,
+                fragetext=self._quill_from_html(fragetext),
+                erklaerung=self._quill_from_html(row.get("erklaerung")),
                 punkte=int(row.get("punkte") or 1),
-                schwierigkeit=row.get("schwierigkeit") or Frage.Schwierigkeit.MITTEL,
+                schwierigkeit=(row.get("schwierigkeit") or Frage.Schwierigkeit.MITTEL).strip().upper(),
             )
+            if themen:
+                tags = [
+                    FragenTag.objects.get_or_create(name=name, organisation=fragenkatalog.organisation)[0]
+                    for name in sorted(themen)
+                ]
+                frage.tags.set(tags)
             if frage.typ in [Frage.Typ.SINGLE_CHOICE, Frage.Typ.MULTIPLE_CHOICE, Frage.Typ.WAHR_FALSCH]:
                 for index in range(1, 9):
                     antworttext = row.get(f"antwort_{index}", "").strip()
@@ -94,7 +240,7 @@ class CSVImportForm(forms.Form):
                         Antwort.objects.create(
                             frage=frage,
                             antworttext=antworttext,
-                            ist_korrekt=row.get(f"korrekt_{index}", "0").strip() == "1",
+                            ist_korrekt=self._is_correct(row.get(f"korrekt_{index}")),
                             reihenfolge=index,
                         )
             elif frage.typ == Frage.Typ.ZUORDNUNG:

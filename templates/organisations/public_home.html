@@ -27,7 +27,7 @@
         <p class="lead mb-4" style="max-width:600px;">{{ startseite.hero_untertitel }}</p>
         {% endif %}
         <a class="btn btn-aboro btn-lg"
-           href="{% url 'course_catalog' %}">
+           href="{% url 'tenant_course_catalog' org.slug %}">
             {% if startseite and startseite.hero_button_text %}
                 {{ startseite.hero_button_text }}
             {% else %}
@@ -51,7 +51,7 @@
 <div class="mb-5">
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h2 class="h4 mb-0">Unsere Kurse</h2>
-        <a class="btn btn-sm btn-outline-secondary" href="{% url 'course_catalog' %}">Alle anzeigen</a>
+        <a class="btn btn-sm btn-outline-secondary" href="{% url 'tenant_course_catalog' org.slug %}">Alle anzeigen</a>
     </div>
     <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-3 g-3">
         {% for kurs in kurse %}
@@ -64,7 +64,7 @@
                 {% endif %}
                 <div class="course-card__body">
                     <h3 class="h6 fw-semibold mb-1">
-                        <a href="{% url 'course_detail' kurs.slug %}">{{ kurs.titel }}</a>
+                        <a href="{% url 'tenant_course_detail' org.slug kurs.slug %}">{{ kurs.titel }}</a>
                     </h3>
                     <div class="d-flex align-items-center gap-2 mt-2">
                         {% if kurs.ist_kostenlos or kurs.preis == 0 %}
@@ -90,7 +90,7 @@
         {% if user.is_authenticated and ist_org_admin %}
             <a href="{% url 'org_startseite' org.slug %}">Startseite jetzt gestalten</a>
         {% else %}
-            Besuchen Sie den <a href="{% url 'course_catalog' %}">Kurskatalog</a>, um die verfügbaren Kurse zu sehen.
+            Besuchen Sie den <a href="{% url 'tenant_course_catalog' org.slug %}">Kurskatalog</a>, um die verfügbaren Kurse zu sehen.
         {% endif %}
     </p>
 </div>

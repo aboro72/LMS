@@ -10,14 +10,19 @@ class Niveau(models.TextChoices):
 
 
 class Kurs(models.Model):
+    class Angebotstyp(models.TextChoices):
+        KURS = "KURS", "Kompletter Kurs"
+        ZERTIFIKAT = "ZERTIFIKAT", "Reine Zertifikatsprüfung"
+
     titel = models.CharField(max_length=300)
     slug = models.SlugField(unique=True)
-    beschreibung = QuillField()
+    beschreibung = QuillField(blank=True)
     thumbnail = models.ImageField(upload_to="thumbnails/", blank=True)
     organisation = models.ForeignKey("organisations.Organisation", on_delete=models.CASCADE)
     erstellt_von = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True)
     sprache = models.CharField(max_length=10, default="de")
     niveau = models.CharField(max_length=20, choices=Niveau.choices)
+    angebotstyp = models.CharField(max_length=12, choices=Angebotstyp.choices, default=Angebotstyp.KURS)
     ist_veroeffentlicht = models.BooleanField(default=False)
     ist_kostenlos = models.BooleanField(default=True)
     preis = models.DecimalField(max_digits=8, decimal_places=2, default=0)
@@ -38,6 +43,10 @@ class Kurs(models.Model):
 
     def __str__(self):
         return self.titel
+
+    @property
+    def ist_zertifikatspruefung(self):
+        return self.angebotstyp == self.Angebotstyp.ZERTIFIKAT
 
     @property
     def dauer_minuten(self):
@@ -73,6 +82,7 @@ class Lektion(models.Model):
     inhalt = QuillField(blank=True)
     video_url = models.URLField(blank=True)
     datei = models.FileField(upload_to="lektionen/", blank=True)
+    video_thumbnail = models.ImageField(upload_to="lektion-thumbnails/", blank=True)
     dauer_minuten = models.PositiveIntegerField(default=0)
     ist_vorschau = models.BooleanField(default=False)
 

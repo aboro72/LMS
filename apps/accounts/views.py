@@ -1,8 +1,10 @@
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.shortcuts import redirect
 from django.urls import reverse_lazy
 from django.views.generic import CreateView, TemplateView
 
 from .forms import RegisterForm
+from .models import Rolle
 
 
 class HomeView(TemplateView):
@@ -33,3 +35,179 @@ class RegisterView(CreateView):
     form_class = RegisterForm
     template_name = "accounts/register.html"
     success_url = reverse_lazy("account_login")
+
+
+ROLE_HELP_PAGES = {
+    "superadmin": {
+        "title": "Super-Admin Hilfe",
+        "badge": "Plattformbetrieb",
+        "intro": "Der Super-Admin betreibt die gesamte Plattform, prueft Organisationen, Zahlungsfluesse und globale Einstellungen.",
+        "quick_cards": [
+            {"title": "Ueberblick", "text": "Alle Mandanten, Kurse, Zahlungen und kritischen Einstellungen im Blick behalten."},
+            {"title": "Kontrolle", "text": "Lizenz-, Zahlungs- und Audit-Funktionen regelmaessig pruefen."},
+            {"title": "Support", "text": "Bei Problemen Rollen, Einschreibungen und Zahlungsstatus nachvollziehen."},
+        ],
+        "sections": [
+            {"title": "Wichtige Bereiche", "text": "Diese Bereiche sind fuer den Plattformbetrieb zentral.", "items": [
+                {"title": "Organisationen", "text": "Zeigt alle Mandanten mit Mitglieder- und Kursanzahl. Von hier aus erkennst du schnell, welche Organisation aktiv genutzt wird.", "url_name": "superadmin_orgs", "link_text": "Organisationen oeffnen"},
+                {"title": "Zahlungseinstellungen", "text": "Aktiviere oder deaktiviere Zahlungsarten und den globalen Zahlungsschalter.", "url_name": "superadmin_payment_settings", "link_text": "Zahlungen konfigurieren"},
+                {"title": "Auszahlungen", "text": "Kontrolliere bezahlte Kurse, offene Ueberweisungen und Trainer-Anteile.", "url_name": "superadmin_payouts", "link_text": "Auszahlungen ansehen"},
+                {"title": "Audit-Log", "text": "Zeigt wichtige Systemereignisse wie Zahlungsbestaetigungen, Einladungen und Auszahlungsmarkierungen.", "url_name": "superadmin_audit_log", "link_text": "Audit-Log oeffnen"},
+            ]},
+            {"title": "Empfohlener Ablauf", "text": "So pruefst du eine Demo oder Installation systematisch.", "items": [
+                {"title": "1. Mandantenstatus pruefen", "text": "Starte bei den Organisationen und pruefe Aktivstatus, Lizenzlimit, Mitglieder und Kursmenge."},
+                {"title": "2. Zahlungsfluss kontrollieren", "text": "Pruefe Zahlungseinstellungen, offene Bankueberweisungen und bestaetigte Zahlungen."},
+                {"title": "3. Supportfall nachvollziehen", "text": "Bei Nutzerproblemen pruefst du Rolle, Organisation, Einschreibung und Zahlung in dieser Reihenfolge."},
+            ]},
+        ],
+        "faqs": [
+            {"question": "Warum sehe ich manche Org-Admin-Funktionen nicht?", "answer": "Superuser sehen globale Bereiche. Organisationsspezifische Menues haengen an einem aktiven UserProfile in einer Organisation."},
+            {"question": "Wann ist ein Kurs freigeschaltet?", "answer": "Kostenlose Kurse werden beim Start automatisch eingeschrieben. Kostenpflichtige Kurse brauchen eine bezahlte Einschreibung."},
+            {"question": "Wo erkenne ich Zahlungsprobleme?", "answer": "In Auszahlungen und Audit-Log. Bankueberweisungen koennen manuell bestaetigt werden."},
+        ],
+    },
+    "org_admin": {
+        "title": "Org-Admin Hilfe",
+        "badge": "Organisation verwalten",
+        "intro": "Org-Admins verwalten Mitglieder, Einladungen, Design, Startseite und Organisationskommunikation.",
+        "quick_cards": [
+            {"title": "Mitglieder", "text": "Nutzer einladen, Rollen vergeben und aktive Profile pruefen."},
+            {"title": "Auftritt", "text": "Logo, Farben, Startseite und Zertifikat-Design pflegen."},
+            {"title": "Limits", "text": "Lizenzgrenzen fuer Nutzer und Kurse im Blick behalten."},
+        ],
+        "sections": [
+            {"title": "Wichtige Bereiche", "text": "Diese Funktionen betreffen deine Organisation.", "items": [
+                {"title": "Organisations-Dashboard", "text": "Kennzahlen zu Mitgliedern, Kursen, Einschreibungen und Umsatz deiner Organisation.", "url_name_with_org": "org_admin_dashboard", "link_text": "Dashboard oeffnen"},
+                {"title": "Mitglieder", "text": "Zeigt aktive Mitglieder und offene Einladungen. Neue Nutzer bekommen hier ihre Rolle.", "url_name_with_org": "org_members", "link_text": "Mitglieder verwalten"},
+                {"title": "Design", "text": "Farben, Logo und visuelle Grundlagen fuer Katalog, Kursseiten und Navigation.", "url_name_with_org": "org_design", "link_text": "Design bearbeiten"},
+                {"title": "Startseite", "text": "Pflege die oeffentliche Seite deiner Organisation mit Hero, Inhalt und Button.", "url_name_with_org": "org_startseite", "link_text": "Startseite bearbeiten"},
+                {"title": "E-Mail", "text": "SMTP- und Absenderdaten fuer Einladungen und Systemmails.", "url_name_with_org": "org_email_config", "link_text": "E-Mail konfigurieren"},
+            ]},
+            {"title": "Empfohlener Ablauf", "text": "Damit eine Organisation startklar ist.", "items": [
+                {"title": "1. Grunddaten und Design pruefen", "text": "Logo, Farben und Startseite setzen, damit Lernende die Organisation wiedererkennen."},
+                {"title": "2. Rollen einladen", "text": "Trainer zuerst einladen, danach Pruefer und Lernende. Jede Einladung ist an eine E-Mail und Rolle gebunden."},
+                {"title": "3. Inhalte kontrollieren", "text": "Nach Kurserstellung im Katalog pruefen, ob Kurse veroeffentlicht und richtig bepreist sind."},
+            ]},
+        ],
+        "faqs": [
+            {"question": "Warum kann ich keinen Nutzer mehr einladen?", "answer": "Das Nutzerlimit der Lizenz kann erreicht sein. Super-Admins koennen die Lizenz im Adminbereich anpassen."},
+            {"question": "Warum sieht ein Trainer keine Kurse?", "answer": "Der Trainer braucht ein aktives Trainer-Profil in genau der Organisation, zu der die Kurse gehoeren."},
+            {"question": "Welche Rolle braucht ein Pruefer?", "answer": "Fuer die Bewertungsqueue braucht der Nutzer die Rolle Pruefer oder eine hoeher berechtigte Rolle."},
+        ],
+    },
+    "trainer": {
+        "title": "Trainer Hilfe",
+        "badge": "Kurse und Pruefungen erstellen",
+        "intro": "Trainer bauen Kurse, Lektionen, Begleitmaterial, Uebungsfragen, Fragenkataloge und Pruefungen.",
+        "quick_cards": [
+            {"title": "Kurse", "text": "Kursdaten, Abschnitte, Lektionen und Medien pflegen."},
+            {"title": "Pruefungen", "text": "Fragenkataloge erstellen und Pruefungen konfigurieren."},
+            {"title": "Umsatz", "text": "Bezahlte Kurse und Trainer-Anteile nachvollziehen."},
+        ],
+        "sections": [
+            {"title": "Wichtige Bereiche", "text": "Hier findet die taegliche Trainerarbeit statt.", "items": [
+                {"title": "Kursverwaltung", "text": "Kurse erstellen, veroeffentlichen, Abschnitte und Lektionen pflegen. Videos werden als Lektionsmedium hochgeladen; Begleitmaterial ist fuer PDF, DOC, TXT oder ZIP gedacht.", "url_name": "trainer_course_list", "link_text": "Kurse verwalten"},
+                {"title": "Lernpfade", "text": "Strukturierte Kursreihen erstellen: Grunddaten speichern, Kurse hinzufuegen, Reihenfolge setzen und veroeffentlichen.", "url_name": "trainer_learning_path_list", "link_text": "Lernpfade verwalten"},
+                {"title": "Fragenkataloge", "text": "Sammlung von Fragen, Antworten, Freitexten und Zuordnungen fuer spaetere Pruefungen.", "url_name": "trainer_catalog_list", "link_text": "Fragenkataloge oeffnen"},
+                {"title": "Pruefungen", "text": "Definiert Anzahl Fragen, Zeitlimit, Bestehensgrenze, Zufallslogik und Versuchsanzahl.", "url_name": "trainer_exam_list", "link_text": "Pruefungen verwalten"},
+                {"title": "Umsatz", "text": "Zeigt Einnahmen und Trainer-Anteil fuer bestaetigte Zahlungen.", "url_name": "trainer_revenue_dashboard", "link_text": "Umsatz ansehen"},
+            ]},
+            {"title": "Empfohlener Kursaufbau", "text": "Ein sauberer Kurs entsteht in dieser Reihenfolge.", "items": [
+                {"title": "1. Kursgrunddaten", "text": "Titel, Slug, Beschreibung, Organisation, Preis und Veroeffentlichung setzen."},
+                {"title": "2. Abschnitte und Lektionen", "text": "Abschnitte strukturieren das Thema. Lektionen koennen Video, Text, Dokument oder Mini-Quiz sein."},
+                {"title": "3. Medien hochladen", "text": "Fuer Videos den Block Video/Dokument der Lektion aktualisieren nutzen. Aus hochgeladenen Videos wird automatisch ein Thumbnail erzeugt."},
+                {"title": "4. Pruefung verbinden", "text": "Fragenkatalog und Pruefung erstellen, danach dem Kurs zuordnen."},
+                {"title": "5. Lernpfad erstellen", "text": "Unter Trainer > Lernpfade eine Kursreihe anlegen, vorhandene Kurse hinzufuegen und die Reihenfolge festlegen."},
+            ]},
+        ],
+        "csv_template_file": "downloads/fragenkatalog_csv_vorlage.xlsx",
+        "csv_example": "typ;fragetext;erklaerung;schwierigkeit;punkte;antwort_1;korrekt_1;antwort_2;korrekt_2;antwort_3;korrekt_3;antwort_4;korrekt_4;antwort_5;korrekt_5;antwort_6;korrekt_6;antwort_7;korrekt_7;antwort_8;korrekt_8;links_1;rechts_1;links_2;rechts_2;links_3;rechts_3;links_4;rechts_4;links_5;rechts_5\nSC;Welche Farbe hat ein Stoppschild?;Rot ist die richtige Antwort.;L;1;Rot;1;Blau;0;Gruen;0;;;;;;;;;;;;;;;;;;;;\nMC;Welche Werte sind Boolean-Werte?;True und False sind boolesche Werte.;M;2;True;1;False;1;Vielleicht;0;;;;;;;;;;;;;;;;;;;;\nWF;Python ist eine Programmiersprache.;Die Aussage ist wahr.;L;1;Wahr;1;Falsch;0;;;;;;;;;;;;;;;;;;;;;;\nFT;Erklaere kurz den Unterschied zwischen HTTP und HTTPS.;Musterloesung fuer die manuelle Bewertung.;M;5;;;;;;;;;;;;;;;;;;;;;;;;;;\nZO;Ordne die Begriffe zu.;Jedes linke Element braucht ein rechtes Element.;M;3;;;;;;;;;;;;;;;;;HTTP;Protokoll;HTML;Markup-Sprache;;;;;;\nSZ;Kunde meldet Ausfall im Helpdesk.;Szenario-Text, danach koennen Teilfragen manuell angelegt werden.;S;1;;;;;;;;;;;;;;;;;;;;;;;;;;",
+        "faqs": [
+            {"question": "Warum wird mein Video als Begleitmaterial abgelehnt?", "answer": "Videos gehoeren zur Lektion selbst. Oeffne bei der Lektion Video/Dokument der Lektion aktualisieren und lade dort MP4, WebM, MOV oder M4V hoch."},
+            {"question": "Wann sehen Lernende den Kurs?", "answer": "Der Kurs muss veroeffentlicht sein und die Organisation muss aktiv sein."},
+            {"question": "Wie erstelle ich einen Lernpfad?", "answer": "Im Trainer-Menue Lernpfade oeffnen, Lernpfad erstellen, Grunddaten speichern und danach im Editor Kurse hinzufuegen. Erst wenn Veroeffentlicht aktiv ist, erscheint der Lernpfad fuer Lernende."},
+            {"question": "Wie entsteht das Video-Thumbnail?", "answer": "Beim Speichern eines hochgeladenen Videos erzeugt ffmpeg automatisch ein JPG aus dem Frame bei Sekunde 3."},
+        ],
+    },
+    "examiner": {
+        "title": "Pruefer Hilfe",
+        "badge": "Antworten bewerten",
+        "intro": "Pruefer bearbeiten manuelle Freitextantworten und sorgen dafuer, dass Pruefungsergebnisse korrekt abgeschlossen werden.",
+        "quick_cards": [
+            {"title": "Queue", "text": "Offene manuelle Bewertungen an einem Ort."},
+            {"title": "Fairness", "text": "Antwort, Musterloesung und Punkte nachvollziehbar bewerten."},
+            {"title": "Abschluss", "text": "Nach Bewertung kann ein Ergebnis final werden und Zertifikate ausloesen."},
+        ],
+        "sections": [
+            {"title": "Wichtige Bereiche", "text": "Pruefer arbeiten hauptsaechlich in der Queue.", "items": [
+                {"title": "Pruefer-Queue", "text": "Listet offene Freitextantworten, die manuell bewertet werden muessen.", "url_name": "examiner_queue", "link_text": "Queue oeffnen"},
+                {"title": "Pruefungsdetail", "text": "Zeigt die Pruefung aus Sicht der Teilnehmenden und hilft beim Nachvollziehen der Aufgabe."},
+                {"title": "Zertifikate", "text": "Nach bestandener Pruefung koennen Zertifikate erzeugt und verifiziert werden."},
+            ]},
+            {"title": "Bewertungsablauf", "text": "So bleibt die Bewertung nachvollziehbar.", "items": [
+                {"title": "1. Antwort lesen", "text": "Freitextantwort vollstaendig lesen und mit der erwarteten Loesung vergleichen."},
+                {"title": "2. Punkte vergeben", "text": "Teilpunkte vergeben, wenn die Antwort wesentliche Aspekte enthaelt."},
+                {"title": "3. Ergebnis speichern", "text": "Nach dem Speichern wird die Antwort aus der offenen Queue entfernt."},
+            ]},
+        ],
+        "faqs": [
+            {"question": "Warum ist die Queue leer?", "answer": "Entweder gibt es keine offenen Freitextantworten oder deine Rolle ist nicht in der betreffenden Organisation aktiv."},
+            {"question": "Kann ein Pruefer Kurse bearbeiten?", "answer": "Nur mit zusaetzlicher Trainer- oder Org-Admin-Rolle. Pruefer allein bewerten Antworten."},
+            {"question": "Wann wird ein Zertifikat erstellt?", "answer": "Wenn die Pruefung vollstaendig bewertet ist und die Bestehensgrenze erreicht wurde."},
+        ],
+    },
+    "learner": {
+        "title": "Lernenden Hilfe",
+        "badge": "Kurse absolvieren",
+        "intro": "Lernende schreiben sich in Kurse ein, bearbeiten Lektionen, absolvieren Pruefungen und laden Zertifikate herunter.",
+        "quick_cards": [
+            {"title": "Starten", "text": "Kostenlose Kurse direkt starten, bezahlte Kurse nach Freischaltung nutzen."},
+            {"title": "Lernen", "text": "Videos, Texte, Dokumente und Uebungsfragen durcharbeiten."},
+            {"title": "Nachweisen", "text": "Pruefung bestehen und Zertifikat herunterladen."},
+        ],
+        "sections": [
+            {"title": "Wichtige Bereiche", "text": "Diese Seiten brauchst du am haeufigsten.", "items": [
+                {"title": "Katalog", "text": "Alle veroeffentlichten Kurse finden, filtern und Kursdetails oeffnen.", "url_name": "course_catalog", "link_text": "Kurse ansehen"},
+                {"title": "Lernpfade", "text": "Mehrere Kurse in einer sinnvollen Reihenfolge bearbeiten.", "url_name": "learning_path_list", "link_text": "Lernpfade ansehen"},
+                {"title": "Dashboard", "text": "Zeigt deine Organisationen, Einschreibungen, Fortschritt und aktuelle Zertifikate.", "url_name": "dashboard", "link_text": "Dashboard oeffnen"},
+                {"title": "Zertifikate", "text": "Bestandene Zertifikate einsehen und als PDF herunterladen.", "url_name": "cert_list", "link_text": "Zertifikate oeffnen"},
+            ]},
+            {"title": "Lernablauf", "text": "Vom Kursstart bis zum Zertifikat.", "items": [
+                {"title": "1. Kurs auswaehlen", "text": "Im Katalog einen Kurs oeffnen. Kostenlose Kurse starten sofort nach dem Login."},
+                {"title": "2. Lektionen bearbeiten", "text": "In der Lernansicht die Lektionen nacheinander oeffnen und Fortschritt markieren."},
+                {"title": "3. Uebungsfragen nutzen", "text": "Mini-Quizfragen helfen beim Wiederholen und zaehlen nicht als Zertifikatspruefung."},
+                {"title": "4. Pruefung absolvieren", "text": "Wenn eine Abschlusspruefung vorhanden ist, kannst du sie aus dem Kursdetail starten."},
+            ]},
+        ],
+        "faqs": [
+            {"question": "Warum werde ich zum Login geschickt?", "answer": "Lernfortschritt, Einschreibungen und Zertifikate sind kontobezogen. Deshalb brauchst du ein angemeldetes Konto."},
+            {"question": "Warum kann ich einen bezahlten Kurs nicht starten?", "answer": "Der Kurs ist erst nach bestaetigter Zahlung freigeschaltet. Kostenlose Kurse werden automatisch freigeschaltet."},
+            {"question": "Wo finde ich mein Zertifikat?", "answer": "Nach bestandener Pruefung erscheint es im Dashboard und unter Zertifikate."},
+        ],
+    },
+}
+
+
+class RoleHelpView(LoginRequiredMixin, TemplateView):
+    template_name = "accounts/role_help.html"
+
+    def dispatch(self, request, *args, **kwargs):
+        allowed_role = self._default_role()
+        requested_role = kwargs.get("role")
+        if requested_role and requested_role != allowed_role:
+            return redirect("role_help_detail", role=allowed_role)
+        self.active_role = allowed_role
+        return super().dispatch(request, *args, **kwargs)
+
+    def _default_role(self):
+        user = self.request.user
+        if user.is_superuser or user.groups.filter(name=Rolle.SUPERADMIN).exists():
+            return "superadmin"
+        profile_role = user.profile.filter(aktiv=True).values_list("rolle", flat=True).first()
+        return profile_role or "learner"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["active_role"] = self.active_role
+        context["active_help"] = ROLE_HELP_PAGES[self.active_role]
+        return context

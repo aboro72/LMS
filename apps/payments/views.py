@@ -27,7 +27,11 @@ class CheckoutView(LoginRequiredMixin, FormView):
     def dispatch(self, request, *args, **kwargs):
         if not request.user.is_authenticated:
             return self.handle_no_permission()
-        self.kurs = get_object_or_404(Kurs, slug=kwargs["slug"], ist_veroeffentlicht=True, organisation__aktiv=True)
+        kurs_queryset = Kurs.objects.filter(slug=kwargs["slug"], ist_veroeffentlicht=True, organisation__aktiv=True)
+        if kwargs.get("org_slug"):
+            kurs_queryset = kurs_queryset.filter(organisation__slug=kwargs["org_slug"])
+        self.kurs = get_object_or_404(kurs_queryset)
+        self.org_slug = kwargs.get("org_slug")
         if self.kurs.ist_kostenlos or self.kurs.preis <= 0:
             Einschreibung.objects.update_or_create(
                 nutzer=request.user,
@@ -35,8 +39,12 @@ class CheckoutView(LoginRequiredMixin, FormView):
                 defaults={"bezahlt": True},
             )
             messages.success(request, "Du bist in den kostenlosen Kurs eingeschrieben.")
+            if self.org_slug:
+                return redirect("tenant_course_learn", org_slug=self.kurs.organisation.slug, slug=self.kurs.slug)
             return redirect("course_learn", slug=self.kurs.slug)
         if Einschreibung.objects.filter(nutzer=request.user, kurs=self.kurs, bezahlt=True).exists():
+            if self.org_slug:
+                return redirect("tenant_course_learn", org_slug=self.kurs.organisation.slug, slug=self.kurs.slug)
             return redirect("course_learn", slug=self.kurs.slug)
         self.payment_settings = lade_zahlungseinstellungen()
         return super().dispatch(request, *args, **kwargs)
@@ -55,6 +63,8 @@ class CheckoutView(LoginRequiredMixin, FormView):
         if settings.DEBUG and zahlungsart_ist_automatisch(zahlungsart) and self.payment_settings.demo_autoconfirm:
             bestaetige_zahlung(zahlung, provider_referenz=f"demo-{zahlungsart}-{zahlung.zahlung_id}", actor=self.request.user)
             messages.success(self.request, "Zahlung wurde bestaetigt. Der Kurs ist freigeschaltet.")
+            if self.org_slug:
+                return redirect("tenant_course_learn", org_slug=self.kurs.organisation.slug, slug=self.kurs.slug)
             return redirect("course_learn", slug=self.kurs.slug)
         if zahlungsart == Zahlungsart.BANK_TRANSFER:
             messages.warning(self.request, "Ueberweisung wurde vorgemerkt. Zugriff wird nach Zahlungseingang freigeschaltet.")

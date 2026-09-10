@@ -12,8 +12,9 @@ from .models import (
 @admin.register(Organisation)
 class OrganisationAdmin(admin.ModelAdmin):
     list_display = ("name", "slug", "lizenz_typ", "max_nutzer", "max_kurse", "aktiv", "erstellt_am")
+    fields = ("name", "slug", "kontakt_email", "website", "weiterleitungs_url", "lizenz_typ", "max_nutzer", "max_kurse", "aktiv")
     list_filter = ("lizenz_typ", "aktiv")
-    search_fields = ("name", "slug", "kontakt_email")
+    search_fields = ("name", "slug", "kontakt_email", "weiterleitungs_url")
     prepopulated_fields = {"slug": ("name",)}
 
 

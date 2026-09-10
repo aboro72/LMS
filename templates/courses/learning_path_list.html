@@ -15,7 +15,7 @@
             <div class="course-card h-100">
                 <div class="course-card__body">
                     <p class="small text-secondary mb-1">{{ lernpfad.organisation.name }}</p>
-                    <h2 class="h5"><a href="{% url 'learning_path_detail' lernpfad.slug %}">{{ lernpfad.titel }}</a></h2>
+                    <h2 class="h5"><a href="{% if tenant_org %}{% url 'tenant_learning_path_detail' tenant_org.slug lernpfad.slug %}{% else %}{% url 'learning_path_detail' lernpfad.slug %}{% endif %}">{{ lernpfad.titel }}</a></h2>
                     <p class="text-secondary">{{ lernpfad.beschreibung|truncatewords:24 }}</p>
                     <span class="badge text-bg-light">{{ lernpfad.pfad_kurse.count }} Kurse</span>
                 </div>

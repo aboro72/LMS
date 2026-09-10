@@ -300,6 +300,86 @@ body {
     margin: 0;
 }
 
+.catalog-hero {
+    background: linear-gradient(135deg, var(--aboro-blue-dark) 0%, var(--aboro-blue) 100%);
+    border-radius: 14px;
+    color: #fff;
+    padding: 1.5rem;
+    box-shadow: 0 12px 28px rgba(18, 49, 95, 0.16);
+}
+
+.catalog-hero p { color: rgba(255, 255, 255, 0.82); }
+
+.catalog-stat {
+    min-width: 104px;
+    padding: .65rem .85rem;
+    border: 1px solid rgba(255, 255, 255, .25);
+    border-radius: 10px;
+    background: rgba(255, 255, 255, .1);
+}
+
+.catalog-stat strong, .catalog-stat span { display: block; }
+.catalog-stat strong { font-size: 1.35rem; }
+.catalog-stat span { font-size: .78rem; color: rgba(255, 255, 255, .78); }
+
+.catalog-sidebar { position: sticky; top: 1rem; }
+
+.catalog-section-title {
+    display: flex;
+    gap: .65rem;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.catalog-step {
+    display: grid;
+    place-items: center;
+    width: 1.8rem;
+    height: 1.8rem;
+    flex: 0 0 auto;
+    border-radius: 50%;
+    background: var(--aboro-blue);
+    color: #fff;
+    font-size: .85rem;
+    font-weight: 700;
+}
+
+.topic-picker {
+    border: 1px solid rgba(18, 49, 95, .16);
+    border-radius: 10px;
+    padding: 1rem;
+    background: #f7f9fc;
+}
+
+.topic-picker .form-label { color: var(--aboro-blue-dark); }
+
+.catalog-topic {
+    display: inline-block;
+    margin: .15rem .2rem .15rem 0;
+    padding: .25rem .55rem;
+    border-radius: 999px;
+    background: #e6f2ff;
+    color: #135e96;
+    font-size: .8rem;
+    font-weight: 600;
+}
+
+.question-card { border-left: 4px solid var(--aboro-blue); }
+.question-card__meta { display: flex; flex-wrap: wrap; gap: .35rem; align-items: center; }
+.question-card details { border-top: 1px solid rgba(18, 49, 95, .1); padding-top: .8rem; }
+.question-card summary { cursor: pointer; color: var(--aboro-blue); font-weight: 600; }
+
+.catalog-import {
+    border: 1px dashed rgba(18, 49, 95, .32);
+    border-radius: 10px;
+    padding: 1rem;
+    background: #fbfcfe;
+}
+
+@media (max-width: 991.98px) {
+    .catalog-sidebar { position: static; }
+}
+
 @media (max-width: 767.98px) {
     .home-kpis {
         grid-template-columns: 1fr;

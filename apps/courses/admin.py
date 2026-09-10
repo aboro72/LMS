@@ -42,8 +42,8 @@ class AbschnittInline(admin.TabularInline):
 
 @admin.register(Kurs)
 class KursAdmin(admin.ModelAdmin):
-    list_display = ("titel", "organisation", "niveau", "sprache", "ist_veroeffentlicht", "erstellt_von")
-    list_filter = ("niveau", "sprache", "ist_veroeffentlicht", "organisation")
+    list_display = ("titel", "organisation", "angebotstyp", "niveau", "sprache", "ist_veroeffentlicht", "erstellt_von")
+    list_filter = ("angebotstyp", "niveau", "sprache", "ist_veroeffentlicht", "organisation")
     search_fields = ("titel", "organisation__name", "erstellt_von__username")
     prepopulated_fields = {"slug": ("titel",)}
     autocomplete_fields = ("organisation", "erstellt_von")

@@ -2,6 +2,8 @@ from django.conf import settings
 from django.db import models
 from django_quill.fields import QuillField
 
+from apps.security.fields import EncryptedTextField
+
 
 class Fragenkatalog(models.Model):
     titel = models.CharField(max_length=300)
@@ -119,6 +121,33 @@ class Pruefung(models.Model):
         return self.titel
 
 
+class PruefungsThemenquote(models.Model):
+    pruefung = models.ForeignKey(Pruefung, on_delete=models.CASCADE, related_name="themenquoten")
+    thema = models.ForeignKey(FragenTag, on_delete=models.CASCADE, related_name="pruefungsquoten")
+    anzahl_fragen = models.PositiveIntegerField(verbose_name="Anzahl Fragen")
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=["pruefung", "thema"], name="unique_exam_topic_quota")]
+        ordering = ["thema__name"]
+        verbose_name = "Themenquote"
+        verbose_name_plural = "Themenquoten"
+
+    def __str__(self):
+        return f"{self.pruefung}: {self.anzahl_fragen} aus {self.thema}"
+
+
+class PruefungsAnmeldung(models.Model):
+    nutzer = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="pruefungsanmeldungen")
+    pruefung = models.ForeignKey(Pruefung, on_delete=models.CASCADE, related_name="anmeldungen")
+    angemeldet_am = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=["nutzer", "pruefung"], name="unique_user_exam_registration")]
+        ordering = ["-angemeldet_am"]
+        verbose_name = "Prüfungsanmeldung"
+        verbose_name_plural = "Prüfungsanmeldungen"
+
+
 class PruefungsVersuch(models.Model):
     class Status(models.TextChoices):
         LAUFEND = "LAUFEND", "Laufend"
@@ -138,6 +167,8 @@ class PruefungsVersuch(models.Model):
     prozent_erreicht = models.DecimalField(max_digits=5, decimal_places=2, default=0)
     bestanden = models.BooleanField(default=False)
     fragen_reihenfolge = models.JSONField(default=list)
+    ergebnis_verschluesselt = EncryptedTextField(blank=True)
+    einsehbar_bis = models.DateTimeField(null=True, blank=True)
 
     class Meta:
         constraints = [models.UniqueConstraint(fields=["nutzer", "pruefung", "versuch_nummer"], name="unique_user_exam_attempt")]

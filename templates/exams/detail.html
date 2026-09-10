@@ -15,9 +15,10 @@
         <dt class="col-sm-4">Zeitlimit</dt>
         <dd class="col-sm-8">{% if pruefung.zeitlimit_minuten %}{{ pruefung.zeitlimit_minuten }} Minuten{% else %}Kein Limit{% endif %}</dd>
     </dl>
-    <form method="post" action="{% url 'exam_start' pruefung.id %}">
-        {% csrf_token %}
-        <button class="btn btn-aboro" type="submit">Pruefung starten</button>
-    </form>
+    {% if angemeldet %}
+        <form method="post" action="{% url 'exam_start' pruefung.id %}">{% csrf_token %}<button class="btn btn-aboro" type="submit">Prüfung starten</button></form>
+    {% else %}
+        <form method="post" action="{% url 'exam_enroll' pruefung.id %}">{% csrf_token %}<button class="btn btn-aboro" type="submit">Zur Prüfung anmelden</button></form>
+    {% endif %}
 </div>
 {% endblock %}

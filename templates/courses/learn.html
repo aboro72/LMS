@@ -5,8 +5,13 @@
 {% block breadcrumbs %}
 <nav aria-label="breadcrumb">
     <ol class="breadcrumb">
+        {% if tenant_org %}
+        <li class="breadcrumb-item"><a href="{% url 'org_public_home' tenant_org.slug %}">Start</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'tenant_course_detail' tenant_org.slug kurs.slug %}">{{ kurs.titel }}</a></li>
+        {% else %}
         <li class="breadcrumb-item"><a href="{% url 'home' %}">Start</a></li>
         <li class="breadcrumb-item"><a href="{% url 'course_detail' kurs.slug %}">{{ kurs.titel }}</a></li>
+        {% endif %}
         <li class="breadcrumb-item active" aria-current="page">Lernen</li>
     </ol>
 </nav>
@@ -30,7 +35,7 @@
                 <h2 class="h6 mt-3 mb-2">{{ abschnitt.titel }}</h2>
                 <div class="list-group list-group-flush">
                     {% for item in abschnitt.lektionen.all %}
-                        <a class="list-group-item px-0 d-flex justify-content-between align-items-center {% if lektion.id == item.id %}active-lesson{% endif %}" href="{% url 'course_lesson' kurs.slug item.id %}">
+                        <a class="list-group-item px-0 d-flex justify-content-between align-items-center {% if lektion.id == item.id %}active-lesson{% endif %}" href="{% if tenant_org %}{% url 'tenant_course_lesson' tenant_org.slug kurs.slug item.id %}{% else %}{% url 'course_lesson' kurs.slug item.id %}{% endif %}">
                             <span>{{ item.titel }}</span>
                             {% if item.id in abgeschlossene_ids %}
                                 <span class="badge text-bg-success">OK</span>
@@ -56,7 +61,7 @@
                 {% if lektion.typ == "VIDEO" %}
                     {% if lektion.datei %}
                         <div class="ratio ratio-16x9 mb-3 video-frame">
-                            <video controls preload="metadata">
+                            <video controls preload="metadata"{% if lektion.video_thumbnail %} poster="{{ lektion.video_thumbnail.url }}"{% endif %}>
                                 <source src="{{ lektion.datei.url }}">
                                 Dein Browser kann dieses Video nicht abspielen.
                             </video>
@@ -113,7 +118,7 @@
                                 </div>
                             {% endfor %}
                         {% endif %}
-                        <form method="post" action="{% url 'course_lesson_exercise' kurs.slug lektion.id %}">
+                        <form method="post" action="{% if tenant_org %}{% url 'tenant_course_lesson_exercise' tenant_org.slug kurs.slug lektion.id %}{% else %}{% url 'course_lesson_exercise' kurs.slug lektion.id %}{% endif %}">
                             {% csrf_token %}
                             {% for frage in lektion.uebungsfragen.all %}
                                 {% if frage.aktiv %}
@@ -135,17 +140,17 @@
 
                 <div class="d-flex justify-content-between gap-2 flex-wrap">
                     {% if vorherige_lektion %}
-                        <a class="btn btn-outline-secondary" href="{% url 'course_lesson' kurs.slug vorherige_lektion.id %}">Vorherige Lektion</a>
+                        <a class="btn btn-outline-secondary" href="{% if tenant_org %}{% url 'tenant_course_lesson' tenant_org.slug kurs.slug vorherige_lektion.id %}{% else %}{% url 'course_lesson' kurs.slug vorherige_lektion.id %}{% endif %}">Vorherige Lektion</a>
                     {% else %}
                         <span></span>
                     {% endif %}
                     <div class="d-flex gap-2">
-                        <form method="post" action="{% url 'course_lesson_complete' kurs.slug lektion.id %}">
+                        <form method="post" action="{% if tenant_org %}{% url 'tenant_course_lesson_complete' tenant_org.slug kurs.slug lektion.id %}{% else %}{% url 'course_lesson_complete' kurs.slug lektion.id %}{% endif %}">
                             {% csrf_token %}
                             <button class="btn btn-aboro" type="submit">Als abgeschlossen markieren</button>
                         </form>
                         {% if naechste_lektion %}
-                            <a class="btn btn-outline-secondary" href="{% url 'course_lesson' kurs.slug naechste_lektion.id %}">Naechste Lektion</a>
+                            <a class="btn btn-outline-secondary" href="{% if tenant_org %}{% url 'tenant_course_lesson' tenant_org.slug kurs.slug naechste_lektion.id %}{% else %}{% url 'course_lesson' kurs.slug naechste_lektion.id %}{% endif %}">Naechste Lektion</a>
                         {% endif %}
                     </div>
                 </div>

@@ -36,6 +36,7 @@ MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
+    "apps.organisations.middleware.TenantRedirectMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
@@ -117,6 +118,7 @@ DEFAULT_FROM_EMAIL = config("DEFAULT_FROM_EMAIL", default="noreply@aborosoft.de"
 
 PLATFORM_COMMISSION_PERCENT = config("PLATFORM_COMMISSION_PERCENT", default=15, cast=int)
 PAYMENT_DEMO_AUTOCONFIRM = config("PAYMENT_DEMO_AUTOCONFIRM", default=True, cast=bool)
+DEMO_DATA_ALLOW_PRODUCTION = config("DEMO_DATA_ALLOW_PRODUCTION", default=False, cast=bool)
 STRIPE_PUBLIC_KEY = config("STRIPE_PUBLIC_KEY", default="")
 STRIPE_SECRET_KEY = config("STRIPE_SECRET_KEY", default="")
 PAYPAL_CLIENT_ID = config("PAYPAL_CLIENT_ID", default="")

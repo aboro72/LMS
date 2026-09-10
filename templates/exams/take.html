@@ -27,8 +27,10 @@
                         <span>{{ antwort.antworttext }}</span>
                     </label>
                 {% endfor %}
-            {% elif frage.typ == "FT" %}
-                <textarea class="form-control" name="freitext_antwort" rows="8">{{ bestehende_antwort.freitext_antwort }}</textarea>
+            {% elif frage.typ == "FT" or frage.typ == "SZ" %}
+                <label class="form-label fw-semibold" for="freitextAntwort">Ihre Antwort</label>
+                <textarea class="form-control" id="freitextAntwort" name="freitext_antwort" rows="8" placeholder="Begründen Sie Ihre Antwort nachvollziehbar.">{{ bestehende_antwort.freitext_antwort }}</textarea>
+                <div class="form-text">Ihre Antwort wird gespeichert und anschließend von einem Prüfer bewertet.</div>
             {% elif frage.typ == "ZO" %}
                 <input type="hidden" name="zuordnung_json" id="zuordnungJsonInput">
                 <div class="mb-3">

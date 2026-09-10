@@ -5,17 +5,8 @@ def rollen_context(request):
     if not request.user.is_authenticated:
         return {}
 
-    if request.user.is_superuser:
-        return {
-            "ist_superadmin": True,
-            "ist_trainer": True,
-            "ist_examiner": True,
-            "ist_org_admin": True,
-            "meine_org": None,
-            "org_design": None,
-        }
-
     rollen = set(request.user.profile.filter(aktiv=True).values_list("rolle", flat=True))
+    ist_superadmin = request.user.is_superuser or request.user.groups.filter(name=Rolle.SUPERADMIN).exists()
     meine_org = None
     org_design = None
 
@@ -47,9 +38,9 @@ def rollen_context(request):
             org_design = None
 
     return {
-        "ist_superadmin": request.user.groups.filter(name=Rolle.SUPERADMIN).exists(),
-        "ist_trainer": bool(rollen & {Rolle.TRAINER, Rolle.ORG_ADMIN, Rolle.SUPERADMIN}),
-        "ist_examiner": bool(rollen & {Rolle.EXAMINER, Rolle.ORG_ADMIN, Rolle.SUPERADMIN}),
+        "ist_superadmin": ist_superadmin,
+        "ist_trainer": Rolle.TRAINER in rollen,
+        "ist_examiner": Rolle.EXAMINER in rollen,
         "ist_org_admin": Rolle.ORG_ADMIN in rollen,
         "meine_org": meine_org,
         "org_design": org_design,

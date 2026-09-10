@@ -19,8 +19,8 @@ env/
 
 # Environment files
 .env
-.env.*
-!.env.example
+.env
+!.env
 
 # IDE/OS
 .idea/

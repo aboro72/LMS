@@ -1,5 +1,9 @@
 # Fehlerbericht ABoroLMS
 
+Nachtrag 2026-09-10: Lokale Produktionspruefungen und Payment-Deaktivierung sind in
+[PRODUKTIONSPRUEFUNG.md](PRODUKTIONSPRUEFUNG.md) dokumentiert. Payment ist lokal
+ausgeschaltet und ueber die Superadmin-Zahlungseinstellungen wieder aktivierbar.
+
 Stand: 2026-09-09
 
 ## Nachpruefung und ergaenzende Korrektur am 2026-09-09

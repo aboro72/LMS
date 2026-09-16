@@ -26,7 +26,7 @@
             <div class="home-product-panel">
                 <div class="home-product-panel__header">
                     <span>Kursplattform</span>
-                    <strong>Demo aktiv</strong>
+                    {% if demo_mode %}<strong>Demo aktiv</strong>{% endif %}
                 </div>
                 <div class="home-product-panel__screen">
                     <div class="home-video-preview">
@@ -73,6 +73,7 @@
     </div>
 </section>
 
+{% if demo_mode %}
 <section class="aboro-panel mt-4">
     <div class="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-3">
         <div>
@@ -126,4 +127,5 @@
         </table>
     </div>
 </section>
+{% endif %}
 {% endblock %}

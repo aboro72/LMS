@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import redirect
 from django.urls import reverse_lazy
@@ -9,6 +10,11 @@ from .models import Rolle
 
 class HomeView(TemplateView):
     template_name = "home.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["demo_mode"] = settings.DEBUG
+        return context
 
 
 class DashboardView(LoginRequiredMixin, TemplateView):

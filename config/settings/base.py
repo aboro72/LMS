@@ -80,6 +80,7 @@ ACCOUNT_LOGIN_METHODS = {"email", "username"}
 ACCOUNT_SIGNUP_FIELDS = ["email*", "username*", "password1*", "password2*"]
 ACCOUNT_EMAIL_VERIFICATION = "optional"
 ACCOUNT_FORMS = {"login": "apps.accounts.forms.BootstrapLoginForm"}
+ACCOUNT_ADAPTER = "apps.accounts.adapters.OrganisationAccountAdapter"
 
 MESSAGE_TAGS = {
     messages.ERROR: "danger",

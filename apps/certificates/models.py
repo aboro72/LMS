@@ -18,6 +18,8 @@ class ZertifikatDesign(models.Model):
     )
     footer_text = models.CharField(max_length=500, blank=True, verbose_name="Fußzeilentext")
     signature_line = models.CharField(max_length=200, blank=True, verbose_name="Unterschriftenzeile")
+    unterschrift_1 = models.ImageField(upload_to="zertifikat_unterschriften/", blank=True, verbose_name="Unterschrift 1")
+    unterschrift_2 = models.ImageField(upload_to="zertifikat_unterschriften/", blank=True, verbose_name="Unterschrift 2")
     logo = models.ImageField(upload_to="zertifikat_logos/", blank=True, verbose_name="Logo")
 
     class Meta:
@@ -52,6 +54,8 @@ class Zertifikat(models.Model):
         related_name="zertifikate",
     )
     code = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
+    zertifikatsnummer = models.CharField(max_length=80, unique=True, null=True, blank=True, editable=False)
+    pdf_datei = models.FileField(upload_to="zertifikate/", blank=True)
     ausgestellt_am = models.DateTimeField(auto_now_add=True)
     ist_widerrufen = models.BooleanField(default=False)
 
@@ -79,3 +83,12 @@ class Zertifikat(models.Model):
 
     def get_inhaber_name(self):
         return self.nutzer.get_full_name() or self.nutzer.username
+
+
+class InterneZertifikatsnummer(models.Model):
+    naechste_nummer = models.PositiveIntegerField(default=5001)
+
+    @classmethod
+    def load(cls):
+        obj, _ = cls.objects.get_or_create(pk=1, defaults={"naechste_nummer": 5001})
+        return obj

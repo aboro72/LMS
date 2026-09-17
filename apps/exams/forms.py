@@ -46,7 +46,7 @@ class FrageForm(forms.ModelForm):
 
     class Meta:
         model = Frage
-        fields = ("typ", "fragetext", "erklaerung", "schwierigkeit", "punkte", "eltern_szenario")
+        fields = ("typ", "fragetext", "erklaerung", "bewertungshinweis", "schwierigkeit", "punkte", "eltern_szenario")
 
     def __init__(self, *args, fragenkatalog=None, **kwargs):
         super().__init__(*args, **kwargs)
@@ -65,6 +65,14 @@ class FrageForm(forms.ModelForm):
         if commit:
             self.save_themen(frage)
         return frage
+
+    def clean(self):
+        data = super().clean()
+        if data.get("typ") in [Frage.Typ.FREITEXT, Frage.Typ.SZENARIO]:
+            schema = data.get("bewertungshinweis")
+            if not schema or not schema.html.strip():
+                self.add_error("bewertungshinweis", "Bitte legen Sie die erwarteten Inhalte und die Punktverteilung fest.")
+        return data
 
     def save_themen(self, frage):
         if not self.fragenkatalog:
@@ -105,6 +113,10 @@ class PruefungForm(forms.ModelForm):
             "zufaellige_antwortfolge",
             "kein_zurueck",
             "ist_aktiv",
+            "zertifikatsnummernart",
+            "externe_nummern_prefix",
+            "externe_nummern_naechste",
+            "externe_nummern_ende",
         )
 
         help_texts = {

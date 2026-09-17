@@ -4,12 +4,12 @@ from django.utils import timezone
 
 from apps.courses.models import Einschreibung
 
-from .models import AuditLog, Rechnung, Zahlung, Zahlungsart, Zahlungseinstellungen, Zahlungsstatus
+from .models import AuditLog, OrganisationZahlungseinstellungen, Rechnung, Zahlung, Zahlungsart, Zahlungseinstellungen, Zahlungsstatus
 
 
 @transaction.atomic
 def erstelle_zahlung(kurs, nutzer, zahlungsart):
-    if zahlungsart not in dict(lade_zahlungseinstellungen().aktive_zahlungsarten()):
+    if zahlungsart not in dict(lade_zahlungseinstellungen(kurs.organisation).aktive_zahlungsarten()):
         raise PermissionDenied("Zahlungen oder diese Zahlungsart sind derzeit deaktiviert.")
     gebuehr, trainer_anteil = Zahlung.berechne_aufteilung(kurs.preis)
     zahlung = Zahlung.objects.create(
@@ -90,5 +90,8 @@ def zahlungsart_ist_automatisch(zahlungsart):
     return zahlungsart in [Zahlungsart.STRIPE, Zahlungsart.GOOGLE_PAY, Zahlungsart.PAYPAL]
 
 
-def lade_zahlungseinstellungen():
-    return Zahlungseinstellungen.load()
+def lade_zahlungseinstellungen(organisation=None):
+    if organisation is None:
+        return Zahlungseinstellungen.load()
+    obj, _ = OrganisationZahlungseinstellungen.objects.get_or_create(organisation=organisation)
+    return obj

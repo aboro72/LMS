@@ -5,7 +5,8 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.db.models import Avg, Count
-from django.http import HttpResponse, JsonResponse
+from django.core.files.base import ContentFile
+from django.http import FileResponse, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
@@ -25,7 +26,7 @@ from .forms import (
     PruefungsThemenquoteFormSet,
     ZuordnungsPaarForm,
 )
-from .models import Antwort, Frage, Fragenkatalog, FragenTag, Pruefung, PruefungsAnmeldung, PruefungsVersuch, TeilnehmerAntwort, ZuordnungsPaar
+from .models import Antwort, Frage, Fragenkatalog, FragenTag, Pruefung, PruefungsAnmeldung, PruefungsbogenArchiv, PruefungsVersuch, TeilnehmerAntwort, ZuordnungsPaar
 from .pdf import generiere_pruefungsbogen_pdf
 from .services import NichtGenugFragenInThema, MaxVersucheErreicht, pruefe_zeitlimit, speichere_antwort, starte_pruefung, waehle_pruefungsfragen, werte_versuch_aus
 
@@ -271,6 +272,8 @@ class TrainerPruefungFormMixin:
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["themen_formset"] = kwargs.get("themen_formset") or self.get_themen_formset()
+        if self.object and self.object.pk:
+            context["offline_boegen"] = self.object.offline_boegen.all()[:12]
         return context
 
     def form_valid(self, form):
@@ -300,6 +303,15 @@ class TrainerPruefungCreateView(TrainerPruefungFormMixin, RollenMixin, CreateVie
         kwargs = super().get_form_kwargs()
         kwargs["user"] = self.request.user
         return kwargs
+
+    def form_valid(self, form):
+        organisation = form.cleaned_data.get("organisation")
+        if organisation and organisation.ist_demo_organisation:
+            from apps.courses.models import Kurs
+            if Pruefung.objects.filter(organisation=organisation).count() + Kurs.objects.filter(organisation=organisation).count() >= organisation.demo_inhalte_startbestand + 3:
+                form.add_error(None, "In der Demo-Organisation koennen zusaetzlich hoechstens drei Kurse oder Zertifikatspruefungen angelegt werden.")
+                return self.form_invalid(form)
+        return super().form_valid(form)
 
     def get_success_url(self):
         messages.success(self.request, "Pruefung wurde gespeichert.")
@@ -342,6 +354,49 @@ class TrainerPruefungsbogenPDFView(RollenMixin, View):
         return response
 
 
+class TrainerOfflinePruefungsbogenCreateView(RollenMixin, View):
+    rolle = Rolle.TRAINER
+
+    def post(self, request, pk):
+        pruefung = get_object_or_404(trainer_exam_queryset(request.user), pk=pk)
+        try:
+            fragen = waehle_pruefungsfragen(pruefung)
+        except NichtGenugFragenInThema as exc:
+            messages.error(request, f"Offline-Pruefungsbogen konnte nicht erzeugt werden: {exc}")
+            return redirect("trainer_exam_edit", pk=pruefung.pk)
+        if not pruefung.zufaellige_fragenreihenfolge:
+            fragen.sort(key=lambda frage: frage.id)
+        archiv = PruefungsbogenArchiv.objects.create(
+            pruefung=pruefung,
+            erstellt_von=request.user,
+            fragen_reihenfolge=[frage.pk for frage in fragen],
+        )
+        stamp = timezone.localtime(archiv.erstellt_am).strftime("%Y%m%d-%H%M%S")
+        archiv.teilnehmer_pdf.save(
+            f"pruefungsbogen-{pruefung.pk}-{stamp}-teilnehmer.pdf",
+            ContentFile(generiere_pruefungsbogen_pdf(pruefung, fragen, mit_loesungen=False)),
+            save=False,
+        )
+        archiv.loesung_pdf.save(
+            f"pruefungsbogen-{pruefung.pk}-{stamp}-loesungen.pdf",
+            ContentFile(generiere_pruefungsbogen_pdf(pruefung, fragen, mit_loesungen=True)),
+            save=False,
+        )
+        archiv.save()
+        messages.success(request, "Offline-Pruefungsbogen und Trainer-Lösung wurden im Archiv gespeichert.")
+        return redirect("trainer_exam_edit", pk=pruefung.pk)
+
+
+class TrainerOfflinePruefungsbogenDownloadView(RollenMixin, View):
+    rolle = Rolle.TRAINER
+
+    def get(self, request, pk, archiv_id, variante):
+        pruefung = get_object_or_404(trainer_exam_queryset(request.user), pk=pk)
+        archiv = get_object_or_404(PruefungsbogenArchiv, pk=archiv_id, pruefung=pruefung)
+        datei = archiv.loesung_pdf if variante == "loesung" else archiv.teilnehmer_pdf
+        return FileResponse(datei.open("rb"), as_attachment=True, filename=datei.name.rsplit("/", 1)[-1])
+
+
 class PruefungDetailView(LoginRequiredMixin, DetailView):
     model = Pruefung
     template_name = "exams/detail.html"
@@ -367,6 +422,9 @@ class PruefungEinschreibenView(LoginRequiredMixin, View):
 class PruefungStartView(LoginRequiredMixin, View):
     def post(self, request, pk):
         pruefung = get_object_or_404(Pruefung, pk=pk, ist_aktiv=True, organisation__aktiv=True)
+        if not all([request.user.first_name, request.user.last_name, request.user.geburtsdatum, request.user.geburtsort]):
+            messages.error(request, "Bitte vervollständigen Sie zuerst Vorname, Nachname, Geburtsdatum und Geburtsort im Profil.")
+            return redirect("profile")
         if not PruefungsAnmeldung.objects.filter(nutzer=request.user, pruefung=pruefung).exists():
             messages.error(request, "Bitte melden Sie sich zuerst zur Prüfung an.")
             return redirect("exam_detail", pk=pruefung.pk)
@@ -542,4 +600,22 @@ class TrainerPruefungStatistikView(RollenMixin, TemplateView):
             "durchschnitt": versuche.aggregate(avg=Avg("prozent_erreicht"))["avg"] or 0,
             "frage_stats": frage_stats,
         })
+        return context
+
+
+class TrainerPruefungErgebnisListeView(RollenMixin, ListView):
+    rolle = Rolle.TRAINER
+    template_name = "exams/trainer/exam_results.html"
+    context_object_name = "versuche"
+
+    def dispatch(self, request, *args, **kwargs):
+        self.pruefung = get_object_or_404(trainer_exam_queryset(request.user), pk=kwargs["pk"])
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_queryset(self):
+        return PruefungsVersuch.objects.filter(pruefung=self.pruefung).select_related("nutzer").order_by("-gestartet_am")
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["pruefung"] = self.pruefung
         return context

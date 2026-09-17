@@ -6,15 +6,44 @@ from .models import User
 
 class RegisterForm(UserCreationForm):
     email = forms.EmailField(required=True)
+    geburtsdatum = forms.DateField(required=False, widget=forms.DateInput(attrs={"type": "date"}))
 
     class Meta:
         model = User
-        fields = ("username", "email", "first_name", "last_name", "password1", "password2")
+        fields = ("username", "email", "first_name", "last_name", "geburtsdatum", "geburtsort", "password1", "password2")
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         for field in self.fields.values():
             field.widget.attrs.update({"class": "form-control"})
+
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        user.geburtsdatum = self.cleaned_data.get("geburtsdatum").isoformat() if self.cleaned_data.get("geburtsdatum") else ""
+        if commit:
+            user.save()
+        return user
+
+
+class ProfilForm(forms.ModelForm):
+    geburtsdatum = forms.DateField(required=False, widget=forms.DateInput(attrs={"type": "date", "class": "form-control"}))
+
+    class Meta:
+        model = User
+        fields = ("first_name", "last_name", "geburtsdatum", "geburtsort")
+        widgets = {"first_name": forms.TextInput(attrs={"class": "form-control"}), "last_name": forms.TextInput(attrs={"class": "form-control"}), "geburtsort": forms.TextInput(attrs={"class": "form-control"})}
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.instance.geburtsdatum:
+            self.initial["geburtsdatum"] = self.instance.geburtsdatum
+
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        user.geburtsdatum = self.cleaned_data.get("geburtsdatum").isoformat() if self.cleaned_data.get("geburtsdatum") else ""
+        if commit:
+            user.save()
+        return user
 
 
 from allauth.account.forms import LoginForm as AllauthLoginForm

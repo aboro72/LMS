@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Antwort, Frage, Fragenkatalog, FragenTag, Pruefung, PruefungsThemenquote, PruefungsVersuch, TeilnehmerAntwort, ZuordnungsPaar
+from .models import Antwort, Frage, Fragenkatalog, FragenTag, Pruefung, PruefungsThemenquote, PruefungsVersuch, PruefungsbogenArchiv, TeilnehmerAntwort, ZuordnungsPaar
 
 
 class AntwortInline(admin.TabularInline):
@@ -67,6 +67,12 @@ class PruefungsVersuchAdmin(admin.ModelAdmin):
     list_display = ("nutzer", "pruefung", "versuch_nummer", "status", "prozent_erreicht", "bestanden")
     list_filter = ("status", "bestanden", "pruefung__organisation")
     search_fields = ("nutzer__username", "pruefung__titel")
+
+
+@admin.register(PruefungsbogenArchiv)
+class PruefungsbogenArchivAdmin(admin.ModelAdmin):
+    list_display = ("pruefung", "erstellt_von", "erstellt_am")
+    list_filter = ("pruefung__organisation",)
 
 
 @admin.register(TeilnehmerAntwort)

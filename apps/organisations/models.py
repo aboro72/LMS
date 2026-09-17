@@ -34,6 +34,8 @@ class Organisation(models.Model):
     lizenz_typ = models.CharField(max_length=20, choices=LizenzTyp.choices, default=LizenzTyp.BASIC)
     max_nutzer = models.PositiveIntegerField(default=50)
     max_kurse = models.PositiveIntegerField(default=10)
+    ist_demo_organisation = models.BooleanField(default=False, verbose_name="Demo-Organisation")
+    demo_inhalte_startbestand = models.PositiveIntegerField(default=0, editable=False)
     aktiv = models.BooleanField(default=True)
     erstellt_am = models.DateTimeField(auto_now_add=True)
 
@@ -52,6 +54,10 @@ class Einladung(models.Model):
     rolle = models.CharField(max_length=20, choices=Rolle.choices)
     token = models.UUIDField(default=uuid.uuid4, unique=True)
     eingeladen_von = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True)
+    pruefung = models.ForeignKey(
+        "exams.Pruefung", on_delete=models.SET_NULL, null=True, blank=True,
+        related_name="einladungen", verbose_name="Zertifikatspruefung",
+    )
     erstellt_am = models.DateTimeField(auto_now_add=True)
     akzeptiert_am = models.DateTimeField(null=True, blank=True)
     abgelaufen_am = models.DateTimeField(default=default_invitation_expiry)
@@ -94,6 +100,14 @@ class OrganisationEmailKonfiguration(models.Model):
     smtp_password = EncryptedCharField(blank=True, verbose_name="SMTP-Passwort")
     smtp_use_tls = models.BooleanField(default=True, verbose_name="STARTTLS verwenden (Port 587)")
     smtp_use_ssl = models.BooleanField(default=False, verbose_name="SSL verwenden (Port 465)")
+    einladung_betreff = models.CharField(max_length=200, default="Einladung zu {{ organisation }}")
+    einladung_text = models.TextField(
+        default="Hallo,\n\nSie wurden zu {{ organisation }} eingeladen. Bitte nehmen Sie die Einladung innerhalb von 7 Tagen an:\n{{ einladungslink }}\n\nFreundliche Gruesse\n{{ organisation }}"
+    )
+    passwort_reset_betreff = models.CharField(max_length=200, default="Passwort zuruecksetzen bei {{ organisation }}")
+    passwort_reset_text = models.TextField(
+        default="Hallo,\n\nSie haben angefordert, Ihr Passwort fuer {{ organisation }} zurueckzusetzen. Nutzen Sie dazu diesen Link:\n{{ passwort_reset_link }}\n\nWenn Sie dies nicht angefordert haben, koennen Sie diese E-Mail ignorieren."
+    )
 
     class Meta:
         verbose_name = "E-Mail-Konfiguration"

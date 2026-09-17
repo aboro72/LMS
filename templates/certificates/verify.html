@@ -19,18 +19,16 @@
                 </div>
                 <p class="text-uppercase fw-semibold text-success mb-2">Zertifikat gueltig</p>
                 <h1 class="h4 mb-3">{{ zertifikat.get_titel }}</h1>
-                <p class="lead mb-4">
-                    Dieses Zertifikat wurde an<br>
-                    <strong class="text-aboro-orange" style="font-size:1.2rem;">{{ zertifikat.get_inhaber_name }}</strong><br>
-                    ausgestellt.
-                </p>
+                <p class="lead mb-4">Dieses Zertifikat ist beim Aussteller als gültig registriert.</p>
                 <dl class="row text-start mb-4">
                     {% if zertifikat.get_organisation %}
-                        <dt class="col-5">Organisation</dt>
+                    <dt class="col-5">Organisation</dt>
                         <dd class="col-7">{{ zertifikat.get_organisation.name }}</dd>
                     {% endif %}
                     <dt class="col-5">Ausgestellt am</dt>
                     <dd class="col-7">{{ zertifikat.ausgestellt_am|date:"d. F Y" }}</dd>
+                    <dt class="col-5">Zertifikatsnummer</dt>
+                    <dd class="col-7"><strong>{{ zertifikat.zertifikatsnummer|default:"-" }}</strong></dd>
                     {% if zertifikat.pruefungsversuch %}
                         <dt class="col-5">Ergebnis</dt>
                         <dd class="col-7">{{ zertifikat.pruefungsversuch.prozent_erreicht }}% (bestanden)</dd>
@@ -38,7 +36,7 @@
                     <dt class="col-5">Zertifikat-ID</dt>
                     <dd class="col-7"><code class="small">{{ zertifikat.code }}</code></dd>
                 </dl>
-                <p class="text-secondary small">Diese Seite verifiziert das Zertifikat direkt beim Aussteller ABoroLMS.</p>
+                <p class="text-secondary small">Diese öffentliche Prüfung enthält bewusst keine Namen oder Geburtsdaten. Die vollständigen personenbezogenen Angaben stehen ausschließlich auf dem geschützten Zertifikats-PDF des Lernenden.</p>
             {% endif %}
         </div>
     </div>

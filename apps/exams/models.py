@@ -53,6 +53,7 @@ class Frage(models.Model):
     typ = models.CharField(max_length=2, choices=Typ.choices)
     fragetext = QuillField()
     erklaerung = QuillField(blank=True)
+    bewertungshinweis = QuillField(blank=True, verbose_name="Bewertungsschema")
     schwierigkeit = models.CharField(max_length=1, choices=Schwierigkeit.choices, default=Schwierigkeit.MITTEL)
     punkte = models.PositiveIntegerField(default=1)
     tags = models.ManyToManyField(FragenTag, blank=True)
@@ -98,6 +99,9 @@ class ZuordnungsPaar(models.Model):
 
 
 class Pruefung(models.Model):
+    class Zertifikatsnummernart(models.TextChoices):
+        INTERN = "INTERN", "Interne fortlaufende Nummer"
+        EXTERN = "EXTERN", "Externer Nummernbereich"
     titel = models.CharField(max_length=300)
     beschreibung = models.TextField(blank=True)
     organisation = models.ForeignKey("organisations.Organisation", on_delete=models.CASCADE)
@@ -110,6 +114,10 @@ class Pruefung(models.Model):
     zufaellige_antwortfolge = models.BooleanField(default=True)
     kein_zurueck = models.BooleanField(default=False)
     ist_aktiv = models.BooleanField(default=True)
+    zertifikatsnummernart = models.CharField(max_length=10, choices=Zertifikatsnummernart.choices, default=Zertifikatsnummernart.INTERN)
+    externe_nummern_prefix = models.CharField(max_length=40, blank=True)
+    externe_nummern_naechste = models.PositiveIntegerField(default=1)
+    externe_nummern_ende = models.PositiveIntegerField(null=True, blank=True)
     erstellt_am = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -146,6 +154,24 @@ class PruefungsAnmeldung(models.Model):
         ordering = ["-angemeldet_am"]
         verbose_name = "Prüfungsanmeldung"
         verbose_name_plural = "Prüfungsanmeldungen"
+
+
+class PruefungsbogenArchiv(models.Model):
+    """Unveraenderliche Offline-Fassung mit der beim Erstellen gezogenen Fragenfolge."""
+    pruefung = models.ForeignKey(Pruefung, on_delete=models.CASCADE, related_name="offline_boegen")
+    erstellt_von = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True)
+    erstellt_am = models.DateTimeField(auto_now_add=True)
+    fragen_reihenfolge = models.JSONField(default=list)
+    teilnehmer_pdf = models.FileField(upload_to="pruefungsboegen/teilnehmer/")
+    loesung_pdf = models.FileField(upload_to="pruefungsboegen/loesungen/")
+
+    class Meta:
+        ordering = ["-erstellt_am"]
+        verbose_name = "Offline-Pruefungsbogen"
+        verbose_name_plural = "Offline-Pruefungsboegen"
+
+    def __str__(self):
+        return f"{self.pruefung} – {self.erstellt_am:%d.%m.%Y %H:%M}"
 
 
 class PruefungsVersuch(models.Model):

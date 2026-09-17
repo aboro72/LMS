@@ -4,6 +4,8 @@ from .views import (
     AuditLogListView,
     BankTransferConfirmView,
     CheckoutView,
+    OrganisationPaymentSettingsView,
+    OrganisationBankTransferConfirmView,
     PaymentSettingsView,
     PaymentCancelView,
     PaymentSuccessView,
@@ -16,6 +18,8 @@ from .views import (
 
 urlpatterns = [
     path("superadmin/zahlungseinstellungen/", PaymentSettingsView.as_view(), name="superadmin_payment_settings"),
+    path("organisationen/<slug:slug>/zahlungseinstellungen/", OrganisationPaymentSettingsView.as_view(), name="org_payment_settings"),
+    path("organisationen/zahlungen/<uuid:zahlung_id>/ueberweisung-bestaetigen/", OrganisationBankTransferConfirmView.as_view(), name="org_bank_transfer_confirm"),
     path("kurse/<slug:slug>/checkout/", CheckoutView.as_view(), name="course_checkout"),
     path("<slug:org_slug>/kurse/<slug:slug>/checkout/", CheckoutView.as_view(), name="tenant_course_checkout"),
     path("zahlungen/<uuid:zahlung_id>/success/", PaymentSuccessView.as_view(), name="payment_success"),

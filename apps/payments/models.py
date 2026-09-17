@@ -79,6 +79,43 @@ class Zahlungseinstellungen(models.Model):
         return choices
 
 
+class OrganisationZahlungseinstellungen(models.Model):
+    """Abgeschottete Anbieter- und Bankdaten einer einzelnen Organisation."""
+    organisation = models.OneToOneField("organisations.Organisation", on_delete=models.CASCADE, related_name="zahlungseinstellungen")
+    payment_aktiv = models.BooleanField("Bezahlte Angebote aktivieren", default=False)
+    stripe_aktiv = models.BooleanField("Stripe anbieten", default=False)
+    stripe_public_key = models.CharField(max_length=255, blank=True)
+    stripe_secret_key = EncryptedCharField(blank=True)
+    paypal_aktiv = models.BooleanField("PayPal anbieten", default=False)
+    paypal_client_id = models.CharField(max_length=255, blank=True)
+    paypal_secret = EncryptedCharField(blank=True)
+    ueberweisung_aktiv = models.BooleanField("Bankueberweisung anbieten", default=False)
+    kontoinhaber = EncryptedCharField(blank=True)
+    iban = EncryptedCharField(blank=True)
+    bic = EncryptedCharField(blank=True)
+    bankname = EncryptedCharField(blank=True)
+    aktualisiert_am = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Organisations-Zahlungseinstellungen"
+        verbose_name_plural = "Organisations-Zahlungseinstellungen"
+
+    def __str__(self):
+        return f"Zahlungseinstellungen – {self.organisation}"
+
+    def aktive_zahlungsarten(self):
+        if not self.payment_aktiv:
+            return []
+        choices = []
+        if self.stripe_aktiv and self.stripe_public_key and self.stripe_secret_key:
+            choices.append((Zahlungsart.STRIPE, Zahlungsart.STRIPE.label))
+        if self.paypal_aktiv and self.paypal_client_id and self.paypal_secret:
+            choices.append((Zahlungsart.PAYPAL, Zahlungsart.PAYPAL.label))
+        if self.ueberweisung_aktiv and self.iban:
+            choices.append((Zahlungsart.BANK_TRANSFER, Zahlungsart.BANK_TRANSFER.label))
+        return choices
+
+
 class Zahlung(models.Model):
     zahlung_id = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
     nutzer = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="zahlungen")

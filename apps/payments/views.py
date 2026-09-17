@@ -8,9 +8,12 @@ from django.utils import timezone
 from django.views import View
 from django.views.generic import DetailView, FormView, ListView
 
+from apps.accounts.mixins import RollenMixin
+from apps.accounts.models import Rolle
 from apps.courses.models import Einschreibung, Kurs
+from apps.organisations.models import Organisation
 
-from .forms import CheckoutForm, PaymentSwitchForm
+from .forms import CheckoutForm, OrganisationZahlungseinstellungenForm, PaymentSwitchForm
 from .models import AuditLog, Auszahlungsstatus, Rechnung, Zahlung, Zahlungsart, Zahlungsstatus
 from .services import bestaetige_zahlung, erstelle_zahlung, lade_zahlungseinstellungen, log_audit, zahlungsart_ist_automatisch
 
@@ -46,7 +49,7 @@ class CheckoutView(LoginRequiredMixin, FormView):
             if self.org_slug:
                 return redirect("tenant_course_learn", org_slug=self.kurs.organisation.slug, slug=self.kurs.slug)
             return redirect("course_learn", slug=self.kurs.slug)
-        self.payment_settings = lade_zahlungseinstellungen()
+        self.payment_settings = lade_zahlungseinstellungen(self.kurs.organisation)
         return super().dispatch(request, *args, **kwargs)
 
     def get_form_kwargs(self):
@@ -149,6 +152,19 @@ class BankTransferConfirmView(SuperadminRequiredMixin, View):
         return redirect("superadmin_payouts")
 
 
+class OrganisationBankTransferConfirmView(RollenMixin, View):
+    rolle = Rolle.ORG_ADMIN
+
+    def post(self, request, zahlung_id):
+        queryset = Zahlung.objects.filter(zahlung_id=zahlung_id, zahlungsart=Zahlungsart.BANK_TRANSFER)
+        if not request.user.is_superuser:
+            queryset = queryset.filter(kurs__organisation__userprofile__nutzer=request.user, kurs__organisation__userprofile__rolle=Rolle.ORG_ADMIN, kurs__organisation__userprofile__aktiv=True)
+        zahlung = get_object_or_404(queryset)
+        bestaetige_zahlung(zahlung, provider_referenz="org-bank-transfer", actor=request.user)
+        messages.success(request, "Überweisung bestätigt und Kurs freigeschaltet.")
+        return redirect("org_payment_settings", slug=zahlung.kurs.organisation.slug)
+
+
 class PayoutMarkNotifiedView(SuperadminRequiredMixin, View):
     def post(self, request, zahlung_id):
         zahlung = get_object_or_404(Zahlung, zahlung_id=zahlung_id, status=Zahlungsstatus.BEZAHLT)
@@ -213,3 +229,36 @@ class PaymentSettingsView(SuperadminRequiredMixin, FormView):
                   obj=form.instance, metadata={"payment_aktiv": form.instance.payment_aktiv})
         messages.success(self.request, "Zahlungseinstellungen gespeichert.")
         return redirect("superadmin_payment_settings")
+
+
+class OrganisationPaymentSettingsView(RollenMixin, FormView):
+    rolle = Rolle.ORG_ADMIN
+    template_name = "payments/organisation/settings.html"
+    form_class = OrganisationZahlungseinstellungenForm
+
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.is_superuser:
+            self.org = get_object_or_404(Organisation, slug=kwargs["slug"])
+        else:
+            self.org = get_object_or_404(Organisation, slug=kwargs["slug"], userprofile__nutzer=request.user, userprofile__rolle=Rolle.ORG_ADMIN, userprofile__aktiv=True)
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs["instance"] = lade_zahlungseinstellungen(self.org)
+        return kwargs
+
+    def form_valid(self, form):
+        form.save()
+        log_audit(actor=self.request.user, organisation=self.org, action="org_zahlungseinstellungen_gespeichert", obj=form.instance)
+        messages.success(self.request, "Eigene Zahlungsarten und Zugangsdaten wurden gespeichert.")
+        return redirect("org_payment_settings", slug=self.org.slug)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["org"] = self.org
+        context["offene_ueberweisungen"] = Zahlung.objects.filter(
+            kurs__organisation=self.org, zahlungsart=Zahlungsart.BANK_TRANSFER,
+            status=Zahlungsstatus.OFFEN,
+        ).select_related("kurs", "nutzer")
+        return context

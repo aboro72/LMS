@@ -1,5 +1,6 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
+from apps.security.fields import EncryptedCharField
 
 
 class Rolle(models.TextChoices):
@@ -14,6 +15,8 @@ class User(AbstractUser):
     avatar = models.ImageField(upload_to="avatars/", blank=True)
     bio = models.TextField(blank=True)
     bevorzugte_sprache = models.CharField(max_length=10, default="de")
+    geburtsdatum = EncryptedCharField(blank=True, verbose_name="Geburtsdatum")
+    geburtsort = EncryptedCharField(blank=True, verbose_name="Geburtsort")
     erstellt_am = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):

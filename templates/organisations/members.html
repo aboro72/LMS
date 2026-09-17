@@ -36,6 +36,7 @@
                         <th>Nutzer</th>
                         <th>E-Mail</th>
                         <th>Rolle</th>
+                        <th>Pruefung</th>
                     </tr>
                     </thead>
                     <tbody>
@@ -73,6 +74,7 @@
                         <tr>
                             <td>{{ einladung.email }}</td>
                             <td><span class="badge text-bg-light">{{ einladung.get_rolle_display }}</span></td>
+                            <td class="small">{{ einladung.pruefung.titel|default:"-" }}</td>
                             <td class="small text-secondary">{{ einladung.erstellt_am|date:"d.m.Y" }}</td>
                             <td class="small {% if einladung.ist_abgelaufen %}text-danger{% else %}text-secondary{% endif %}">
                                 {{ einladung.abgelaufen_am|date:"d.m.Y" }}
@@ -91,7 +93,7 @@
     {# Einladungsformular #}
     <div class="col-lg-4">
         <div class="aboro-panel">
-            <h2 class="h5 mb-3">Mitglied einladen</h2>
+            <h2 class="h5 mb-3">{% if ist_trainer_einladender %}Teilnehmer zur Pruefung einladen{% else %}Mitglied einladen{% endif %}</h2>
             {% if org.max_nutzer and mitglieder|length >= org.max_nutzer %}
                 <div class="alert alert-warning small">
                     Nutzerlimit ({{ org.max_nutzer }}) erreicht.
@@ -110,8 +112,8 @@
                     <button class="btn btn-aboro w-100" type="submit">Einladung erstellen</button>
                 </form>
                 <p class="text-secondary small mt-3 mb-0">
-                    Die Einladung ist 7 Tage gueltig. Der Eingeladene muss den Einladungslink
-                    (im Admin abrufbar) aufrufen und sein Konto verknuepfen.
+                    Die Einladung ist 7 Tage gueltig. Wird eine Zertifikatspruefung ausgewählt,
+                    ist der Lernende nach Annahme sofort dafür angemeldet.
                 </p>
             {% endif %}
         </div>

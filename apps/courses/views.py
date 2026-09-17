@@ -160,8 +160,8 @@ class KursDetailView(DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        from apps.payments.models import Zahlungseinstellungen
-        context["payment_aktiv"] = Zahlungseinstellungen.load().payment_aktiv
+        from apps.payments.services import lade_zahlungseinstellungen
+        context["payment_aktiv"] = lade_zahlungseinstellungen(self.object.organisation).payment_aktiv
         if self.request.user.is_authenticated:
             context["einschreibung"] = Einschreibung.objects.filter(
                 nutzer=self.request.user,
@@ -360,6 +360,11 @@ class TrainerKursCreateView(RollenMixin, CreateView):
 
     def form_valid(self, form):
         org = form.cleaned_data.get("organisation")
+        if org and org.ist_demo_organisation:
+            from apps.exams.models import Pruefung
+            if Kurs.objects.filter(organisation=org).count() + Pruefung.objects.filter(organisation=org).count() >= org.demo_inhalte_startbestand + 3:
+                form.add_error(None, "In der Demo-Organisation koennen zusaetzlich hoechstens drei Kurse oder Zertifikatspruefungen angelegt werden.")
+                return self.form_invalid(form)
         if org and org.max_kurse and org.max_kurse > 0:
             if Kurs.objects.filter(organisation=org).count() >= org.max_kurse:
                 messages.error(

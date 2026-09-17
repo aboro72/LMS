@@ -125,6 +125,9 @@ body {
     margin-top: 4mm;
     text-align: center;
 }
+.signatures { display: flex; gap: 10mm; margin-top: 3mm; }
+.signature { min-width: 45mm; text-align: center; }
+.signature img { max-width: 42mm; max-height: 15mm; object-fit: contain; display: block; margin: 0 auto 1mm; }
 .footer-right {
     text-align: center;
 }
@@ -170,6 +173,8 @@ body {
         <div class="name">{{ zertifikat.get_inhaber_name }}</div>
         <div class="exam-label">die folgende Prüfung erfolgreich bestanden hat:</div>
         <div class="exam-title">{{ zertifikat.get_titel }}</div>
+        {% if zertifikat.zertifikatsnummer %}<div class="exam-label">Zertifikatsnummer: {{ zertifikat.zertifikatsnummer }}</div>{% endif %}
+        {% if zertifikat.nutzer.geburtsdatum or zertifikat.nutzer.geburtsort %}<div class="exam-label">Geboren am {{ zertifikat.nutzer.geburtsdatum }}{% if zertifikat.nutzer.geburtsort %} in {{ zertifikat.nutzer.geburtsort }}{% endif %}</div>{% endif %}
         {% if zertifikat.pruefungsversuch %}
         <div class="score">Ergebnis: {{ zertifikat.pruefungsversuch.prozent_erreicht }}% &nbsp;|&nbsp; Bestanden</div>
         {% endif %}
@@ -181,8 +186,14 @@ body {
                 {% if footer_text %}
                 <div class="footer-extra">{{ footer_text }}</div>
                 {% endif %}
-                {% if signature_line %}
+                {% if signature_line and not unterschrift_1_b64 and not unterschrift_2_b64 %}
                 <div class="signature-line">{{ signature_line }}</div>
+                {% endif %}
+                {% if unterschrift_1_b64 or unterschrift_2_b64 %}
+                <div class="signatures">
+                    {% if unterschrift_1_b64 %}<div class="signature"><img src="{{ unterschrift_1_b64 }}" alt="Unterschrift 1"><div class="signature-line">{{ signature_line|default:"Unterschrift" }}</div></div>{% endif %}
+                    {% if unterschrift_2_b64 %}<div class="signature"><img src="{{ unterschrift_2_b64 }}" alt="Unterschrift 2"><div class="signature-line">{{ signature_line|default:"Unterschrift" }}</div></div>{% endif %}
+                </div>
                 {% endif %}
             </div>
             <div class="footer-right">

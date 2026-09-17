@@ -45,9 +45,12 @@ class ZertifikatDownloadView(LoginRequiredMixin, View):
             ist_widerrufen=False,
         )
         base_url = request.build_absolute_uri("/")
-        pdf_bytes = generiere_zertifikat_pdf(zert, base_url)
-        response = HttpResponse(pdf_bytes, content_type="application/pdf")
-        response["Content-Disposition"] = f'attachment; filename="zertifikat-{zert.code}.pdf"'
+        if not zert.pdf_datei:
+            pdf_bytes = generiere_zertifikat_pdf(zert, base_url)
+            from django.core.files.base import ContentFile
+            zert.pdf_datei.save(f"zertifikat-{zert.zertifikatsnummer or zert.code}.pdf", ContentFile(pdf_bytes), save=True)
+        response = HttpResponse(zert.pdf_datei.open("rb"), content_type="application/pdf")
+        response["Content-Disposition"] = f'attachment; filename="zertifikat-{zert.zertifikatsnummer or zert.code}.pdf"'
         return response
 
 

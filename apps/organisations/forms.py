@@ -38,6 +38,30 @@ class EinladungForm(forms.Form):
         ],
         label="Rolle",
     )
+    pruefung = forms.ModelChoiceField(
+        queryset=None, required=False,
+        label="Direkt zu einer Zertifikatspruefung anmelden",
+        help_text="Optional. Nach Annahme der Einladung wird der Lernende sofort fuer diese Pruefung angemeldet.",
+    )
+
+    def __init__(self, *args, organisation=None, ist_trainer=False, **kwargs):
+        super().__init__(*args, **kwargs)
+        from apps.exams.models import Pruefung
+        self.fields["email"].widget.attrs["class"] = "form-control"
+        self.fields["rolle"].widget.attrs["class"] = "form-select"
+        self.fields["pruefung"].widget.attrs["class"] = "form-select"
+        self.fields["pruefung"].queryset = Pruefung.objects.filter(
+            organisation=organisation, ist_aktiv=True
+        ).order_by("titel") if organisation else Pruefung.objects.none()
+        if ist_trainer:
+            self.fields["rolle"].choices = [(Rolle.LEARNER, "Lernender")]
+            self.fields["rolle"].initial = Rolle.LEARNER
+
+    def clean(self):
+        data = super().clean()
+        if data.get("pruefung") and data.get("rolle") != Rolle.LEARNER:
+            self.add_error("rolle", "Eine Pruefungsanmeldung ist nur fuer Lernende moeglich.")
+        return data
 
 
 class OrganisationWeiterleitungForm(forms.ModelForm):
@@ -70,6 +94,10 @@ class OrganisationEmailKonfigForm(forms.ModelForm):
             "smtp_password",
             "smtp_use_tls",
             "smtp_use_ssl",
+            "einladung_betreff",
+            "einladung_text",
+            "passwort_reset_betreff",
+            "passwort_reset_text",
         ]
         widgets = {
             "aktiv": forms.CheckboxInput(attrs={"class": "form-check-input"}),
@@ -81,6 +109,10 @@ class OrganisationEmailKonfigForm(forms.ModelForm):
             "smtp_user": forms.TextInput(attrs={"class": "form-control", "placeholder": "academy@meinefirma.de"}),
             "smtp_use_tls": forms.CheckboxInput(attrs={"class": "form-check-input"}),
             "smtp_use_ssl": forms.CheckboxInput(attrs={"class": "form-check-input"}),
+            "einladung_betreff": forms.TextInput(attrs={"class": "form-control"}),
+            "einladung_text": forms.Textarea(attrs={"class": "form-control", "rows": 7}),
+            "passwort_reset_betreff": forms.TextInput(attrs={"class": "form-control"}),
+            "passwort_reset_text": forms.Textarea(attrs={"class": "form-control", "rows": 7}),
         }
 
     def clean(self):

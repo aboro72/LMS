@@ -6,20 +6,21 @@
 <section class="aboro-hero py-5">
     <div class="row align-items-center g-5">
         <div class="col-lg-7">
-            <p class="text-uppercase text-aboro-orange fw-semibold mb-2">ABoroLMS Selfhosting</p>
-            <h1 class="display-5 fw-bold mb-3">Kurse verkaufen, Wissen vermitteln und Zertifikate ausstellen</h1>
+            <p class="text-uppercase text-aboro-orange fw-semibold mb-2">ABoroLMS – die Plattform für Ihr digitales Bildungsangebot</p>
+            <h1 class="display-5 fw-bold mb-3">Wissen verkaufen. Prüfungen professionell abwickeln. Einnahmen skalieren.</h1>
             <p class="lead text-secondary mb-4">
-                ABoroLMS ist eine serverseitige Django-Lernplattform fuer Video-Kurse, Begleitmaterial,
-                Uebungsfragen, Zertifikatspruefungen und bezahlte Kurszugriffe.
+                Mit ABoroLMS bauen Sie Ihr eigenes Lern- und Prüfungsangebot auf – mit Kursen, Zertifikaten,
+                Online- und Offline-Prüfungen sowie integrierten Zahlungsabläufen. Sie behalten die Kontrolle
+                über Ihre Marke, Ihre Teilnehmer und Ihre Erlöse.
             </p>
             <div class="d-flex gap-2 flex-wrap">
                 <a class="btn btn-aboro btn-lg" href="{% url 'course_catalog' %}">Kurse ansehen</a>
                 <a class="btn btn-outline-secondary btn-lg" href="{% url 'account_login' %}">Einloggen</a>
             </div>
             <div class="home-kpis mt-4">
-                <div><strong>Video</strong><span>Upload oder externe URL</span></div>
-                <div><strong>6 Typen</strong><span>SC, MC, Freitext, Zuordnung...</span></div>
-                <div><strong>Selfhosted</strong><span>Django, Templates, Bootstrap</span></div>
+                <div><strong>Mehr Umsatz</strong><span>digitale Angebote rund um die Uhr</span></div>
+                <div><strong>Weniger Aufwand</strong><span>automatisierte Abläufe und Zertifikate</span></div>
+                <div><strong>Ihre Marke</strong><span>eigene Organisation und Inhalte</span></div>
             </div>
         </div>
         <div class="col-lg-5">
@@ -36,9 +37,9 @@
                         <span style="width: 68%"></span>
                     </div>
                     <div class="home-mini-list">
-                        <div>Begleitmaterial herunterladen</div>
-                        <div>Lernfortschritt pruefen</div>
-                        <div>Zertifikatspruefung starten</div>
+                        <div>Teilnehmer zur Prüfung einladen</div>
+                        <div>Zertifikat herunterladen</div>
+                        <div>Offline-Bogen archivieren</div>
                     </div>
                 </div>
             </div>
@@ -49,83 +50,95 @@
 <section class="row g-3 mb-4">
     <div class="col-md-6 col-xl-3">
         <div class="home-feature">
-            <h2>Kurse & Kapitel</h2>
-            <p>Trainer strukturieren Inhalte in Abschnitte, Lektionen, Videos, Dokumente und Downloads.</p>
+            <h2>Neue Einnahmequellen</h2>
+            <p>Verkaufen Sie Kurse, Prüfungen und Zertifikate digital – unabhängig von Ort und Öffnungszeiten.</p>
         </div>
     </div>
     <div class="col-md-6 col-xl-3">
         <div class="home-feature">
-            <h2>Uebungen</h2>
-            <p>Optionale Multiple-Choice-Aufgaben pruefen den Lernstand direkt nach jeder Lektion.</p>
+            <h2>Professionell prüfen</h2>
+            <p>Themenquoten und Zufallslogik erzeugen faire, individuelle Prüfungen mit nachvollziehbaren Ergebnissen.</p>
         </div>
     </div>
     <div class="col-md-6 col-xl-3">
         <div class="home-feature">
-            <h2>Pruefungen</h2>
-            <p>Fragenkataloge, CSV-Import, 6 Fragetypen, automatische Auswertung und Freitext-Pruefer-Queue.</p>
+            <h2>Flexibel anbieten</h2>
+            <p>Online oder vor Ort: PDF-Prüfungsbögen, Lösungen und Zertifikate entstehen aus einem einheitlichen Prozess.</p>
         </div>
     </div>
     <div class="col-md-6 col-xl-3">
         <div class="home-feature">
-            <h2>Zahlungen</h2>
-            <p>Bezahlte Kurse werden zentral kassiert; Auszahlungen an Trainer werden transparent vorbereitet.</p>
+            <h2>Skalierbar wachsen</h2>
+            <p>Mehr Teilnehmer und Angebote, ohne jeden Schritt manuell zu bearbeiten – sauber getrennt je Organisation.</p>
+        </div>
+    </div>
+</section>
+
+<section class="aboro-panel mb-4">
+    <div class="row g-4 align-items-center">
+        <div class="col-lg-7">
+            <p class="text-uppercase text-aboro-orange fw-semibold small mb-2">Ihre Betreiberperspektive</p>
+            <h2 class="h3 mb-2">Aus Fachwissen wird ein wiederholbares Geschäftsmodell</h2>
+            <p class="text-secondary mb-0">Einmal erstellte Inhalte können beliebig oft angeboten werden. Automatisierte Einladungen, Prüfungen, Auswertungen und Zertifikate reduzieren den Verwaltungsaufwand und schaffen mehr Zeit für Kunden, Marketing und neue Angebote.</p>
+        </div>
+        <div class="col-lg-5">
+            <div class="border rounded-3 p-3 bg-light">
+                <div class="small text-uppercase text-secondary fw-semibold">Beispielhafte Umsatzprognose</div>
+                <div class="h4 mb-2">50 Teilnehmende × 79 € = 3.950 € Umsatz/Monat</div>
+                <p class="small text-secondary mb-0">Bei 100 Teilnehmenden wären es 7.900 € Monatsumsatz. Die Werte sind eine unverbindliche Modellrechnung und hängen von Angebot, Preis, Auslastung, Marketing sowie laufenden Kosten ab. Umsatz ist nicht gleich Gewinn.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="aboro-panel mb-4">
+    <div class="row g-4 align-items-center">
+        <div class="col-lg-5">
+            <p class="text-uppercase text-aboro-orange fw-semibold small mb-2">Sicherheit & Datenschutz</p>
+            <h2 class="h3 mb-2">Für einen verantwortungsvollen, DSGVO-konformen Betrieb ausgelegt</h2>
+            <p class="text-secondary mb-0">Sensible Teilnehmer-, Prüfungs- und Zahlungsdaten werden mit klaren Zugriffsregeln und getrennten Organisationsbereichen verarbeitet.</p>
+        </div>
+        <div class="col-lg-7">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <div class="fw-semibold mb-1">Mandantentrennung</div>
+                    <p class="small text-secondary mb-0">Daten und Inhalte bleiben je Organisation logisch voneinander getrennt.</p>
+                </div>
+                <div class="col-md-4">
+                    <div class="fw-semibold mb-1">Geschützte Daten</div>
+                    <p class="small text-secondary mb-0">Prüfungsergebnisse und sensible Einstellungen werden verschlüsselt gespeichert.</p>
+                </div>
+                <div class="col-md-4">
+                    <div class="fw-semibold mb-1">Kontrollierte Aufbewahrung</div>
+                    <p class="small text-secondary mb-0">Ergebnisse sind nur für einen definierten Zeitraum verfügbar und Rollen steuern den Zugriff.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="aboro-panel mb-4">
+    <div class="row g-4 align-items-center">
+        <div class="col-lg-8">
+            <p class="text-uppercase text-aboro-orange fw-semibold small mb-2">Sicher prüfen und nachweisen</p>
+            <h2 class="h3 mb-2">Vom Fragenpool bis zum Zertifikat</h2>
+            <p class="text-secondary mb-0">Trainer legen Fragen nach Themengebieten an, definieren Anzahl, Bestehensgrenze und Zeitlimit. Lernende werden zur Prüfung angemeldet, sehen ihre persönlichen Ergebnisse ein Jahr lang und laden bei Erfolg ihr Zertifikat als PDF herunter. Freitext- und Szenarioantworten erhalten ein definiertes Bewertungsschema und werden manuell bewertet.</p>
+        </div>
+        <div class="col-lg-4">
+            <div class="border-start ps-lg-4">
+                <div class="fw-semibold mb-1">Für Organisationen</div>
+                <p class="small text-secondary mb-3">Eigener Absender, eigener SMTP-Server und individuelle Texte für Einladungen sowie Passwort-Resets.</p>
+                <div class="fw-semibold mb-1">Für bezahlte Angebote</div>
+                <p class="small text-secondary mb-0">Kostenlose Angebote bleiben möglich. Banküberweisung sowie getrennte Stripe- und PayPal-Zugangsdaten werden pro Organisation verwaltet.</p>
+            </div>
         </div>
     </div>
 </section>
 
 {% if demo_mode %}
 <section class="aboro-panel mt-4">
-    <div class="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-3">
-        <div>
-            <h2 class="h5 mb-1">Demo-Zugaenge</h2>
-            <p class="text-secondary mb-0">Diese Konten werden mit <code>python manage.py create_demo_data</code> erstellt.</p>
-        </div>
-        <span class="badge text-bg-light">Passwort: ChangeMe123!</span>
-    </div>
-    <div class="table-responsive">
-        <table class="table align-middle mb-0">
-            <thead>
-            <tr>
-                <th>Rolle</th>
-                <th>Benutzername</th>
-                <th>E-Mail</th>
-                <th>Passwort</th>
-            </tr>
-            </thead>
-            <tbody>
-            <tr>
-                <td>Super-Admin</td>
-                <td><code>superadmin</code></td>
-                <td><code>superadmin@example.com</code></td>
-                <td><code>ChangeMe123!</code></td>
-            </tr>
-            <tr>
-                <td>Org-Admin</td>
-                <td><code>orgadmin</code></td>
-                <td><code>orgadmin@example.com</code></td>
-                <td><code>ChangeMe123!</code></td>
-            </tr>
-            <tr>
-                <td>Trainer</td>
-                <td><code>trainer</code></td>
-                <td><code>trainer@example.com</code></td>
-                <td><code>ChangeMe123!</code></td>
-            </tr>
-            <tr>
-                <td>Pruefer</td>
-                <td><code>examiner</code></td>
-                <td><code>examiner@example.com</code></td>
-                <td><code>ChangeMe123!</code></td>
-            </tr>
-            <tr>
-                <td>Lernender</td>
-                <td><code>learner</code></td>
-                <td><code>learner@example.com</code></td>
-                <td><code>ChangeMe123!</code></td>
-            </tr>
-            </tbody>
-        </table>
-    </div>
+    <h2 class="h5 mb-1">Demo-Zugänge</h2>
+    <p class="text-secondary mb-0">Die verfügbaren Demo-Zugänge können direkt über die entsprechenden Buttons auf der Anmeldeseite verwendet werden.</p>
 </section>
 {% endif %}
 {% endblock %}

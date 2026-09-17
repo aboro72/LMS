@@ -2,6 +2,12 @@ from django.conf import settings
 from django.core.mail import EmailMultiAlternatives
 
 
+def fuelle_emailvorlage(vorlage, **werte):
+    for schluessel, wert in werte.items():
+        vorlage = vorlage.replace("{{ " + schluessel + " }}", str(wert or ""))
+    return vorlage
+
+
 def sende_org_email(organisation, betreff, text_nachricht, empfaenger, html_nachricht=None):
     """
     Versendet eine E-Mail über den SMTP-Server der Organisation (falls konfiguriert)

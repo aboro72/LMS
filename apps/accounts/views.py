@@ -2,9 +2,9 @@ from django.conf import settings
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import redirect
 from django.urls import reverse_lazy
-from django.views.generic import CreateView, TemplateView
+from django.views.generic import CreateView, TemplateView, UpdateView
 
-from .forms import RegisterForm
+from .forms import ProfilForm, RegisterForm
 from .models import Rolle
 
 
@@ -41,6 +41,15 @@ class RegisterView(CreateView):
     form_class = RegisterForm
     template_name = "accounts/register.html"
     success_url = reverse_lazy("account_login")
+
+
+class ProfilView(LoginRequiredMixin, UpdateView):
+    form_class = ProfilForm
+    template_name = "accounts/profile.html"
+    success_url = reverse_lazy("dashboard")
+
+    def get_object(self):
+        return self.request.user
 
 
 ROLE_HELP_PAGES = {

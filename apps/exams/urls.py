@@ -20,8 +20,11 @@ from .views import (
     TrainerPruefungCreateView,
     TrainerPruefungListView,
     TrainerPruefungStatistikView,
+    TrainerPruefungErgebnisListeView,
     TrainerPruefungUpdateView,
     TrainerPruefungsbogenPDFView,
+    TrainerOfflinePruefungsbogenCreateView,
+    TrainerOfflinePruefungsbogenDownloadView,
 )
 
 
@@ -43,7 +46,10 @@ urlpatterns = [
     path("trainer/pruefungen/neu/", TrainerPruefungCreateView.as_view(), name="trainer_exam_create"),
     path("trainer/pruefungen/<int:pk>/", TrainerPruefungUpdateView.as_view(), name="trainer_exam_edit"),
     path("trainer/pruefungen/<int:pk>/fragebogen/<str:variante>/pdf/", TrainerPruefungsbogenPDFView.as_view(), name="trainer_exam_paper_pdf"),
+    path("trainer/pruefungen/<int:pk>/offline-boegen/erstellen/", TrainerOfflinePruefungsbogenCreateView.as_view(), name="trainer_offline_paper_create"),
+    path("trainer/pruefungen/<int:pk>/offline-boegen/<int:archiv_id>/<str:variante>/", TrainerOfflinePruefungsbogenDownloadView.as_view(), name="trainer_offline_paper_download"),
     path("trainer/pruefungen/<int:pk>/statistik/", TrainerPruefungStatistikView.as_view(), name="trainer_exam_stats"),
+    path("trainer/pruefungen/<int:pk>/ergebnisse/", TrainerPruefungErgebnisListeView.as_view(), name="trainer_exam_results"),
     path("meine-pruefungsergebnisse/", PruefungErgebnisListeView.as_view(), name="exam_result_list"),
     path("examiner/queue/", ExaminerQueueView.as_view(), name="examiner_queue"),
     path("examiner/queue/<int:pk>/", ExaminerBewertungView.as_view(), name="examiner_review"),

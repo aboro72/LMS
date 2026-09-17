@@ -43,6 +43,24 @@ def _get_org_for_admin(request, slug):
     return get_object_or_404(Organisation, slug=slug, id__in=org_ids)
 
 
+def _get_org_for_inviter(request, slug):
+    """Org-Admins may invite all roles; trainers may invite learners for their own org."""
+    if request.user.is_superuser:
+        return get_object_or_404(Organisation, slug=slug)
+    org_ids = request.user.profile.filter(
+        rolle__in=[Rolle.ORG_ADMIN, Rolle.TRAINER], aktiv=True
+    ).values_list("organisation_id", flat=True)
+    return get_object_or_404(Organisation, slug=slug, id__in=org_ids)
+
+
+def _ist_trainer_ohne_org_admin(user, org):
+    return not user.is_superuser and user.profile.filter(
+        organisation=org, rolle=Rolle.TRAINER, aktiv=True
+    ).exists() and not user.profile.filter(
+        organisation=org, rolle=Rolle.ORG_ADMIN, aktiv=True
+    ).exists()
+
+
 # --------------------------------------------------------------------------- #
 # Org-Signup
 # --------------------------------------------------------------------------- #
@@ -106,13 +124,15 @@ class OrgAdminDashboardView(RollenMixin, TemplateView):
 # --------------------------------------------------------------------------- #
 # Mitgliederverwaltung
 # --------------------------------------------------------------------------- #
-class OrgMemberListView(RollenMixin, ListView):
-    rolle = Rolle.ORG_ADMIN
+class OrgMemberListView(LoginRequiredMixin, ListView):
     template_name = "organisations/members.html"
     context_object_name = "mitglieder"
 
+    def dispatch(self, request, *args, **kwargs):
+        self.org = _get_org_for_inviter(request, kwargs["slug"])
+        return super().dispatch(request, *args, **kwargs)
+
     def get_queryset(self):
-        self.org = _get_org_for_admin(self.request, self.kwargs["slug"])
         return UserProfile.objects.filter(
             organisation=self.org, aktiv=True
         ).select_related("nutzer").order_by("rolle", "nutzer__username")
@@ -120,18 +140,21 @@ class OrgMemberListView(RollenMixin, ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["org"] = self.org
-        context["einladung_form"] = EinladungForm()
+        context["ist_trainer_einladender"] = _ist_trainer_ohne_org_admin(self.request.user, self.org)
+        context["einladung_form"] = EinladungForm(
+            organisation=self.org, ist_trainer=context["ist_trainer_einladender"]
+        )
         context["offene_einladungen"] = Einladung.objects.filter(
             organisation=self.org, akzeptiert_am__isnull=True
         ).order_by("-erstellt_am")
         return context
 
 
-class OrgEinladungCreateView(RollenMixin, View):
-    rolle = Rolle.ORG_ADMIN
+class OrgEinladungCreateView(LoginRequiredMixin, View):
 
     def post(self, request, slug):
-        org = _get_org_for_admin(request, slug)
+        org = _get_org_for_inviter(request, slug)
+        ist_trainer = _ist_trainer_ohne_org_admin(request.user, org)
         if org.max_nutzer and org.max_nutzer > 0:
             aktuell = (
                 UserProfile.objects.filter(organisation=org, aktiv=True)
@@ -145,13 +168,14 @@ class OrgEinladungCreateView(RollenMixin, View):
                 )
                 return redirect("org_members", slug=slug)
 
-        form = EinladungForm(request.POST)
+        form = EinladungForm(request.POST, organisation=org, ist_trainer=ist_trainer)
         if form.is_valid():
             einladung = Einladung.objects.create(
                 organisation=org,
                 email=form.cleaned_data["email"],
                 rolle=form.cleaned_data["rolle"],
                 eingeladen_von=request.user,
+                pruefung=form.cleaned_data["pruefung"],
             )
             try:
                 from apps.payments.services import log_audit
@@ -161,11 +185,28 @@ class OrgEinladungCreateView(RollenMixin, View):
                     action="einladung_erstellt",
                     obj=einladung,
                     message=f"Einladung fuer {einladung.email} erstellt.",
-                    metadata={"rolle": einladung.rolle},
+                    metadata={"rolle": einladung.rolle, "pruefung_id": einladung.pruefung_id},
                 )
             except Exception:
                 pass
-            messages.success(request, f"Einladung fuer {form.cleaned_data['email']} erstellt.")
+            einladungslink = request.build_absolute_uri(
+                reverse("org_invitation_accept", kwargs={"token": einladung.token})
+            )
+            try:
+                from .email import fuelle_emailvorlage, sende_org_email
+                pruefung_hinweis = (
+                    f"\nSie werden nach dem Annehmen direkt zur Zertifikatspruefung „{einladung.pruefung.titel}“ angemeldet."
+                    if einladung.pruefung_id else ""
+                )
+                config, _ = OrganisationEmailKonfiguration.objects.get_or_create(organisation=org)
+                sende_org_email(org,
+                    fuelle_emailvorlage(config.einladung_betreff, organisation=org.name),
+                    fuelle_emailvorlage(config.einladung_text, organisation=org.name, einladungslink=einladungslink) + pruefung_hinweis,
+                    einladung.email)
+            except Exception:
+                messages.warning(request, "Einladung wurde erstellt, konnte aber nicht per E-Mail versendet werden. Der Link ist in der Liste offener Einladungen verfügbar.")
+            else:
+                messages.success(request, f"Einladung fuer {form.cleaned_data['email']} wurde per E-Mail versendet.")
         else:
             messages.error(request, "Einladung konnte nicht erstellt werden.")
         return redirect("org_members", slug=slug)
@@ -381,6 +422,11 @@ class EinladungAnnehmenView(LoginRequiredMixin, View):
         )
         einladung.akzeptiert_am = timezone.now()
         einladung.save(update_fields=["akzeptiert_am"])
+        if einladung.pruefung_id and einladung.rolle == Rolle.LEARNER:
+            from apps.exams.models import PruefungsAnmeldung
+            PruefungsAnmeldung.objects.get_or_create(
+                nutzer=request.user, pruefung=einladung.pruefung
+            )
         try:
             from apps.payments.services import log_audit
             log_audit(

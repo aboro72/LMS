@@ -1,4 +1,5 @@
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.conf import settings
 from django.core.exceptions import PermissionDenied
 
 from .models import Rolle
@@ -14,6 +15,8 @@ class RollenMixin(LoginRequiredMixin):
             return super().dispatch(request, *args, **kwargs)
         if request.user.is_superuser or request.user.groups.filter(name=Rolle.SUPERADMIN).exists():
             return super().dispatch(request, *args, **kwargs)
+        if getattr(settings, "SINGLE_SYSTEM_MODE", False) and self.rolle == Rolle.ORG_ADMIN:
+            raise PermissionDenied
         if request.user.profile.filter(rolle=self.rolle, aktiv=True).exists():
             return super().dispatch(request, *args, **kwargs)
         raise PermissionDenied

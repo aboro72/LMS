@@ -17,22 +17,37 @@
         <h1 class="h3 mb-1">Dashboard</h1>
         <p class="text-secondary mb-0">Willkommen, {{ user.get_full_name|default:user.username }}.</p>
     </div>
-    {% if not profile %}
-        <a class="btn btn-aboro" href="{% url 'org_signup' %}">Organisation erstellen</a>
+    {% if ist_superadmin %}
+        <a class="btn btn-aboro" href="{% url 'system_members' %}">Benutzer verwalten</a>
     {% endif %}
     <a class="btn btn-outline-secondary" href="{% url 'profile' %}">Mein Profil</a>
 </div>
 
+{% if ist_exam_operator or ist_superadmin %}
+<div class="row g-3 mb-4">
+    <div class="col-md-6"><div class="aboro-panel h-100">
+        <h2 class="h5">Fragenkataloge</h2>
+        <p class="text-secondary">Fragen suchen, bearbeiten, per CSV importieren und aktivieren.</p>
+        <a class="btn btn-aboro" href="{% url 'trainer_catalog_list' %}">Fragenkataloge verwalten</a>
+    </div></div>
+    <div class="col-md-6"><div class="aboro-panel h-100">
+        <h2 class="h5">Prüfungen</h2>
+        <p class="text-secondary">Prüfungen erstellen, Zeitlimit, Bestehensgrenze und PDF-Vorgaben konfigurieren.</p>
+        <a class="btn btn-aboro" href="{% url 'trainer_exam_list' %}">Prüfungen verwalten</a>
+    </div></div>
+</div>
+{% endif %}
+{% if not operator_arbeitsplatz %}
 <div class="row g-3 mb-3">
     <div class="col-lg-8">
         <div class="aboro-panel h-100">
-            <h2 class="h5 mb-3">Meine Organisationen</h2>
+            <h2 class="h5 mb-3">Meine Rollen</h2>
             {% if profile %}
                 <div class="list-group list-group-flush">
                     {% for item in profile %}
                         <div class="list-group-item px-0 d-flex justify-content-between align-items-center">
                             <div>
-                                <span class="fw-semibold">{{ item.organisation.name }}</span>
+                                
                                 <span class="badge text-bg-light ms-2">{{ item.get_rolle_display }}</span>
                             </div>
                             {% if item.rolle == "org_admin" %}
@@ -42,7 +57,7 @@
                     {% endfor %}
                 </div>
             {% else %}
-                <p class="text-secondary mb-0">Noch keine Organisation zugeordnet. <a href="{% url 'org_signup' %}">Jetzt erstellen</a>.</p>
+                <p class="text-secondary mb-0">Noch keine Rolle zugeordnet. Wenden Sie sich an den Superadmin.</p>
             {% endif %}
         </div>
     </div>
@@ -90,4 +105,5 @@
         <p class="text-secondary mb-0">Noch keine Zertifikate. Bestehe eine Pruefung, um dein erstes zu erhalten.</p>
     {% endif %}
 </div>
+{% endif %}
 {% endblock %}

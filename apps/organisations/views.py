@@ -1,4 +1,5 @@
 import json
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import PermissionDenied
@@ -35,7 +36,7 @@ from .models import (
 # Hilfsmethode: Organisation für Org-Admin laden
 # --------------------------------------------------------------------------- #
 def _get_org_for_admin(request, slug):
-    if request.user.is_superuser:
+    if request.user.is_superuser or (request.user.is_authenticated and request.user.groups.filter(name=Rolle.SUPERADMIN).exists()):
         return get_object_or_404(Organisation, slug=slug)
     org_ids = request.user.profile.filter(
         rolle=Rolle.ORG_ADMIN, aktiv=True
@@ -45,7 +46,7 @@ def _get_org_for_admin(request, slug):
 
 def _get_org_for_inviter(request, slug):
     """Org-Admins may invite all roles; trainers may invite learners for their own org."""
-    if request.user.is_superuser:
+    if request.user.is_superuser or (request.user.is_authenticated and request.user.groups.filter(name=Rolle.SUPERADMIN).exists()):
         return get_object_or_404(Organisation, slug=slug)
     org_ids = request.user.profile.filter(
         rolle__in=[Rolle.ORG_ADMIN, Rolle.TRAINER], aktiv=True
@@ -158,7 +159,7 @@ class OrgEinladungCreateView(LoginRequiredMixin, View):
     def post(self, request, slug):
         org = _get_org_for_inviter(request, slug)
         ist_trainer = _ist_trainer_ohne_org_admin(request.user, org)
-        if org.max_nutzer and org.max_nutzer > 0:
+        if not settings.SINGLE_SYSTEM_MODE and org.max_nutzer and org.max_nutzer > 0:
             aktuell = (
                 UserProfile.objects.filter(organisation=org, aktiv=True)
                 .values("nutzer").distinct().count()
@@ -383,6 +384,44 @@ class OffentlicheStartseiteView(TemplateView):
         return context
 
 
+class SingleSystemStartseiteView(OffentlicheStartseiteView):
+    """Zentrale Startseite ohne sichtbaren Organisations-Slug."""
+
+    def get_context_data(self, **kwargs):
+        self.kwargs["slug"] = settings.SINGLE_SYSTEM_ORGANISATION_SLUG
+        if not Organisation.objects.filter(slug=self.kwargs["slug"], aktiv=True).exists():
+            fallback = Organisation.objects.filter(aktiv=True).order_by("pk").first()
+            if fallback:
+                self.kwargs["slug"] = fallback.slug
+        return super().get_context_data(**kwargs)
+
+
+class SingleSystemStartseiteEditorView(OrgStartseiteView):
+    """Optionaler Pagebuilder unter /startseite ohne Mandantenpräfix."""
+
+    def _slug(self):
+        configured = Organisation.objects.filter(slug=settings.SINGLE_SYSTEM_ORGANISATION_SLUG, aktiv=True).first()
+        return (configured or Organisation.objects.filter(aktiv=True).order_by("pk").first()).slug
+
+    def get(self, request):
+        return super().get(request, self._slug())
+
+    def post(self, request):
+        return super().post(request, self._slug())
+
+
+class SingleSystemPageBuilderView(OrgStartseitePageBuilderView):
+    def _slug(self):
+        configured = Organisation.objects.filter(slug=settings.SINGLE_SYSTEM_ORGANISATION_SLUG, aktiv=True).first()
+        return (configured or Organisation.objects.filter(aktiv=True).order_by("pk").first()).slug
+
+    def get(self, request):
+        return super().get(request, self._slug())
+
+    def post(self, request):
+        return super().post(request, self._slug())
+
+
 # --------------------------------------------------------------------------- #
 # Superadmin-Übersicht
 # --------------------------------------------------------------------------- #
@@ -411,7 +450,7 @@ class EinladungAnnehmenView(LoginRequiredMixin, View):
         if request.user.email and request.user.email.lower() != einladung.email.lower():
             messages.error(request, "Diese Einladung ist fuer eine andere E-Mail-Adresse ausgestellt.")
             return redirect("dashboard")
-        if einladung.organisation.max_nutzer and einladung.organisation.max_nutzer > 0:
+        if not settings.SINGLE_SYSTEM_MODE and einladung.organisation.max_nutzer and einladung.organisation.max_nutzer > 0:
             aktuell = UserProfile.objects.filter(
                 organisation=einladung.organisation,
                 aktiv=True,
@@ -444,5 +483,5 @@ class EinladungAnnehmenView(LoginRequiredMixin, View):
             )
         except Exception:
             pass
-        messages.success(request, f"Du wurdest der Organisation {einladung.organisation.name} hinzugefuegt.")
+        messages.success(request, "Dein Benutzerzugang wurde freigeschaltet.")
         return redirect("org_admin_dashboard", slug=einladung.organisation.slug) if einladung.rolle == Rolle.ORG_ADMIN else redirect("dashboard")

@@ -9,7 +9,7 @@
             <h1 class="h4 mb-1">Anmelden</h1>
             <p class="text-secondary small mb-4">
                 Noch kein Konto?
-                <a href="{% if tenant_org %}{% url 'tenant_register' tenant_org.slug %}{% else %}{% url 'register' %}{% endif %}">Jetzt registrieren</a>
+                <a href="{% if tenant_org and not single_system_mode %}{% url 'tenant_register' tenant_org.slug %}{% else %}{% url 'register' %}{% endif %}">Jetzt registrieren</a>
             </p>
 
             <div class="mb-4">

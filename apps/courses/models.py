@@ -77,7 +77,10 @@ class Kurs(models.Model):
 
     @property
     def ist_zertifikatspruefung(self):
-        return self.angebotstyp == self.Angebotstyp.ZERTIFIKAT
+        # A certificate course without a linked exam is invalid legacy data.
+        # Treat it as a normal course in read-only views so navigation never
+        # tries to reverse an exam URL with an empty primary key.
+        return self.angebotstyp == self.Angebotstyp.ZERTIFIKAT and self.pruefung_id is not None
 
     @property
     def dauer_minuten(self):
@@ -227,7 +230,7 @@ class KursBewertung(models.Model):
     class Meta:
         constraints = [
             models.UniqueConstraint(fields=["kurs", "nutzer"], name="unique_course_review_user"),
-            models.CheckConstraint(check=models.Q(sterne__gte=1, sterne__lte=5), name="course_review_stars_1_5"),
+            models.CheckConstraint(condition=models.Q(sterne__gte=1, sterne__lte=5), name="course_review_stars_1_5"),
         ]
         ordering = ["-erstellt_am"]
         verbose_name = "Kursbewertung"

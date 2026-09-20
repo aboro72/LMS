@@ -6,7 +6,7 @@
 <nav aria-label="breadcrumb">
     <ol class="breadcrumb">
         <li class="breadcrumb-item"><a href="{% url 'home' %}">Start</a></li>
-        <li class="breadcrumb-item"><a href="{% url 'org_admin_dashboard' org.slug %}">{{ org.name }}</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">{{ org.name }}</a></li>
         <li class="breadcrumb-item active" aria-current="page">Zertifikat-Design</li>
     </ol>
 </nav>
@@ -17,9 +17,9 @@
     <div>
         <p class="text-uppercase text-aboro-orange fw-semibold mb-1 small">{{ org.name }}</p>
         <h1 class="h3 mb-1">Zertifikat-Design anpassen</h1>
-        <p class="text-secondary mb-0">Diese Einstellungen gelten für alle Zertifikate dieser Organisation.</p>
+        <p class="text-secondary mb-0">Diese Einstellungen gelten für alle Zertifikate dieser Installation.</p>
     </div>
-    <a class="btn btn-outline-secondary" href="{% url 'org_admin_dashboard' org.slug %}">Zurück zum Dashboard</a>
+    <a class="btn btn-outline-secondary" href="{% url 'dashboard' %}">Zurück zum Dashboard</a>
 </div>
 
 <div class="row g-4">
@@ -40,7 +40,7 @@
                         {% if form.primary_color.errors %}
                             <div class="text-danger small mt-1">{{ form.primary_color.errors }}</div>
                         {% endif %}
-                        <div class="form-text">Rahmen, Titel und Organisationsname</div>
+                        <div class="form-text">Rahmen, Titel und Betreibername</div>
                     </div>
                     <div class="col-sm-6">
                         <label class="form-label fw-semibold">{{ form.secondary_color.label }}</label>
@@ -61,7 +61,7 @@
                         {% if form.org_display_name.errors %}
                             <div class="text-danger small mt-1">{{ form.org_display_name.errors }}</div>
                         {% endif %}
-                        <div class="form-text">Wird oben im Zertifikat statt des Organisationsnamens angezeigt.</div>
+                        <div class="form-text">Wird oben im Zertifikat statt des Betreibernamens angezeigt.</div>
                     </div>
                     <div class="col-12">
                         <label class="form-label fw-semibold">{{ form.footer_text.label }}</label>
@@ -110,7 +110,7 @@
                 </div>
                 <div class="mt-4 d-flex gap-2">
                     <button type="submit" class="btn btn-aboro">Design speichern</button>
-                    <a href="{% url 'org_admin_dashboard' org.slug %}" class="btn btn-outline-secondary">Abbrechen</a>
+                    <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary">Abbrechen</a>
                 </div>
             </form>
         </div>

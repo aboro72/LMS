@@ -6,7 +6,7 @@
 <nav aria-label="breadcrumb">
     <ol class="breadcrumb">
         <li class="breadcrumb-item"><a href="{% url 'home' %}">Start</a></li>
-        <li class="breadcrumb-item"><a href="{% url 'org_admin_dashboard' org.slug %}">{{ org.name }}</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">{{ org.name }}</a></li>
         <li class="breadcrumb-item active" aria-current="page">Mitglieder</li>
     </ol>
 </nav>
@@ -15,13 +15,13 @@
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
-        <h1 class="h3 mb-1">Mitglieder – {{ org.name }}</h1>
+        <h1 class="h3 mb-1">Benutzerverwaltung</h1>
         <p class="text-secondary mb-0">
             {{ mitglieder|length }} aktive Mitglieder
-            {% if org.max_nutzer %}(Limit: {{ org.max_nutzer }}){% endif %}
+            {% if org.max_nutzer and not single_system_mode %}(Limit: {{ org.max_nutzer }}){% endif %}
         </p>
     </div>
-    <a class="btn btn-outline-secondary" href="{% url 'org_admin_dashboard' org.slug %}">Zurueck</a>
+    <a class="btn btn-outline-secondary" href="{% url 'dashboard' %}">Zurueck</a>
 </div>
 
 <div class="row g-4">
@@ -100,7 +100,7 @@
                     Bitte upgraden Sie Ihre Lizenz um weitere Mitglieder einzuladen.
                 </div>
             {% else %}
-                <form method="post" action="{% url 'org_invite' org.slug %}" novalidate>
+                <form method="post" action="{% url 'system_invite' %}" novalidate>
                     {% csrf_token %}
                     {% for field in einladung_form %}
                         <div class="mb-3">

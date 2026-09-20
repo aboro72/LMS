@@ -153,8 +153,8 @@ KURSINHALTE = [
                     "Superuser darf immer rein; sonst muss <code>UserProfile.filter(rolle=..., aktiv=True).exists()</code> True ergeben.</p>"
                     "<h3>Demo-Zugaenge</h3>"
                     "<p>Alle Demo-Nutzer haben das Passwort <code>ChangeMe123!</code>. "
-                    "Benutzernamen: <code>superadmin</code>, <code>orgadmin</code>, <code>trainer</code>, "
-                    "<code>examiner</code>, <code>learner</code>.</p>"
+                "Benutzernamen: <code>superadmin</code>, <code>exam_operator</code>, <code>trainer</code>, "
+                "<code>examiner</code>, <code>learner</code>.</p>"
                 ),
                 "uebung": {
                     "frage": "Welche Rolle erstellt Fragenkataloge und Pruefungen?",
@@ -1112,8 +1112,9 @@ class Command(BaseCommand):
         superadmin.save()
         superadmin.groups.add(Group.objects.get(name=Rolle.SUPERADMIN.value))
 
+        User.objects.filter(username="orgadmin").delete()
         for username, rolle in [
-            ("orgadmin", Rolle.ORG_ADMIN),
+            ("exam_operator", Rolle.EXAM_OPERATOR),
             ("trainer", Rolle.TRAINER),
             ("examiner", Rolle.EXAMINER),
             ("learner", Rolle.LEARNER),
@@ -1140,7 +1141,7 @@ class Command(BaseCommand):
             },
         )
         for username, rolle in [
-            ("orgadmin", Rolle.ORG_ADMIN),
+            ("exam_operator", Rolle.EXAM_OPERATOR),
             ("trainer", Rolle.TRAINER),
             ("examiner", Rolle.EXAMINER),
             ("learner", Rolle.LEARNER),

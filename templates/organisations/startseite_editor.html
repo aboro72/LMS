@@ -9,8 +9,8 @@
 {% block breadcrumbs %}
 <nav aria-label="breadcrumb">
     <ol class="breadcrumb">
-        <li class="breadcrumb-item"><a href="{% url 'org_public_home' org.slug %}">Start</a></li>
-        <li class="breadcrumb-item"><a href="{% url 'org_admin_dashboard' org.slug %}">{{ org.name }}</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'single_system_startseite' %}">Start</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">{{ org.name }}</a></li>
         <li class="breadcrumb-item active">Startseite</li>
     </ol>
 </nav>
@@ -23,15 +23,15 @@
         <h1 class="h3 mb-1">Eigene Startseite gestalten</h1>
         <p class="text-secondary mb-0">
             Öffentliche Adresse:
-            <a href="{% url 'org_public_home' org.slug %}" target="_blank">
+            <a href="{% url 'single_system_startseite' %}" target="_blank">
                 /{{ org.slug }}/
             </a>
         </p>
     </div>
     <div class="d-flex gap-2">
-        <a class="btn btn-outline-secondary" href="{% url 'org_startseite_pagebuilder' org.slug %}">PageBuilder</a>
-        <a class="btn btn-outline-secondary" href="{% url 'org_public_home' org.slug %}" target="_blank">Vorschau</a>
-        <a class="btn btn-outline-secondary" href="{% url 'org_admin_dashboard' org.slug %}">Zurück</a>
+        <a class="btn btn-outline-secondary" href="{% url 'single_system_pagebuilder' %}">PageBuilder</a>
+        <a class="btn btn-outline-secondary" href="{% url 'single_system_startseite' %}" target="_blank">Vorschau</a>
+        <a class="btn btn-outline-secondary" href="{% url 'dashboard' %}">Zurück</a>
     </div>
 </div>
 
@@ -50,10 +50,10 @@
                     <div class="form-text">{{ form.aktiv.help_text }}</div>
                     {% if form.aktiv.errors %}<div class="text-danger small">{{ form.aktiv.errors }}</div>{% endif %}
                 </div>
-                <label class="form-label fw-semibold" for="{{ weiterleitung_form.weiterleitungs_url.id_for_label }}">{{ weiterleitung_form.weiterleitungs_url.label }}</label>
+                {% if not single_system_mode %}<label class="form-label fw-semibold" for="{{ weiterleitung_form.weiterleitungs_url.id_for_label }}">{{ weiterleitung_form.weiterleitungs_url.label }}</label>
                 {{ weiterleitung_form.weiterleitungs_url }}
                 <div class="form-text">{{ weiterleitung_form.weiterleitungs_url.help_text }}</div>
-                {% if weiterleitung_form.weiterleitungs_url.errors %}<div class="text-danger small mt-1">{{ weiterleitung_form.weiterleitungs_url.errors }}</div>{% endif %}
+                {% if weiterleitung_form.weiterleitungs_url.errors %}<div class="text-danger small mt-1">{{ weiterleitung_form.weiterleitungs_url.errors }}</div>{% endif %}{% endif %}
             </div>
 
             <div class="aboro-panel mb-4">
@@ -95,7 +95,7 @@
 
             <div class="d-flex gap-2">
                 <button type="submit" class="btn btn-aboro">Startseite speichern</button>
-                <a href="{% url 'org_admin_dashboard' org.slug %}" class="btn btn-outline-secondary">Abbrechen</a>
+                <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary">Abbrechen</a>
             </div>
         </div>
 
@@ -119,7 +119,7 @@
                         <strong>Design</strong><br>
                         <span class="text-secondary">
                             Farben und Logo passen Sie unter
-                            <a href="{% url 'org_design' org.slug %}">Design</a> an.
+                            <a href="{% url 'system_design' %}">Design</a> an.
                         </span>
                     </li>
                     <li>

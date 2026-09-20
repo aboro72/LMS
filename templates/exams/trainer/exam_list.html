@@ -29,7 +29,7 @@
             <thead>
             <tr>
                 <th>Titel</th>
-                <th>Organisation</th>
+                {% if not single_system_mode %}<th>Organisation</th>{% endif %}
                 <th>Fragen</th>
                 <th>Zeitlimit</th>
                 <th>Bestehensgrenze</th>
@@ -41,7 +41,7 @@
             {% for pruefung in pruefungen %}
                 <tr>
                     <td class="fw-semibold">{{ pruefung.titel }}</td>
-                    <td>{{ pruefung.organisation.name }}</td>
+                    {% if not single_system_mode %}<td>{{ pruefung.organisation.name }}</td>{% endif %}
                     <td>{{ pruefung.anzahl_fragen }}</td>
                     <td>{% if pruefung.zeitlimit_minuten %}{{ pruefung.zeitlimit_minuten }} Min.{% else %}-{% endif %}</td>
                     <td>{{ pruefung.bestehensgrenze_prozent }}%</td>

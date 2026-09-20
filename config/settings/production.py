@@ -5,6 +5,8 @@ from .base import *  # noqa: F403
 DEBUG = False
 PRODUCTION = True
 PAYMENT_DEMO_AUTOCONFIRM = False
+SINGLE_SYSTEM_MODE = config("SINGLE_SYSTEM_MODE", default=True, cast=bool)  # noqa: F405
+SINGLE_SYSTEM_ORGANISATION_SLUG = config("SINGLE_SYSTEM_ORGANISATION_SLUG", default="ml-gruppe")  # noqa: F405
 
 # --------------------------------------------------------------------------- #
 # Datenbankmotor

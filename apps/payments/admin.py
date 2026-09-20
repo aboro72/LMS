@@ -1,10 +1,11 @@
+from apps.organisations.single_system_admin import SingleSystemAdminMixin
 from django.contrib import admin
 
 from .models import AuditLog, Auszahlungsstatus, Rechnung, Zahlung, Zahlungseinstellungen, Zahlungsstatus
 
 
 @admin.register(Zahlungseinstellungen)
-class ZahlungseinstellungenAdmin(admin.ModelAdmin):
+class ZahlungseinstellungenAdmin(SingleSystemAdminMixin, admin.ModelAdmin):
     fieldsets = (
         ("Allgemein", {"fields": ("payment_aktiv", "demo_autoconfirm", "ueberweisung_aktiv")}),
         ("Stripe und Google Pay", {"fields": ("stripe_aktiv", "stripe_public_key", "stripe_secret_key", "google_pay_aktiv")}),
@@ -26,7 +27,7 @@ class ZahlungseinstellungenAdmin(admin.ModelAdmin):
 
 
 @admin.register(Zahlung)
-class ZahlungAdmin(admin.ModelAdmin):
+class ZahlungAdmin(SingleSystemAdminMixin, admin.ModelAdmin):
     list_display = (
         "zahlung_id",
         "nutzer",
@@ -59,14 +60,14 @@ class ZahlungAdmin(admin.ModelAdmin):
 
 
 @admin.register(Rechnung)
-class RechnungAdmin(admin.ModelAdmin):
+class RechnungAdmin(SingleSystemAdminMixin, admin.ModelAdmin):
     list_display = ("rechnungsnummer", "zahlung", "empfaenger_email", "betrag_brutto", "rechnungsdatum")
     search_fields = ("rechnungsnummer", "zahlung__zahlung_id", "empfaenger_email")
     readonly_fields = ("rechnungsnummer", "rechnungsdatum")
 
 
 @admin.register(AuditLog)
-class AuditLogAdmin(admin.ModelAdmin):
+class AuditLogAdmin(SingleSystemAdminMixin, admin.ModelAdmin):
     list_display = ("erstellt_am", "action", "actor", "organisation", "object_type", "object_id")
     list_filter = ("action", "organisation", "erstellt_am")
     search_fields = ("action", "message", "actor__username", "object_type", "object_id")

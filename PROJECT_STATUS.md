@@ -1,5 +1,14 @@
 # ABoroLMS Projektstatus
 
+## Einzelinstallation – 20.09.2026
+
+- Einzelbetrieb ist der Standard. Genau eine interne Betreiberkonfiguration ersetzt die Mandantenauswahl; mehrere Altbestände werden nicht stillschweigend vermischt.
+- Zentrale Verwaltung unter `/verwaltung/`: Benutzer/Einladungen, Design, E-Mail und Zertifikat-Design. Mandanten-Anmeldung, -Registrierung und Organisationsübersicht sind im Einzelbetrieb nicht erreichbar.
+- Formulare weisen die interne Betreiberreferenz serverseitig zu; keine Organisationsauswahl in Kursen, Kategorien, Lernpfaden, Fragenkatalogen und Prüfungen. Auch Admin-Formulare blenden die technische Referenz aus.
+- Navigation, Tabellen, Operator-Dashboard und Logout verwenden den Einzelbetrieb. Alte Organisations-Verwaltungslinks leiten auf zentrale URLs um.
+- Bestehende Fremdschlüssel bleiben intern zur Datenerhaltung bestehen. Betreiberbezeichnung: ML Gruppe. SQLite-Sicherung vor dieser Datenänderung: `tmp/before-single-system.sqlite3`.
+- Verifiziert: 40 Accounts-/Prüfungstests erfolgreich; 19 echte HTTP-Seitenabrufe auf Port 8000 mit vier Rollen erfolgreich, inklusive Erstellformularen ohne Organisationsfeld.
+
 ## Erledigt
 
 - Produktannahme aktualisiert: ABoroLMS wird als Selfhosting-Produkt geplant, nicht als reines SaaS-Angebot.

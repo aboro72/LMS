@@ -15,7 +15,7 @@
 <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
         <h1 class="h3 mb-1">Kursverwaltung</h1>
-        <p class="text-secondary mb-0">Kurse deiner Organisationen erstellen und pflegen.</p>
+        <p class="text-secondary mb-0">Kurse dieser Installation erstellen und pflegen.</p>
     </div>
     <a class="btn btn-aboro" href="{% url 'trainer_course_create' %}">Kurs erstellen</a>
 </div>
@@ -26,7 +26,7 @@
             <thead>
             <tr>
                 <th>Titel</th>
-                <th>Organisation</th>
+                {% if not single_system_mode %}<th>Organisation</th>{% endif %}
                 <th>Status</th>
                 <th>Niveau</th>
                 <th></th>
@@ -36,7 +36,7 @@
             {% for kurs in kurse %}
                 <tr>
                     <td>{{ kurs.titel }}</td>
-                    <td>{{ kurs.organisation.name }}</td>
+                    {% if not single_system_mode %}<td>{{ kurs.organisation.name }}</td>{% endif %}
                     <td>{% if kurs.ist_veroeffentlicht %}Veroeffentlicht{% else %}Entwurf{% endif %}</td>
                     <td>{{ kurs.get_niveau_display }}</td>
                     <td class="text-end"><a class="btn btn-sm btn-outline-secondary" href="{% url 'trainer_course_edit' kurs.slug %}">Bearbeiten</a></td>

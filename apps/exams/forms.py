@@ -10,6 +10,7 @@ from django_quill.quill import Quill
 
 from apps.accounts.models import Rolle
 from apps.organisations.models import Organisation
+from apps.organisations.single_system import bind_system_form
 
 from .models import Antwort, Frage, Fragenkatalog, FragenTag, Pruefung, PruefungsThemenquote, TeilnehmerAntwort, ZuordnungsPaar
 
@@ -29,6 +30,7 @@ class FragenkatalogForm(forms.ModelForm):
         if user and not user.is_superuser:
             organisation_ids = user.profile.filter(rolle__in=[Rolle.TRAINER, Rolle.EXAM_OPERATOR], aktiv=True).values_list("organisation_id", flat=True)
             self.fields["organisation"].queryset = Organisation.objects.filter(id__in=organisation_ids)
+        bind_system_form(self)
 
 
 class FrageForm(forms.ModelForm):
@@ -137,6 +139,7 @@ class PruefungForm(forms.ModelForm):
             organisation_ids = user.profile.filter(rolle__in=[Rolle.TRAINER, Rolle.EXAM_OPERATOR], aktiv=True).values_list("organisation_id", flat=True)
             self.fields["organisation"].queryset = Organisation.objects.filter(id__in=organisation_ids)
             self.fields["fragenkatalog"].queryset = Fragenkatalog.objects.filter(organisation_id__in=organisation_ids)
+        bind_system_form(self)
 
 
 class PruefungsThemenquoteForm(forms.ModelForm):

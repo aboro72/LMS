@@ -5,7 +5,7 @@
 {% block breadcrumbs %}
 <nav aria-label="breadcrumb">
     <ol class="breadcrumb">
-        <li class="breadcrumb-item"><a href="{% url 'org_public_home' org.slug %}">Start</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'single_system_startseite' %}">Start</a></li>
         <li class="breadcrumb-item active" aria-current="page">{{ org.name }}</li>
     </ol>
 </nav>
@@ -19,13 +19,13 @@
         <span class="badge text-bg-light">{{ org.get_lizenz_typ_display }}</span>
     </div>
     <div class="d-flex gap-2 flex-wrap">
-        <a class="btn btn-outline-secondary" href="{% url 'org_members' org.slug %}">Mitglieder</a>
-        <a class="btn btn-outline-secondary" href="{% url 'org_design' org.slug %}">Design</a>
-        <a class="btn btn-outline-secondary" href="{% url 'org_public_home' org.slug %}">Startseite</a>
-        <a class="btn btn-outline-secondary" href="{% url 'org_startseite' org.slug %}">Startseite bearbeiten</a>
-        <a class="btn btn-outline-secondary" href="{% url 'org_email_config' org.slug %}">E-Mail</a>
+        <a class="btn btn-outline-secondary" href="{% url 'system_members' %}">Mitglieder</a>
+        <a class="btn btn-outline-secondary" href="{% url 'system_design' %}">Design</a>
+        <a class="btn btn-outline-secondary" href="{% url 'single_system_startseite' %}">Startseite</a>
+        <a class="btn btn-outline-secondary" href="{% url 'single_system_startseite_editor' %}">Startseite bearbeiten</a>
+        <a class="btn btn-outline-secondary" href="{% url 'system_email' %}">E-Mail</a>
         <a class="btn btn-outline-secondary" href="{% url 'org_payment_settings' org.slug %}">Zahlungen</a>
-        <a class="btn btn-outline-secondary" href="{% url 'org_cert_design' org.slug %}">Zertifikat</a>
+        <a class="btn btn-outline-secondary" href="{% url 'system_cert_design' %}">Zertifikat</a>
         <a class="btn btn-aboro" href="{% url 'trainer_course_list' %}">Kursverwaltung</a>
     </div>
 </div>

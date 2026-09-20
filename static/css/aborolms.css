@@ -1,8 +1,8 @@
 :root {
-    --aboro-blue: #12315f;
-    --aboro-blue-dark: #0c2448;
-    --aboro-orange: #f28c28;
-    --aboro-bg: #f6f8fb;
+    --aboro-blue: #0c437b;
+    --aboro-blue-dark: #2b2e34;
+    --aboro-orange: #2fb2bf;
+    --aboro-bg: #f9f9fb;
 }
 
 body {
@@ -30,6 +30,15 @@ body {
 .aboro-hero {
     min-height: 52vh;
 }
+
+.ml-hero { min-height: 50vh; background: linear-gradient(135deg, rgba(12, 67, 123, .08), rgba(47, 178, 191, .12)); border-radius: 0 0 28px 28px; padding-left: clamp(1rem, 4vw, 3rem); padding-right: clamp(1rem, 4vw, 3rem); }
+.ml-hero-card { display: grid; gap: .8rem; padding: 2rem; border-radius: 18px; background: var(--aboro-blue-dark); color: #fff; box-shadow: 0 18px 40px rgba(12, 67, 123, .2); }
+.ml-hero-card__eyebrow { color: var(--aboro-orange); font-size: .78rem; text-transform: uppercase; letter-spacing: .08em; }
+.ml-hero-card__line { height: 8px; border-radius: 99px; background: rgba(255,255,255,.2); overflow: hidden; }
+.ml-hero-card__line span { display: block; height: 100%; border-radius: inherit; background: var(--aboro-orange); }
+.ml-value-list { display: grid; gap: 1rem; }
+.ml-value-list div { display: grid; gap: .15rem; border-left: 3px solid var(--aboro-orange); padding-left: 1rem; }
+.ml-value-list span { color: #64748b; font-size: .9rem; }
 
 .aboro-panel {
     background: #fff;

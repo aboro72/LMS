@@ -33,7 +33,7 @@
             <thead>
             <tr>
                 <th>Titel</th>
-                <th>Organisation</th>
+                {% if not single_system_mode %}<th>Organisation</th>{% endif %}
                 <th>Erstellt von</th>
                 <th class="text-end">Aktionen</th>
             </tr>
@@ -42,7 +42,7 @@
             {% for katalog in kataloge %}
                 <tr>
                     <td class="fw-semibold">{{ katalog.titel }}</td>
-                    <td>{{ katalog.organisation.name }}</td>
+                    {% if not single_system_mode %}<td>{{ katalog.organisation.name }}</td>{% endif %}
                     <td>{{ katalog.erstellt_von|default:"-" }}</td>
                     <td class="text-end">
                         <a class="btn btn-sm btn-outline-secondary" href="{% url 'trainer_catalog_edit' katalog.pk %}">Bearbeiten</a>

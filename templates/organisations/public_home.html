@@ -88,7 +88,7 @@
     <h2 class="h5 text-secondary mb-2">Diese Seite wurde noch nicht eingerichtet.</h2>
     <p class="text-secondary mb-0">
         {% if user.is_authenticated and ist_org_admin %}
-            <a href="{% url 'org_startseite' org.slug %}">Startseite jetzt gestalten</a>
+            <a href="{% url 'single_system_startseite_editor' %}">Startseite jetzt gestalten</a>
         {% else %}
             Besuchen Sie den <a href="{% url 'tenant_course_catalog' org.slug %}">Kurskatalog</a>, um die verfügbaren Kurse zu sehen.
         {% endif %}

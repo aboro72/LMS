@@ -9,7 +9,7 @@
             <h1 class="h4 mb-1">Konto erstellen</h1>
             <p class="text-secondary small mb-4">
                 Bereits registriert?
-                <a href="{% if tenant_org %}{% url 'tenant_login' tenant_org.slug %}{% else %}{% url 'account_login' %}{% endif %}">Jetzt anmelden</a>
+                <a href="{% if tenant_org and not single_system_mode %}{% url 'tenant_login' tenant_org.slug %}{% else %}{% url 'account_login' %}{% endif %}">Jetzt anmelden</a>
             </p>
 
             <form method="post" novalidate>

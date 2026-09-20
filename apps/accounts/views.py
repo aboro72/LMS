@@ -47,11 +47,25 @@ class DashboardView(LoginRequiredMixin, TemplateView):
         context["zertifikate"] = zertifikate[:3]
         return context
 
+    def get(self, request, *args, **kwargs):
+        from .context_processors import rollen_context
+        roles = rollen_context(request)
+        if settings.SINGLE_SYSTEM_MODE and not (roles.get("ist_exam_operator") or roles.get("ist_superadmin")):
+            return redirect("single_system_startseite")
+        return super().get(request, *args, **kwargs)
+
 
 class RegisterView(CreateView):
     form_class = RegisterForm
     template_name = "accounts/register.html"
     success_url = reverse_lazy("account_login")
+
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        if settings.SINGLE_SYSTEM_MODE:
+            from apps.organisations.single_system import system_organisation
+            UserProfile.objects.get_or_create(nutzer=self.object, organisation=system_organisation(), rolle=Rolle.LEARNER)
+        return response
 
 
 class OrganisationRegisterView(CreateView):
@@ -221,7 +235,7 @@ ROLE_HELP_PAGES = {
         "badge": "Zertifikatsprüfungen konfigurieren",
         "intro": "Prüfungsoperatoren verwalten Zertifikatsfragen, Prüfungsparameter und die verbindlichen PDF-Vorgaben.",
         "quick_cards": [
-            {"title": "Fragenkataloge", "text": "Fragen per Hand oder CSV anlegen, suchen und aktivieren."},
+            {"title": "Fragenkataloge", "text": "Fragen per Hand oder CSV anlegen, suchen und aktivieren.", "url_name": "trainer_catalog_list", "link_text": "Kataloge öffnen"},
             {"title": "Prüfungsregeln", "text": "Fragenzahl, Zeitlimit und Bestehensgrenze festlegen."},
             {"title": "PDF-Vorgaben", "text": "Prüflings- und Lösungsbogen verbindlich konfigurieren."},
         ],
@@ -285,4 +299,6 @@ class RoleHelpView(LoginRequiredMixin, TemplateView):
         context = super().get_context_data(**kwargs)
         context["active_role"] = self.active_role
         context["active_help"] = ROLE_HELP_PAGES[self.active_role]
+        if settings.SINGLE_SYSTEM_MODE and self.active_role == "superadmin":
+            context["active_help"] = {"title": "Systemverwaltung", "badge": "Einzelinstallation", "intro": "Benutzer, Rollen, Design und E-Mail-Einstellungen dieser Installation verwalten.", "quick_cards": [], "sections": [{"title": "Verwaltung", "items": [{"title": "Benutzer und Einladungen", "url_name": "system_members", "link_text": "Benutzer verwalten"}, {"title": "Design", "url_name": "system_design", "link_text": "Design bearbeiten"}, {"title": "E-Mail", "url_name": "system_email", "link_text": "E-Mail konfigurieren"}]}], "faqs": []}
         return context

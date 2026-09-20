@@ -5,4 +5,4 @@ class OrganisationsConfig(AppConfig):
     default_auto_field = "django.db.models.BigAutoField"
     name = "apps.organisations"
     label = "organisations"
-    verbose_name = "Organisationen"
+    verbose_name = "Systemkonfiguration"

@@ -32,6 +32,7 @@ class EinladungForm(forms.Form):
     email = forms.EmailField(label="E-Mail-Adresse")
     rolle = forms.ChoiceField(
         choices=[
+            (Rolle.EXAM_OPERATOR, "Prüfungsoperator"),
             (Rolle.TRAINER, "Trainer"),
             (Rolle.EXAMINER, "Prüfer"),
             (Rolle.LEARNER, "Lernender"),
@@ -65,6 +66,12 @@ class EinladungForm(forms.Form):
 
 
 class OrganisationWeiterleitungForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        from django.conf import settings
+        if settings.SINGLE_SYSTEM_MODE:
+            self.fields.pop("weiterleitungs_url", None)
+
     class Meta:
         model = Organisation
         fields = ["weiterleitungs_url"]

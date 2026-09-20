@@ -7,6 +7,7 @@ from django.utils.text import slugify
 
 from apps.accounts.models import Rolle
 from apps.organisations.models import Organisation
+from apps.organisations.single_system import bind_system_form
 from apps.exams.models import Pruefung
 
 from .models import Abschnitt, Begleitmaterial, Kurs, KursBewertung, KursKategorie, Lektion, Lernpfad, LernpfadKurs, Uebungsantwort, Uebungsfrage
@@ -65,6 +66,7 @@ class KursForm(forms.ModelForm):
             self.fields["organisation"].queryset = Organisation.objects.filter(id__in=organisation_ids)
             self.fields["pruefung"].queryset = Pruefung.objects.filter(organisation_id__in=organisation_ids)
             self.fields["kategorie"].queryset = KursKategorie.objects.filter(organisation_id__in=organisation_ids)
+        bind_system_form(self)
 
     def clean(self):
         cleaned_data = super().clean()
@@ -108,6 +110,7 @@ class KursKategorieForm(forms.ModelForm):
             org_ids = user.profile.filter(rolle=Rolle.TRAINER, aktiv=True).values_list("organisation_id", flat=True)
             self.fields["organisation"].queryset = Organisation.objects.filter(id__in=org_ids)
             self.fields["parent"].queryset = KursKategorie.objects.filter(organisation_id__in=org_ids)
+        bind_system_form(self)
 
 
 class AbschnittForm(forms.ModelForm):
@@ -243,6 +246,7 @@ class LernpfadForm(forms.ModelForm):
         if user and not user.is_superuser:
             organisation_ids = user.profile.filter(rolle=Rolle.TRAINER, aktiv=True).values_list("organisation_id", flat=True)
             self.fields["organisation"].queryset = Organisation.objects.filter(id__in=organisation_ids)
+        bind_system_form(self)
 
     def save(self, commit=True):
         lernpfad = super().save(commit=False)

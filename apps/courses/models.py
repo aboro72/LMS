@@ -9,6 +9,36 @@ class Niveau(models.TextChoices):
     FORTGESCHRITTEN = "fortgeschritten", "Fortgeschritten"
 
 
+class KursKategorie(models.Model):
+    organisation = models.ForeignKey("organisations.Organisation", on_delete=models.CASCADE, related_name="kurskategorien")
+    name = models.CharField(max_length=120)
+    parent = models.ForeignKey("self", null=True, blank=True, on_delete=models.CASCADE, related_name="unterkategorien")
+
+    class Meta:
+        ordering = ["parent__name", "name"]
+        constraints = [models.UniqueConstraint(fields=["organisation", "parent", "name"], name="unique_course_category_per_org_parent")]
+        verbose_name = "Kurskategorie"
+        verbose_name_plural = "Kurskategorien"
+
+    def __str__(self):
+        return f"{self.parent.name} / {self.name}" if self.parent else self.name
+
+    @classmethod
+    def standardkategorien_anlegen(cls, organisation):
+        defaults = {
+            "IT": ["Softwareentwicklung", "Administration", "Sonstiges"],
+            "Wirtschaft": ["Büro und Verwaltung", "Finanzen", "Sonstiges"],
+            "Sprachen": ["Deutsch", "Englisch", "Sonstige Sprachen"],
+            "Persönliche Entwicklung": ["Kommunikation", "Führung", "Sonstiges"],
+            "Gesundheit und Sicherheit": ["Arbeitssicherheit", "Gesundheit", "Sonstiges"],
+            "Sonstige": [],
+        }
+        for name, children in defaults.items():
+            parent, _ = cls.objects.get_or_create(organisation=organisation, parent=None, name=name)
+            for child in children:
+                cls.objects.get_or_create(organisation=organisation, parent=parent, name=child)
+
+
 class Kurs(models.Model):
     class Angebotstyp(models.TextChoices):
         KURS = "KURS", "Kompletter Kurs"
@@ -19,6 +49,7 @@ class Kurs(models.Model):
     beschreibung = QuillField(blank=True)
     thumbnail = models.ImageField(upload_to="thumbnails/", blank=True)
     organisation = models.ForeignKey("organisations.Organisation", on_delete=models.CASCADE)
+    kategorie = models.ForeignKey(KursKategorie, null=True, blank=True, on_delete=models.SET_NULL, related_name="kurse")
     erstellt_von = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True)
     sprache = models.CharField(max_length=10, default="de")
     niveau = models.CharField(max_length=20, choices=Niveau.choices)

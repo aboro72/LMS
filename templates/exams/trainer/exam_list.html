@@ -19,7 +19,7 @@
     </div>
     <div class="d-flex gap-2">
         <a class="btn btn-outline-secondary" href="{% url 'trainer_catalog_list' %}">Fragenkataloge</a>
-        <a class="btn btn-aboro" href="{% url 'trainer_exam_create' %}">Zertifikatsprüfung erstellen</a>
+        {% if ist_exam_operator %}<a class="btn btn-aboro" href="{% url 'trainer_exam_create' %}">Zertifikatsprüfung erstellen</a>{% endif %}
     </div>
 </div>
 
@@ -55,12 +55,13 @@
                     <td class="text-end">
                         <a class="btn btn-sm btn-outline-secondary" href="{% url 'trainer_exam_stats' pruefung.pk %}">Statistik</a>
                         <a class="btn btn-sm btn-outline-secondary" href="{% url 'trainer_exam_results' pruefung.pk %}">Ergebnisse</a>
-                        <a class="btn btn-sm btn-outline-secondary" href="{% url 'trainer_exam_edit' pruefung.pk %}">Bearbeiten</a>
+                        <a class="btn btn-sm btn-outline-secondary" href="{% url 'trainer_exam_approvals' pruefung.pk %}">Freigaben</a>
+                        {% if ist_exam_operator %}<a class="btn btn-sm btn-outline-secondary" href="{% url 'trainer_exam_edit' pruefung.pk %}">Bearbeiten</a>{% endif %}
                     </td>
                 </tr>
             {% empty %}
                 <tr>
-                    <td colspan="7" class="text-secondary py-3">Noch keine Pruefungen. <a href="{% url 'trainer_exam_create' %}">Erste Pruefung erstellen</a>.</td>
+                    <td colspan="7" class="text-secondary py-3">Noch keine Pruefungen.{% if ist_exam_operator %} <a href="{% url 'trainer_exam_create' %}">Erste Pruefung erstellen</a>.{% endif %}</td>
                 </tr>
             {% endfor %}
             </tbody>

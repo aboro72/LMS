@@ -14,6 +14,7 @@ from .views import (
     OrganisationSignupView,
     SuperadminOrganisationenView,
 )
+from apps.accounts.views import OrganisationLoginView, OrganisationRegisterView
 
 urlpatterns = [
     # Öffentliche Organisations-Startseite
@@ -21,6 +22,8 @@ urlpatterns = [
 
     # Org-Selbstregistrierung
     path("organisationen/signup/", OrganisationSignupView.as_view(), name="org_signup"),
+    path("<slug:org_slug>/login/", OrganisationLoginView.as_view(), name="tenant_login"),
+    path("<slug:org_slug>/register/", OrganisationRegisterView.as_view(), name="tenant_register"),
 
     # Org-Admin-Bereich
     path("organisationen/<slug:slug>/", OrgAdminDashboardView.as_view(), name="org_admin_dashboard"),

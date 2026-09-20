@@ -7,6 +7,7 @@ class Rolle(models.TextChoices):
     SUPERADMIN = "superadmin", "Super-Admin"
     ORG_ADMIN = "org_admin", "Org-Admin"
     TRAINER = "trainer", "Trainer"
+    EXAM_OPERATOR = "exam_operator", "Prüfungsoperator"
     EXAMINER = "examiner", "Pruefer"
     LEARNER = "learner", "Lernender"
 

@@ -9,7 +9,7 @@ from apps.accounts.models import Rolle
 from apps.organisations.models import Organisation
 from apps.exams.models import Pruefung
 
-from .models import Abschnitt, Begleitmaterial, Kurs, KursBewertung, Lektion, Lernpfad, LernpfadKurs, Uebungsantwort, Uebungsfrage
+from .models import Abschnitt, Begleitmaterial, Kurs, KursBewertung, KursKategorie, Lektion, Lernpfad, LernpfadKurs, Uebungsantwort, Uebungsfrage
 
 
 def _eindeutiger_slug(modell, titel, pk=None):
@@ -43,6 +43,7 @@ class KursForm(forms.ModelForm):
             "beschreibung",
             "thumbnail",
             "organisation",
+            "kategorie",
             "sprache",
             "niveau",
             "angebotstyp",
@@ -63,6 +64,7 @@ class KursForm(forms.ModelForm):
             organisation_ids = user.profile.filter(rolle=Rolle.TRAINER, aktiv=True).values_list("organisation_id", flat=True)
             self.fields["organisation"].queryset = Organisation.objects.filter(id__in=organisation_ids)
             self.fields["pruefung"].queryset = Pruefung.objects.filter(organisation_id__in=organisation_ids)
+            self.fields["kategorie"].queryset = KursKategorie.objects.filter(organisation_id__in=organisation_ids)
 
     def clean(self):
         cleaned_data = super().clean()
@@ -93,6 +95,19 @@ class KursForm(forms.ModelForm):
             kurs.save()
             self.save_m2m()
         return kurs
+
+
+class KursKategorieForm(forms.ModelForm):
+    class Meta:
+        model = KursKategorie
+        fields = ("organisation", "parent", "name")
+
+    def __init__(self, *args, user=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        if user and not user.is_superuser:
+            org_ids = user.profile.filter(rolle=Rolle.TRAINER, aktiv=True).values_list("organisation_id", flat=True)
+            self.fields["organisation"].queryset = Organisation.objects.filter(id__in=org_ids)
+            self.fields["parent"].queryset = KursKategorie.objects.filter(organisation_id__in=org_ids)
 
 
 class AbschnittForm(forms.ModelForm):

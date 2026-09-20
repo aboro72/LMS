@@ -56,6 +56,7 @@ class Frage(models.Model):
     bewertungshinweis = QuillField(blank=True, verbose_name="Bewertungsschema")
     schwierigkeit = models.CharField(max_length=1, choices=Schwierigkeit.choices, default=Schwierigkeit.MITTEL)
     punkte = models.PositiveIntegerField(default=1)
+    aktiv = models.BooleanField(default=True)
     tags = models.ManyToManyField(FragenTag, blank=True)
     eltern_szenario = models.ForeignKey("self", on_delete=models.CASCADE, null=True, blank=True, related_name="teilfragen")
 
@@ -118,6 +119,8 @@ class Pruefung(models.Model):
     externe_nummern_prefix = models.CharField(max_length=40, blank=True)
     externe_nummern_naechste = models.PositiveIntegerField(default=1)
     externe_nummern_ende = models.PositiveIntegerField(null=True, blank=True)
+    pdf_antwortzeilen = models.PositiveIntegerField(default=6, verbose_name="Antwortzeilen im PDF")
+    pdf_fusszeile = models.CharField(max_length=200, blank=True, default="", verbose_name="PDF-Fusszeile")
     erstellt_am = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -127,6 +130,25 @@ class Pruefung(models.Model):
 
     def __str__(self):
         return self.titel
+
+
+class Pruefungsversion(models.Model):
+    """Unveraenderlicher Snapshot der Pruefungsparameter und gezogenen Fragen."""
+
+    pruefung = models.ForeignKey(Pruefung, on_delete=models.CASCADE, related_name="versionen")
+    versionsnummer = models.PositiveIntegerField()
+    erstellt_von = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True)
+    erstellt_am = models.DateTimeField(auto_now_add=True)
+    snapshot = models.JSONField(default=dict)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=["pruefung", "versionsnummer"], name="unique_exam_version_number")]
+        ordering = ["-versionsnummer"]
+        verbose_name = "Pruefungsversion"
+        verbose_name_plural = "Pruefungsversionen"
+
+    def __str__(self):
+        return f"{self.pruefung} v{self.versionsnummer}"
 
 
 class PruefungsThemenquote(models.Model):
@@ -154,6 +176,34 @@ class PruefungsAnmeldung(models.Model):
         ordering = ["-angemeldet_am"]
         verbose_name = "Prüfungsanmeldung"
         verbose_name_plural = "Prüfungsanmeldungen"
+
+
+class PruefungsFreigabe(models.Model):
+    """Serverseitige Freigabe einer konkreten Zertifikatspruefung fuer einen Teilnehmer."""
+
+    pruefung = models.ForeignKey(Pruefung, on_delete=models.CASCADE, related_name="freigaben")
+    nutzer = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="pruefungsfreigaben")
+    freigegeben_von = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name="erteilte_pruefungsfreigaben",
+    )
+    freigegeben_am = models.DateTimeField(auto_now_add=True)
+    widerrufen_am = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=["pruefung", "nutzer"], name="unique_exam_release_user")]
+        ordering = ["nutzer__last_name", "nutzer__first_name", "nutzer__username"]
+        verbose_name = "Pruefungsfreigabe"
+        verbose_name_plural = "Pruefungsfreigaben"
+
+    @property
+    def ist_aktiv(self):
+        return self.widerrufen_am is None
+
+    def __str__(self):
+        return f"{self.pruefung} - {self.nutzer}"
 
 
 class PruefungsbogenArchiv(models.Model):
@@ -184,9 +234,14 @@ class PruefungsVersuch(models.Model):
 
     nutzer = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     pruefung = models.ForeignKey(Pruefung, on_delete=models.CASCADE)
+    pruefungsversion = models.ForeignKey("Pruefungsversion", on_delete=models.PROTECT, null=True, blank=True, related_name="versuche")
     versuch_nummer = models.PositiveIntegerField()
     status = models.CharField(max_length=20, choices=Status.choices, default=Status.LAUFEND)
     gestartet_am = models.DateTimeField(auto_now_add=True)
+    aktive_sekunden = models.PositiveIntegerField(default=0)
+    aktive_phase_begonnen_am = models.DateTimeField(null=True, blank=True)
+    letzte_aktivitaet_am = models.DateTimeField(null=True, blank=True)
+    pausiert_am = models.DateTimeField(null=True, blank=True)
     abgeschlossen_am = models.DateTimeField(null=True, blank=True)
     punkte_erreicht = models.DecimalField(max_digits=8, decimal_places=2, default=0)
     punkte_gesamt = models.DecimalField(max_digits=8, decimal_places=2, default=0)

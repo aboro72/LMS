@@ -4,6 +4,7 @@ import re
 from io import TextIOWrapper
 
 from django import forms
+from django.contrib.auth import get_user_model
 from django.forms import BaseInlineFormSet, inlineformset_factory
 from django_quill.quill import Quill
 
@@ -26,7 +27,7 @@ class FragenkatalogForm(forms.ModelForm):
     def __init__(self, *args, user=None, **kwargs):
         super().__init__(*args, **kwargs)
         if user and not user.is_superuser:
-            organisation_ids = user.profile.filter(rolle=Rolle.TRAINER, aktiv=True).values_list("organisation_id", flat=True)
+            organisation_ids = user.profile.filter(rolle__in=[Rolle.TRAINER, Rolle.EXAM_OPERATOR], aktiv=True).values_list("organisation_id", flat=True)
             self.fields["organisation"].queryset = Organisation.objects.filter(id__in=organisation_ids)
 
 
@@ -111,22 +112,29 @@ class PruefungForm(forms.ModelForm):
             "max_versuche",
             "zufaellige_fragenreihenfolge",
             "zufaellige_antwortfolge",
-            "kein_zurueck",
             "ist_aktiv",
             "zertifikatsnummernart",
             "externe_nummern_prefix",
             "externe_nummern_naechste",
             "externe_nummern_ende",
+            "pdf_antwortzeilen",
+            "pdf_fusszeile",
         )
 
         help_texts = {
             "anzahl_fragen": "Gesamtzahl der Prüfungsfragen. Themenquoten reservieren einen Teil dieser Gesamtzahl; die übrigen Fragen werden zufällig aus dem Katalog ergänzt.",
         }
 
+    def clean_pdf_antwortzeilen(self):
+        value = self.cleaned_data["pdf_antwortzeilen"]
+        if value < 1 or value > 20:
+            raise forms.ValidationError("Bitte wählen Sie zwischen 1 und 20 Antwortzeilen.")
+        return value
+
     def __init__(self, *args, user=None, **kwargs):
         super().__init__(*args, **kwargs)
         if user and not user.is_superuser:
-            organisation_ids = user.profile.filter(rolle=Rolle.TRAINER, aktiv=True).values_list("organisation_id", flat=True)
+            organisation_ids = user.profile.filter(rolle__in=[Rolle.TRAINER, Rolle.EXAM_OPERATOR], aktiv=True).values_list("organisation_id", flat=True)
             self.fields["organisation"].queryset = Organisation.objects.filter(id__in=organisation_ids)
             self.fields["fragenkatalog"].queryset = Fragenkatalog.objects.filter(organisation_id__in=organisation_ids)
 
@@ -274,3 +282,16 @@ class FreitextBewertungForm(forms.ModelForm):
     class Meta:
         model = TeilnehmerAntwort
         fields = ("freitext_punkte", "freitext_kommentar")
+
+
+class PruefungsFreigabeForm(forms.Form):
+    nutzer = forms.ModelChoiceField(queryset=get_user_model().objects.none(), label="Teilnehmer")
+
+    def __init__(self, *args, pruefung=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        if pruefung is not None:
+            self.fields["nutzer"].queryset = get_user_model().objects.filter(
+                profile__organisation=pruefung.organisation,
+                profile__rolle=Rolle.LEARNER,
+                profile__aktiv=True,
+            ).distinct().order_by("last_name", "first_name", "username")

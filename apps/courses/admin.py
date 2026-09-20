@@ -5,6 +5,7 @@ from .models import (
     Begleitmaterial,
     Einschreibung,
     Kurs,
+    KursKategorie,
     KursBewertung,
     Lektion,
     Lernpfad,
@@ -14,6 +15,13 @@ from .models import (
     Uebungsantwort,
     Uebungsfrage,
 )
+
+
+@admin.register(KursKategorie)
+class KursKategorieAdmin(admin.ModelAdmin):
+    list_display = ("name", "parent", "organisation")
+    list_filter = ("organisation",)
+    search_fields = ("name", "organisation__name")
 
 
 class LektionInline(admin.TabularInline):

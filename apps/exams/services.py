@@ -4,9 +4,10 @@ from datetime import timedelta
 from decimal import Decimal
 
 from django.db import transaction
+from django.core.exceptions import ValidationError
 from django.utils import timezone
 
-from .models import Antwort, Frage, Pruefung, PruefungsVersuch, TeilnehmerAntwort
+from .models import Antwort, Frage, Pruefung, Pruefungsversion, PruefungsVersuch, TeilnehmerAntwort
 
 
 class MaxVersucheErreicht(Exception):
@@ -17,8 +18,57 @@ class NichtGenugFragenInThema(Exception):
     pass
 
 
+def aktive_sekunden(versuch, jetzt=None):
+    jetzt = jetzt or timezone.now()
+    sekunden = versuch.aktive_sekunden
+    if versuch.aktive_phase_begonnen_am:
+        sekunden += max(0, int((jetzt - versuch.aktive_phase_begonnen_am).total_seconds()))
+    return sekunden
+
+
+def restliche_sekunden(versuch, jetzt=None):
+    if not versuch.pruefung.zeitlimit_minuten:
+        return None
+    return max(0, versuch.pruefung.zeitlimit_minuten * 60 - aktive_sekunden(versuch, jetzt))
+
+
+@transaction.atomic
+def setze_pruefung_fort(versuch):
+    if versuch.status != PruefungsVersuch.Status.LAUFEND:
+        return False
+    jetzt = timezone.now()
+    versuch.aktive_phase_begonnen_am = jetzt
+    versuch.letzte_aktivitaet_am = jetzt
+    versuch.pausiert_am = None
+    versuch.save(update_fields=["aktive_phase_begonnen_am", "letzte_aktivitaet_am", "pausiert_am"])
+    return True
+
+
+@transaction.atomic
+def pausiere_pruefung(versuch, jetzt=None):
+    if versuch.status != PruefungsVersuch.Status.LAUFEND or not versuch.aktive_phase_begonnen_am:
+        return False
+    jetzt = jetzt or timezone.now()
+    versuch.aktive_sekunden = aktive_sekunden(versuch, jetzt)
+    versuch.aktive_phase_begonnen_am = None
+    versuch.letzte_aktivitaet_am = jetzt
+    versuch.pausiert_am = jetzt
+    versuch.save(update_fields=["aktive_sekunden", "aktive_phase_begonnen_am", "letzte_aktivitaet_am", "pausiert_am"])
+    return True
+
+
+@transaction.atomic
+def bestaetige_aktivitaet(versuch, jetzt=None):
+    if versuch.status != PruefungsVersuch.Status.LAUFEND:
+        return False
+    jetzt = jetzt or timezone.now()
+    versuch.letzte_aktivitaet_am = jetzt
+    versuch.save(update_fields=["letzte_aktivitaet_am"])
+    return True
+
+
 def waehle_pruefungsfragen(pruefung):
-    fragen_queryset = Frage.objects.filter(fragenkatalog=pruefung.fragenkatalog, eltern_szenario__isnull=True).prefetch_related("antworten", "zuordnungen")
+    fragen_queryset = Frage.objects.filter(fragenkatalog=pruefung.fragenkatalog, eltern_szenario__isnull=True, aktiv=True).prefetch_related("antworten", "zuordnungen")
     themenquoten = list(pruefung.themenquoten.select_related("thema"))
     if not themenquoten:
         fragen = list(fragen_queryset)
@@ -56,15 +106,58 @@ def starte_pruefung(pruefung, nutzer):
     if not pruefung.zufaellige_fragenreihenfolge:
         fragen.sort(key=lambda frage: frage.id)
 
+    version = Pruefungsversion.objects.create(
+        pruefung=pruefung,
+        versionsnummer=(Pruefungsversion.objects.filter(pruefung=pruefung).count() + 1),
+        erstellt_von=nutzer,
+        snapshot={
+            "parameter": {
+                "anzahl_fragen": pruefung.anzahl_fragen,
+                "zeitlimit_minuten": pruefung.zeitlimit_minuten,
+                "bestehensgrenze_prozent": pruefung.bestehensgrenze_prozent,
+                "pdf_antwortzeilen": pruefung.pdf_antwortzeilen,
+                "pdf_fusszeile": pruefung.pdf_fusszeile,
+            },
+            "fragen": [
+                {
+                    "id": frage.pk,
+                    "typ": frage.typ,
+                    "text": frage.fragetext.html,
+                    "erklaerung": frage.erklaerung.html,
+                    "bewertungshinweis": frage.bewertungshinweis.html,
+                    "punkte": frage.punkte,
+                    "antworten": list(frage.antworten.values("id", "antworttext", "ist_korrekt", "reihenfolge")),
+                    "zuordnungen": list(frage.zuordnungen.values("id", "linkes_element", "rechtes_element", "reihenfolge")),
+                }
+                for frage in fragen
+            ],
+        },
+    )
+
     return PruefungsVersuch.objects.create(
         nutzer=nutzer,
         pruefung=pruefung,
         versuch_nummer=bisherige_versuche + 1,
+        pruefungsversion=version,
         fragen_reihenfolge=[frage.id for frage in fragen],
     )
 
 
 def speichere_antwort(versuch, frage, daten):
+    if frage.typ == Frage.Typ.ZUORDNUNG:
+        mapping = daten.get("zuordnung_json", {})
+        if isinstance(mapping, str):
+            try:
+                mapping = json.loads(mapping)
+            except (TypeError, ValueError):
+                raise ValidationError("Ungültige Zuordnungen.")
+        if not isinstance(mapping, dict):
+            raise ValidationError("Ungültige Zuordnungen.")
+        paare = list(frage.zuordnungen.all())
+        erlaubte_ids = {str(paar.pk) for paar in paare}
+        erlaubte_werte = {paar.rechtes_element for paar in paare}
+        if any(key not in erlaubte_ids or not isinstance(value, str) or value not in erlaubte_werte for key, value in mapping.items()):
+            raise ValidationError("Ungültige Zuordnungen.")
     teilnehmer_antwort, _ = TeilnehmerAntwort.objects.get_or_create(versuch=versuch, frage=frage)
     if frage.typ in [Frage.Typ.SINGLE_CHOICE, Frage.Typ.MULTIPLE_CHOICE, Frage.Typ.WAHR_FALSCH]:
         antwort_ids = daten.getlist("antworten") if hasattr(daten, "getlist") else daten.get("antworten", [])
@@ -74,7 +167,7 @@ def speichere_antwort(versuch, frage, daten):
     elif frage.typ in [Frage.Typ.FREITEXT, Frage.Typ.SZENARIO]:
         teilnehmer_antwort.freitext_antwort = daten.get("freitext_antwort", "")
     elif frage.typ == Frage.Typ.ZUORDNUNG:
-        teilnehmer_antwort.zuordnung_json = daten.get("zuordnung_json", {})
+        teilnehmer_antwort.zuordnung_json = mapping
     teilnehmer_antwort.save()
     return teilnehmer_antwort
 
@@ -157,9 +250,11 @@ def werte_versuch_aus(versuch):
 def pruefe_zeitlimit(versuch):
     if not versuch.pruefung.zeitlimit_minuten:
         return False
-    deadline = versuch.gestartet_am + timezone.timedelta(minutes=versuch.pruefung.zeitlimit_minuten)
-    if timezone.now() <= deadline:
+    if not versuch.aktive_phase_begonnen_am:
         return False
+    if aktive_sekunden(versuch) <= versuch.pruefung.zeitlimit_minuten * 60:
+        return False
+    pausiere_pruefung(versuch)
     versuch.status = PruefungsVersuch.Status.ABGELAUFEN
     versuch.abgeschlossen_am = timezone.now()
     versuch.einsehbar_bis = versuch.abgeschlossen_am + timedelta(days=365)

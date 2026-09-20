@@ -43,6 +43,14 @@
                 <option value="bezahlt" {% if filter.preis == "bezahlt" %}selected{% endif %}>Bezahlt</option>
             </select>
 
+            <label class="form-label" for="kategorie">Thema / Unterthema</label>
+            <select class="form-select mb-3" id="kategorie" name="kategorie">
+                <option value="">Alle Themen</option>
+                {% for thema in kategorie_choices %}
+                    <option value="{{ thema.id }}" {% if filter.kategorie == thema.id|stringformat:'s' %}selected{% endif %}>{{ thema }}</option>
+                {% endfor %}
+            </select>
+
             <button class="btn btn-aboro w-100" type="submit">Filtern</button>
         </form>
     </aside>
@@ -59,6 +67,7 @@
                         {% endif %}
                         <div class="course-card__body">
                             <div class="small text-secondary mb-1">{{ kurs.organisation.name }}</div>
+                            {% if kurs.kategorie %}<div class="small text-aboro-orange mb-1">{{ kurs.kategorie }}</div>{% endif %}
                             <h2 class="h6 mb-2">{% if tenant_org %}<a href="{% url 'tenant_course_detail' tenant_org.slug kurs.slug %}">{{ kurs.titel }}</a>{% else %}<a href="{% url 'course_detail' kurs.slug %}">{{ kurs.titel }}</a>{% endif %}</h2>
                             {% if kurs.ist_zertifikatspruefung %}<div class="small text-primary fw-semibold mb-2">Zertifikatsprüfung</div>{% endif %}
                             <div class="course-stars mb-2" aria-label="Bewertung">★★★★★</div>

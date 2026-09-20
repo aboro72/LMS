@@ -19,6 +19,12 @@ class RollenMixin(LoginRequiredMixin):
         raise PermissionDenied
 
 
+class OperatorMixin(RollenMixin):
+    """Access guard for configuration of formal certification exams."""
+
+    rolle = Rolle.EXAM_OPERATOR
+
+
 class OrganisationMixin(LoginRequiredMixin):
     organisation_field = "organisation"
 

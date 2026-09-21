@@ -49,12 +49,12 @@
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">Trainer</a>
                             <ul class="dropdown-menu dropdown-menu-end">
-                                <li><a class="dropdown-item" href="{% url 'trainer_course_list' %}">Kursverwaltung</a></li>
-                                <li><a class="dropdown-item" href="{% url 'trainer_learning_path_list' %}">Lernpfade</a></li>
-                                <li><a class="dropdown-item" href="{% url 'trainer_revenue_dashboard' %}">Umsatz</a></li>
+                                <li><a class="dropdown-item" href="{% if tenant_org %}{% url 'tenant_trainer_course_list' tenant_org.slug %}{% else %}{% url 'trainer_course_list' %}{% endif %}">Kursverwaltung</a></li>
+                                <li><a class="dropdown-item" href="{% if tenant_org %}{% url 'tenant_trainer_learning_path_list' tenant_org.slug %}{% else %}{% url 'trainer_learning_path_list' %}{% endif %}">Lernpfade</a></li>
+                                <li><a class="dropdown-item" href="{% if tenant_org %}{% url 'tenant_trainer_revenue_dashboard' tenant_org.slug %}{% else %}{% url 'trainer_revenue_dashboard' %}{% endif %}">Umsatz</a></li>
                                 <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item" href="{% url 'trainer_catalog_list' %}">Fragenkataloge</a></li>
-                                <li><a class="dropdown-item" href="{% url 'trainer_exam_list' %}">Prüfungen</a></li>
+                                <li><a class="dropdown-item" href="{% if tenant_org %}{% url 'tenant_catalog_list' tenant_org.slug %}{% else %}{% url 'trainer_catalog_list' %}{% endif %}">Fragenkataloge</a></li>
+                                <li><a class="dropdown-item" href="{% if tenant_org %}{% url 'tenant_exam_list' tenant_org.slug %}{% else %}{% url 'trainer_exam_list' %}{% endif %}">Prüfungen</a></li>
                             </ul>
                         </li>
                     {% endif %}
@@ -99,8 +99,8 @@
                 {% else %}
                     <li class="nav-item"><a class="nav-link" href="{% if tenant_org %}{% url 'tenant_course_catalog' tenant_org.slug %}{% else %}{% url 'course_catalog' %}{% endif %}">Kurse</a></li>
                     <li class="nav-item"><a class="nav-link" href="{% if tenant_org %}{% url 'tenant_learning_path_list' tenant_org.slug %}{% else %}{% url 'learning_path_list' %}{% endif %}">Lernpfade</a></li>
-                    <li class="nav-item"><a class="nav-link" href="{% url 'account_login' %}">Login</a></li>
-                    <li class="nav-item"><a class="btn btn-sm btn-aboro" href="{% url 'register' %}">Registrieren</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{% if tenant_org %}{% url 'tenant_login' tenant_org.slug %}{% else %}{% url 'account_login' %}{% endif %}">Login</a></li>
+                    <li class="nav-item"><a class="btn btn-sm btn-aboro" href="{% if tenant_org %}{% url 'tenant_register' tenant_org.slug %}{% else %}{% url 'register' %}{% endif %}">Registrieren</a></li>
                 {% endif %}
             </ul>
         </div>

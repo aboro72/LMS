@@ -1,11 +1,14 @@
 from django.conf import settings
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import redirect
+from django.shortcuts import get_object_or_404
 from django.urls import reverse_lazy
 from django.views.generic import CreateView, TemplateView, UpdateView
 
-from .forms import ProfilForm, RegisterForm
-from .models import Rolle
+from .forms import OrganisationLoginForm, ProfilForm, RegisterForm
+from .models import Rolle, UserProfile
+from apps.organisations.models import Organisation
+from allauth.account.views import LoginView as AllauthLoginView
 
 
 class HomeView(TemplateView):
@@ -22,18 +25,26 @@ class DashboardView(LoginRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["profile"] = self.request.user.profile.select_related("organisation").filter(aktiv=True)
-        context["einschreibungen"] = (
+        profile = self.request.user.profile.select_related("organisation").filter(aktiv=True)
+        if getattr(self.request, "tenant_org", None) and not self.request.user.is_superuser:
+            profile = profile.filter(organisation=self.request.tenant_org)
+        context["profile"] = profile
+        einschreibungen = (
             self.request.user.einschreibung_set.select_related("kurs", "kurs__organisation")
             .order_by("-eingeschrieben_am")
             if self.request.user.is_authenticated
             else []
         )
-        context["zertifikate"] = (
+        zertifikate = (
             self.request.user.zertifikate.filter(ist_widerrufen=False)
             .select_related("pruefungsversuch__pruefung", "einschreibung__kurs")
-            .order_by("-ausgestellt_am")[:3]
+            .order_by("-ausgestellt_am")
         )
+        if getattr(self.request, "tenant_org", None) and not self.request.user.is_superuser:
+            einschreibungen = einschreibungen.filter(kurs__organisation=self.request.tenant_org)
+            zertifikate = zertifikate.filter(einschreibung__kurs__organisation=self.request.tenant_org)
+        context["einschreibungen"] = einschreibungen
+        context["zertifikate"] = zertifikate[:3]
         return context
 
 
@@ -41,6 +52,40 @@ class RegisterView(CreateView):
     form_class = RegisterForm
     template_name = "accounts/register.html"
     success_url = reverse_lazy("account_login")
+
+
+class OrganisationRegisterView(CreateView):
+    form_class = RegisterForm
+    template_name = "accounts/register.html"
+    success_url = reverse_lazy("home")
+
+    def dispatch(self, request, *args, **kwargs):
+        self.organisation = get_object_or_404(Organisation, slug=kwargs["org_slug"], aktiv=True)
+        request.tenant_org = self.organisation
+        request.session["active_organisation_id"] = self.organisation.pk
+        return super().dispatch(request, *args, **kwargs)
+
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        UserProfile.objects.get_or_create(
+            nutzer=self.object, organisation=self.organisation,
+            rolle=Rolle.LEARNER, defaults={"aktiv": True},
+        )
+        return redirect("tenant_course_catalog", org_slug=self.organisation.slug)
+
+
+class OrganisationLoginView(AllauthLoginView):
+    form_class = OrganisationLoginForm
+    template_name = "account/login.html"
+
+    def dispatch(self, request, *args, **kwargs):
+        self.organisation = get_object_or_404(Organisation, slug=kwargs["org_slug"], aktiv=True)
+        request.tenant_org = self.organisation
+        request.session["active_organisation_id"] = self.organisation.pk
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_success_url(self):
+        return reverse_lazy("org_public_home", kwargs={"slug": self.organisation.slug})
 
 
 class ProfilView(LoginRequiredMixin, UpdateView):

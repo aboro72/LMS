@@ -5,12 +5,18 @@ def rollen_context(request):
     if not request.user.is_authenticated:
         return {}
 
-    rollen = set(request.user.profile.filter(aktiv=True).values_list("rolle", flat=True))
+    active_org = getattr(request, "tenant_org", None)
+    profile_qs = request.user.profile.filter(aktiv=True)
+    if active_org and not request.user.is_superuser:
+        profile_qs = profile_qs.filter(organisation=active_org)
+    rollen = set(profile_qs.values_list("rolle", flat=True))
     ist_superadmin = request.user.is_superuser or request.user.groups.filter(name=Rolle.SUPERADMIN).exists()
     meine_org = None
     org_design = None
 
-    if Rolle.ORG_ADMIN in rollen:
+    if active_org and (request.user.is_superuser or profile_qs.exists()):
+        meine_org = active_org
+    elif Rolle.ORG_ADMIN in rollen:
         profil = (
             request.user.profile
             .filter(rolle=Rolle.ORG_ADMIN, aktiv=True)

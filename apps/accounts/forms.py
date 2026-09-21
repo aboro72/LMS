@@ -1,5 +1,6 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
+from django.core.exceptions import ValidationError
 
 from .models import User
 
@@ -75,3 +76,15 @@ class BootstrapLoginForm(AllauthLoginForm):
     def clean_password(self):
         password = self.cleaned_data["password"]
         return password.strip()
+
+
+class OrganisationLoginForm(BootstrapLoginForm):
+    def clean(self):
+        cleaned_data = super().clean()
+        organisation = getattr(self.request, "tenant_org", None)
+        if organisation and getattr(self, "user", None) and not (
+            self.user.is_superuser
+            or self.user.profile.filter(organisation=organisation, aktiv=True).exists()
+        ):
+            raise ValidationError("Dieses Konto ist für diese Organisation nicht freigeschaltet.")
+        return cleaned_data

@@ -315,7 +315,7 @@ class TrainerPruefungCreateView(TrainerPruefungFormMixin, RollenMixin, CreateVie
 
     def get_success_url(self):
         messages.success(self.request, "Pruefung wurde gespeichert.")
-        return reverse("trainer_exam_list")
+        return reverse("trainer_exam_edit", kwargs={"pk": self.object.pk})
 
 
 class TrainerPruefungUpdateView(TrainerPruefungFormMixin, RollenMixin, UpdateView):
@@ -403,7 +403,10 @@ class PruefungDetailView(LoginRequiredMixin, DetailView):
     context_object_name = "pruefung"
 
     def get_queryset(self):
-        return Pruefung.objects.filter(ist_aktiv=True, organisation__aktiv=True)
+        queryset = Pruefung.objects.filter(ist_aktiv=True, organisation__aktiv=True)
+        if getattr(self.request, "tenant_org", None) and not self.request.user.is_superuser:
+            queryset = queryset.filter(organisation=self.request.tenant_org)
+        return queryset
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -413,7 +416,10 @@ class PruefungDetailView(LoginRequiredMixin, DetailView):
 
 class PruefungEinschreibenView(LoginRequiredMixin, View):
     def post(self, request, pk):
-        pruefung = get_object_or_404(Pruefung, pk=pk, ist_aktiv=True, organisation__aktiv=True)
+        queryset = Pruefung.objects.filter(pk=pk, ist_aktiv=True, organisation__aktiv=True)
+        if getattr(request, "tenant_org", None) and not request.user.is_superuser:
+            queryset = queryset.filter(organisation=request.tenant_org)
+        pruefung = get_object_or_404(queryset)
         PruefungsAnmeldung.objects.get_or_create(nutzer=request.user, pruefung=pruefung)
         messages.success(request, "Sie sind zur Prüfung angemeldet.")
         return redirect("exam_detail", pk=pruefung.pk)
@@ -421,7 +427,10 @@ class PruefungEinschreibenView(LoginRequiredMixin, View):
 
 class PruefungStartView(LoginRequiredMixin, View):
     def post(self, request, pk):
-        pruefung = get_object_or_404(Pruefung, pk=pk, ist_aktiv=True, organisation__aktiv=True)
+        queryset = Pruefung.objects.filter(pk=pk, ist_aktiv=True, organisation__aktiv=True)
+        if getattr(request, "tenant_org", None) and not request.user.is_superuser:
+            queryset = queryset.filter(organisation=request.tenant_org)
+        pruefung = get_object_or_404(queryset)
         if not all([request.user.first_name, request.user.last_name, request.user.geburtsdatum, request.user.geburtsort]):
             messages.error(request, "Bitte vervollständigen Sie zuerst Vorname, Nachname, Geburtsdatum und Geburtsort im Profil.")
             return redirect("profile")
@@ -445,7 +454,10 @@ class PruefungAblegenView(LoginRequiredMixin, TemplateView):
     template_name = "exams/take.html"
 
     def dispatch(self, request, *args, **kwargs):
-        self.pruefung = get_object_or_404(Pruefung, pk=kwargs["pk"], ist_aktiv=True)
+        queryset = Pruefung.objects.filter(pk=kwargs["pk"], ist_aktiv=True)
+        if getattr(request, "tenant_org", None) and not request.user.is_superuser:
+            queryset = queryset.filter(organisation=request.tenant_org)
+        self.pruefung = get_object_or_404(queryset)
         self.versuch = get_object_or_404(PruefungsVersuch, pk=kwargs["versuch_id"], pruefung=self.pruefung, nutzer=request.user)
         if pruefe_zeitlimit(self.versuch):
             messages.error(request, "Das Zeitlimit wurde ueberschritten.")
@@ -512,7 +524,10 @@ class PruefungErgebnisView(LoginRequiredMixin, DetailView):
     pk_url_kwarg = "versuch_id"
 
     def get_queryset(self):
-        return PruefungsVersuch.objects.filter(nutzer=self.request.user, einsehbar_bis__gte=timezone.now()).select_related("pruefung")
+        queryset = PruefungsVersuch.objects.filter(nutzer=self.request.user, einsehbar_bis__gte=timezone.now()).select_related("pruefung")
+        if getattr(self.request, "tenant_org", None) and not self.request.user.is_superuser:
+            queryset = queryset.filter(pruefung__organisation=self.request.tenant_org)
+        return queryset
 
 
 class PruefungErgebnisListeView(LoginRequiredMixin, ListView):
@@ -520,10 +535,13 @@ class PruefungErgebnisListeView(LoginRequiredMixin, ListView):
     context_object_name = "versuche"
 
     def get_queryset(self):
-        return PruefungsVersuch.objects.filter(
+        queryset = PruefungsVersuch.objects.filter(
             nutzer=self.request.user,
             status__in=[PruefungsVersuch.Status.ABGESCHLOSSEN, PruefungsVersuch.Status.AUSSTEHEND, PruefungsVersuch.Status.ABGELAUFEN],
         ).filter(einsehbar_bis__gte=timezone.now()).select_related("pruefung")
+        if getattr(self.request, "tenant_org", None) and not self.request.user.is_superuser:
+            queryset = queryset.filter(pruefung__organisation=self.request.tenant_org)
+        return queryset
 
 
 class ExaminerQueueView(RollenMixin, ListView):

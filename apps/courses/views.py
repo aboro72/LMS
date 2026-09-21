@@ -14,6 +14,7 @@ from .forms import (
     AbschnittForm,
     BegleitmaterialForm,
     KursBewertungForm,
+    KursKategorieForm,
     KursForm,
     LektionForm,
     LektionMedienForm,
@@ -30,6 +31,7 @@ from .models import (
     Einschreibung,
     Kurs,
     KursBewertung,
+    KursKategorie,
     Lektion,
     Lernpfad,
     LernpfadEinschreibung,
@@ -61,6 +63,13 @@ def get_tenant_org(slug):
     if not slug:
         return None
     return get_object_or_404(Organisation, slug=slug, aktiv=True)
+
+
+def scope_to_active_org(queryset, request):
+    active_org = getattr(request, "tenant_org", None)
+    if active_org and request.user.is_authenticated and not request.user.is_superuser:
+        return queryset.filter(organisation=active_org)
+    return queryset
 
 
 def tenant_reverse(name, obj, **kwargs):
@@ -113,6 +122,8 @@ class KursKatalogView(ListView):
         preis = self.request.GET.get("preis", "").strip()
         if self.tenant_org:
             queryset = queryset.filter(organisation=self.tenant_org)
+        if getattr(self.request, "tenant_org", None) and self.request.user.is_authenticated and not self.request.user.is_superuser:
+            queryset = queryset.filter(organisation=self.request.tenant_org)
         if query:
             queryset = queryset.filter(Q(titel__icontains=query) | Q(beschreibung__icontains=query))
         if niveau:
@@ -123,12 +134,17 @@ class KursKatalogView(ListView):
             queryset = queryset.filter(ist_kostenlos=True)
         elif preis == "bezahlt":
             queryset = queryset.filter(ist_kostenlos=False)
+        if self.request.GET.get("kategorie"):
+            queryset = queryset.filter(kategorie_id=self.request.GET["kategorie"])
         return queryset
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["filter"] = self.request.GET
         context["niveau_choices"] = Kurs._meta.get_field("niveau").choices
+        context["kategorie_choices"] = KursKategorie.objects.filter(
+            organisation=self.tenant_org
+        ).select_related("parent") if self.tenant_org else KursKategorie.objects.all().select_related("parent")
         context.update(tenant_context(self.tenant_org))
         return context
 
@@ -151,6 +167,8 @@ class KursDetailView(DetailView):
         )
         if self.tenant_org:
             queryset = queryset.filter(organisation=self.tenant_org)
+        if getattr(self.request, "tenant_org", None) and self.request.user.is_authenticated and not self.request.user.is_superuser:
+            queryset = queryset.filter(organisation=self.request.tenant_org)
         return queryset
 
     def get(self, request, *args, **kwargs):
@@ -177,6 +195,7 @@ class EinschreibenView(LoginRequiredMixin, View):
         queryset = Kurs.objects.filter(slug=slug, ist_veroeffentlicht=True, organisation__aktiv=True)
         if org_slug:
             queryset = queryset.filter(organisation__slug=org_slug)
+        queryset = scope_to_active_org(queryset, request)
         kurs = get_object_or_404(queryset)
         if not kurs.ist_kostenlos and kurs.preis > 0:
             return redirect("course_checkout", slug=kurs.slug)
@@ -200,6 +219,7 @@ class KursLernenView(LoginRequiredMixin, DetailView):
         queryset = Kurs.objects.filter(ist_veroeffentlicht=True)
         if self.tenant_org:
             queryset = queryset.filter(organisation=self.tenant_org)
+        queryset = scope_to_active_org(queryset, self.request)
         return queryset.prefetch_related(
             Prefetch(
                 "abschnitte",
@@ -290,6 +310,7 @@ class LektionAbschliessenView(LoginRequiredMixin, View):
         queryset = Kurs.objects.filter(slug=slug, ist_veroeffentlicht=True)
         if org_slug:
             queryset = queryset.filter(organisation__slug=org_slug)
+        queryset = scope_to_active_org(queryset, request)
         kurs = get_object_or_404(queryset)
         if not kurszugriff_bezahlt(request.user, kurs):
             return redirect("course_checkout", slug=kurs.slug)
@@ -308,6 +329,7 @@ class LektionUebungPruefenView(LoginRequiredMixin, View):
         queryset = Kurs.objects.filter(slug=slug, ist_veroeffentlicht=True)
         if org_slug:
             queryset = queryset.filter(organisation__slug=org_slug)
+        queryset = scope_to_active_org(queryset, request)
         kurs = get_object_or_404(queryset)
         get_object_or_404(Einschreibung, nutzer=request.user, kurs=kurs, bezahlt=True)
         lektion = get_object_or_404(Lektion, id=lektion_id, abschnitt__kurs=kurs)
@@ -345,6 +367,32 @@ class TrainerKursListView(RollenMixin, ListView):
 
     def get_queryset(self):
         return trainer_course_queryset(self.request.user)
+
+
+class TrainerKategorieListView(RollenMixin, ListView):
+    rolle = Rolle.TRAINER
+    template_name = "courses/trainer/category_list.html"
+    context_object_name = "kategorien"
+
+    def get_queryset(self):
+        if self.request.user.is_superuser:
+            return KursKategorie.objects.select_related("organisation", "parent")
+        org_ids = self.request.user.profile.filter(rolle=Rolle.TRAINER, aktiv=True).values_list("organisation_id", flat=True)
+        return KursKategorie.objects.filter(organisation_id__in=org_ids).select_related("organisation", "parent")
+
+
+class TrainerKategorieCreateView(RollenMixin, CreateView):
+    rolle = Rolle.TRAINER
+    form_class = KursKategorieForm
+    template_name = "courses/trainer/category_form.html"
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs["user"] = self.request.user
+        return kwargs
+
+    def get_success_url(self):
+        return reverse("trainer_category_list")
 
 
 class TrainerKursCreateView(RollenMixin, CreateView):

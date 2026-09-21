@@ -71,6 +71,8 @@ class OrganisationSignupView(LoginRequiredMixin, CreateView):
     def form_valid(self, form):
         org = form.save()
         UserProfile.objects.create(nutzer=self.request.user, organisation=org, rolle=Rolle.ORG_ADMIN)
+        from apps.courses.models import KursKategorie
+        KursKategorie.standardkategorien_anlegen(org)
         messages.success(self.request, f"Organisation '{org.name}' wurde erstellt.")
         return redirect("org_admin_dashboard", slug=org.slug)
 
@@ -110,6 +112,7 @@ class OrgAdminDashboardView(RollenMixin, TemplateView):
         )
         context.update({
             "org": org,
+            "tenant_org": org,
             "nutzer_count": nutzer_count,
             "kurs_count": kurs_count,
             "einschreibungen_count": einschreibungen_count,
@@ -217,7 +220,7 @@ class OrgEmailKonfigView(RollenMixin, View):
     rolle = Rolle.ORG_ADMIN
 
     def _ctx(self, org, form):
-        return {"form": form, "org": org}
+        return {"form": form, "org": org, "tenant_org": org}
 
     def get(self, request, slug):
         org = _get_org_for_admin(request, slug)
@@ -273,6 +276,7 @@ class OrgStartseiteView(RollenMixin, View):
             "form": form,
             "weiterleitung_form": weiterleitung_form or OrganisationWeiterleitungForm(instance=org),
             "org": org,
+            "tenant_org": org,
         }
 
     def get(self, request, slug):
@@ -304,6 +308,7 @@ class OrgStartseitePageBuilderView(RollenMixin, View):
             builder_html = ""
         return {
             "org": org,
+            "tenant_org": org,
             "seite": seite,
             "builder_html": builder_html or "",
             "weiterleitung_form": OrganisationWeiterleitungForm(instance=org),

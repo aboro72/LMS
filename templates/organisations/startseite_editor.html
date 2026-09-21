@@ -9,7 +9,7 @@
 {% block breadcrumbs %}
 <nav aria-label="breadcrumb">
     <ol class="breadcrumb">
-        <li class="breadcrumb-item"><a href="{% url 'home' %}">Start</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'org_public_home' org.slug %}">Start</a></li>
         <li class="breadcrumb-item"><a href="{% url 'org_admin_dashboard' org.slug %}">{{ org.name }}</a></li>
         <li class="breadcrumb-item active">Startseite</li>
     </ol>

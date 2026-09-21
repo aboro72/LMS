@@ -27,7 +27,7 @@ from apps.courses.models import (
 from apps.exams.models import Antwort, Frage, Fragenkatalog, Pruefung, PruefungsVersuch, TeilnehmerAntwort, ZuordnungsPaar
 from apps.exams.services import MaxVersucheErreicht, pruefe_zeitlimit, speichere_antwort, starte_pruefung, werte_versuch_aus
 from apps.organisations.models import Einladung, Organisation
-from apps.payments.models import AuditLog, Rechnung, Zahlung, Zahlungsart, Zahlungseinstellungen, Zahlungsstatus
+from apps.payments.models import AuditLog, OrganisationZahlungseinstellungen, Rechnung, Zahlung, Zahlungsart, Zahlungseinstellungen, Zahlungsstatus
 from apps.payments.services import bestaetige_zahlung, erstelle_zahlung
 
 
@@ -35,6 +35,7 @@ def quill_text(text="Test"):
     return Quill(json.dumps({"delta": {"ops": [{"insert": text}]}, "html": f"<p>{text}</p>"}))
 
 
+@override_settings(SINGLE_SYSTEM_MODE=False)
 class BaseLmsTestCase(TestCase):
     def setUp(self):
         for role in Rolle.values:
@@ -293,7 +294,14 @@ class PaymentAndInvoiceTests(BaseLmsTestCase):
         super().setUp()
         payment_settings = Zahlungseinstellungen.load()
         payment_settings.payment_aktiv = True
+        payment_settings.ueberweisung_aktiv = True
         payment_settings.save()
+        OrganisationZahlungseinstellungen.objects.create(
+            organisation=self.org,
+            payment_aktiv=True,
+            ueberweisung_aktiv=True,
+            iban="DE12345678901234567890",
+        )
 
     def test_payment_split_uses_configured_commission(self):
         with override_settings(PLATFORM_COMMISSION_PERCENT=20):
@@ -435,7 +443,10 @@ class ExamServiceTests(BaseLmsTestCase):
         pruefung.zeitlimit_minuten = 1
         pruefung.save(update_fields=["zeitlimit_minuten"])
         versuch = starte_pruefung(pruefung, self.learner)
-        PruefungsVersuch.objects.filter(pk=versuch.pk).update(gestartet_am=timezone.now() - timedelta(minutes=5))
+        PruefungsVersuch.objects.filter(pk=versuch.pk).update(
+            gestartet_am=timezone.now() - timedelta(minutes=5),
+            aktive_phase_begonnen_am=timezone.now() - timedelta(minutes=5),
+        )
         versuch.refresh_from_db()
         self.assertTrue(pruefe_zeitlimit(versuch))
         versuch.refresh_from_db()

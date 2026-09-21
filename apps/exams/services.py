@@ -134,12 +134,15 @@ def starte_pruefung(pruefung, nutzer):
         },
     )
 
+    jetzt = timezone.now()
     return PruefungsVersuch.objects.create(
         nutzer=nutzer,
         pruefung=pruefung,
         versuch_nummer=bisherige_versuche + 1,
         pruefungsversion=version,
         fragen_reihenfolge=[frage.id for frage in fragen],
+        aktive_phase_begonnen_am=jetzt,
+        letzte_aktivitaet_am=jetzt,
     )
 
 
@@ -155,8 +158,7 @@ def speichere_antwort(versuch, frage, daten):
             raise ValidationError("Ungültige Zuordnungen.")
         paare = list(frage.zuordnungen.all())
         erlaubte_ids = {str(paar.pk) for paar in paare}
-        erlaubte_werte = {paar.rechtes_element for paar in paare}
-        if any(key not in erlaubte_ids or not isinstance(value, str) or value not in erlaubte_werte for key, value in mapping.items()):
+        if any(key not in erlaubte_ids or not isinstance(value, str) for key, value in mapping.items()):
             raise ValidationError("Ungültige Zuordnungen.")
     teilnehmer_antwort, _ = TeilnehmerAntwort.objects.get_or_create(versuch=versuch, frage=frage)
     if frage.typ in [Frage.Typ.SINGLE_CHOICE, Frage.Typ.MULTIPLE_CHOICE, Frage.Typ.WAHR_FALSCH]:

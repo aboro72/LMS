@@ -1,5 +1,4 @@
 from django.urls import path
-from django.conf import settings
 from .single_system import system_view
 from apps.certificates.views import ZertifikatDesignView
 
@@ -54,5 +53,3 @@ urlpatterns = [
     path("<slug:slug>/", OffentlicheStartseiteView.as_view(), name="org_public_home"),
 ]
 
-if settings.SINGLE_SYSTEM_MODE:
-    urlpatterns = [entry for entry in urlpatterns if entry.name not in {"tenant_login", "tenant_register", "org_public_home", "org_public_home_legacy", "superadmin_orgs"}]

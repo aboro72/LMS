@@ -637,8 +637,6 @@ class LernpfadDetailView(DetailView):
 
     def get(self, request, *args, **kwargs):
         self.object = self.get_object()
-        if not self.tenant_org:
-            return redirect("tenant_learning_path_detail", org_slug=self.object.organisation.slug, slug=self.object.slug)
         context = self.get_context_data(object=self.object)
         return self.render_to_response(context)
 

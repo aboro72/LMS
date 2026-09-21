@@ -10,7 +10,7 @@ from .models import AuditLog, OrganisationZahlungseinstellungen, Rechnung, Zahlu
 @transaction.atomic
 def erstelle_zahlung(kurs, nutzer, zahlungsart):
     if zahlungsart not in dict(lade_zahlungseinstellungen(kurs.organisation).aktive_zahlungsarten()):
-        raise PermissionDenied("Zahlungen oder diese Zahlungsart sind derzeit deaktiviert.")
+        raise PermissionDenied("Zahlungen oder diese Zahlungsart sind außerhalb der Entwicklungsumgebung derzeit deaktiviert.")
     gebuehr, trainer_anteil = Zahlung.berechne_aufteilung(kurs.preis)
     zahlung = Zahlung.objects.create(
         nutzer=nutzer,

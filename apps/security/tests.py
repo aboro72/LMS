@@ -1,5 +1,5 @@
 from django.core.exceptions import ImproperlyConfigured
-from django.test import SimpleTestCase, override_settings
+from django.test import SimpleTestCase, TestCase, override_settings
 
 from .crypto import decrypt_text, encrypt_text, generate_field_encryption_key, is_encrypted_value
 
@@ -37,7 +37,7 @@ class FieldEncryptionTests(SimpleTestCase):
             with self.assertRaises(ImproperlyConfigured):
                 encrypt_text("secret")
 
-class ProductionReadinessTests(SimpleTestCase):
+class ProductionReadinessTests(TestCase):
     @override_settings(PRODUCTION=False, FIELD_ENCRYPTION_KEY="j3BQv31KKjfteqM5y4LTfhQf3ru51qCz_02cxydQaDI=", ALLOWED_HOSTS=["*"], EMAIL_BACKEND="django.core.mail.backends.console.EmailBackend")
     def test_development_configuration_is_rejected(self):
         from .checks import production_readiness_check
@@ -65,7 +65,7 @@ class ProductionReadinessTests(SimpleTestCase):
         self.assertEqual(response["Referrer-Policy"], "same-origin")
 
 
-    @override_settings(DEBUG=False)
+    @override_settings(DEBUG=False, DEMO_DATA_ALLOW_PRODUCTION=False)
     def test_demo_command_is_blocked_before_database_writes(self):
         from django.core.management import call_command, CommandError
         with self.assertRaisesMessage(CommandError, "Entwicklungsumgebung"):

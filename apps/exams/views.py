@@ -67,8 +67,7 @@ def trainer_exam_queryset(user):
     return queryset.filter(organisation_id__in=organisation_ids)
 
 
-class TrainerFragenkatalogListView(RollenMixin, ListView):
-    rolle = Rolle.EXAM_OPERATOR
+class TrainerFragenkatalogListView(TrainerOderOperatorMixin, ListView):
     template_name = "exams/trainer/catalog_list.html"
     context_object_name = "kataloge"
 

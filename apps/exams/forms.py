@@ -7,10 +7,10 @@ from django import forms
 from django.forms import BaseInlineFormSet, inlineformset_factory
 from django_quill.quill import Quill
 
-from apps.accounts.models import Rolle
+from apps.accounts.models import Rolle, User
 from apps.organisations.models import Organisation
 
-from .models import Antwort, Frage, Fragenkatalog, FragenTag, Pruefung, PruefungsThemenquote, TeilnehmerAntwort, ZuordnungsPaar
+from .models import Antwort, Frage, Fragenkatalog, FragenTag, Pruefung, PruefungsThemenquote, PruefungsZuweisung, TeilnehmerAntwort, ZuordnungsPaar
 
 
 class FragenkatalogForm(forms.ModelForm):
@@ -130,6 +130,22 @@ class PruefungForm(forms.ModelForm):
             self.fields["organisation"].queryset = Organisation.objects.filter(id__in=organisation_ids)
             self.fields["fragenkatalog"].queryset = Fragenkatalog.objects.filter(organisation_id__in=organisation_ids)
 
+
+class PrueferZuweisungForm(forms.ModelForm):
+    class Meta:
+        model = PruefungsZuweisung
+        fields = ("pruefer",)
+        widgets = {"pruefer": forms.Select(attrs={"class": "form-select"})}
+
+    def __init__(self, *args, pruefung=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.pruefung = pruefung
+        if pruefung:
+            self.fields["pruefer"].queryset = User.objects.filter(
+                profile__organisation=pruefung.organisation,
+                profile__rolle=Rolle.EXAMINER,
+                profile__aktiv=True,
+            ).distinct().order_by("last_name", "first_name", "username")
 
 class PruefungsThemenquoteForm(forms.ModelForm):
     class Meta:

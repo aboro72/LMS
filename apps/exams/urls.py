@@ -2,6 +2,8 @@ from django.urls import path
 
 from .views import (
     ExaminerBewertungView,
+    ExaminerPruefungAssignmentView,
+    ExaminerPruefungClaimView,
     ExaminerQueueView,
     PruefungAblegenView,
     PruefungDetailView,
@@ -54,5 +56,7 @@ urlpatterns = [
     path("trainer/pruefungen/<int:pk>/ergebnisse/", TrainerPruefungErgebnisListeView.as_view(), name="trainer_exam_results"),
     path("meine-pruefungsergebnisse/", PruefungErgebnisListeView.as_view(), name="exam_result_list"),
     path("examiner/queue/", ExaminerQueueView.as_view(), name="examiner_queue"),
+    path("examiner/pruefungen/<int:pk>/uebernehmen/", ExaminerPruefungClaimView.as_view(), name="examiner_exam_claim"),
     path("examiner/queue/<int:pk>/", ExaminerBewertungView.as_view(), name="examiner_review"),
+    path("trainer/pruefungen/<int:pk>/pruefer/", ExaminerPruefungAssignmentView.as_view(), name="examiner_assignment"),
 ]

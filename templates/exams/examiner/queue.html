@@ -22,7 +22,33 @@
     {% endif %}
 </div>
 
+<div class="row g-4 mb-4">
+    <div class="col-lg-6">
+        <div class="aboro-panel h-100">
+            <h2 class="h5 mb-3">Meine Prüfungen</h2>
+            {% for pruefung in zugewiesene_pruefungen %}
+                <a class="d-flex justify-content-between align-items-center border rounded p-2 mb-2 text-decoration-none" href="{% url 'examiner_queue' %}?pruefung={{ pruefung.pk }}">
+                    <span><strong>{{ pruefung.titel }}</strong><br><small class="text-secondary">{{ pruefung.organisation.name }}</small></span>
+                    <span class="badge text-bg-primary">{{ pruefung.offene_antworten }} offen</span>
+                </a>
+            {% empty %}<p class="text-secondary mb-0">Noch keine Prüfung ausgewählt.</p>{% endfor %}
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="aboro-panel h-100">
+            <h2 class="h5 mb-3">Verfügbare Prüfungen selbst übernehmen</h2>
+            {% for pruefung in verfuegbare_pruefungen %}
+                <div class="d-flex justify-content-between align-items-center border rounded p-2 mb-2">
+                    <span><strong>{{ pruefung.titel }}</strong><br><small class="text-secondary">{{ pruefung.organisation.name }}</small></span>
+                    <form method="post" action="{% url 'examiner_exam_claim' pruefung.pk %}">{% csrf_token %}<button class="btn btn-sm btn-outline-primary">Übernehmen</button></form>
+                </div>
+            {% empty %}<p class="text-secondary mb-0">Keine weiteren Prüfungen mit offenen Bewertungen.</p>{% endfor %}
+        </div>
+    </div>
+</div>
+
 <div class="aboro-panel">
+    {% if ausgewaehlte_pruefung %}<div class="alert alert-primary"><strong>Aktive Prüfung:</strong> {{ ausgewaehlte_pruefung.titel }} · {{ ausgewaehlte_pruefung.organisation.name }}<br><small>Es werden ausschließlich Antworten dieser Prüfung angezeigt.</small></div>{% else %}<div class="alert alert-secondary">Bitte zuerst eine Prüfung aus „Meine Prüfungen“ auswählen.</div>{% endif %}
     <div class="table-responsive">
         <table class="table align-middle mb-0">
             <thead>

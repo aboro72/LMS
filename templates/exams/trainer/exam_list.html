@@ -55,6 +55,7 @@
                     <td class="text-end">
                         <a class="btn btn-sm btn-outline-secondary" href="{% url 'trainer_exam_stats' pruefung.pk %}">Statistik</a>
                         <a class="btn btn-sm btn-outline-secondary" href="{% url 'trainer_exam_results' pruefung.pk %}">Ergebnisse</a>
+                        {% if ist_exam_operator %}<a class="btn btn-sm btn-outline-secondary" href="{% url 'examiner_assignment' pruefung.pk %}">Prüfer</a>{% endif %}
                         {% if ist_exam_operator %}<a class="btn btn-sm btn-outline-secondary" href="{% url 'trainer_exam_edit' pruefung.pk %}">Bearbeiten</a>{% endif %}
                     </td>
                 </tr>

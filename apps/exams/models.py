@@ -156,6 +156,26 @@ class PruefungsAnmeldung(models.Model):
         verbose_name_plural = "Prüfungsanmeldungen"
 
 
+class PruefungsZuweisung(models.Model):
+    """Zuweisung einer konkreten Prüfung an genau einen Prüfer."""
+    pruefung = models.ForeignKey(Pruefung, on_delete=models.CASCADE, related_name="pruefer_zuweisungen")
+    pruefer = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="pruefungszuweisungen")
+    zugewiesen_von = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name="erteilte_prueferzuweisungen",
+    )
+    zugewiesen_am = models.DateTimeField(auto_now_add=True)
+    abgeschlossen_am = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=["pruefung", "pruefer"], name="unique_examiner_exam_assignment")]
+        ordering = ["pruefung__titel", "pruefer__last_name", "pruefer__username"]
+
+    @property
+    def ist_aktiv(self):
+        return self.abgeschlossen_am is None
+
+
 class PruefungsbogenArchiv(models.Model):
     """Unveraenderliche Offline-Fassung mit der beim Erstellen gezogenen Fragenfolge."""
     pruefung = models.ForeignKey(Pruefung, on_delete=models.CASCADE, related_name="offline_boegen")

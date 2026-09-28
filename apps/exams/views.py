@@ -4,7 +4,7 @@ from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import ValidationError
 from django.db import transaction
-from django.db.models import Avg, Count
+from django.db.models import Avg, Count, Q
 from django.core.files.base import ContentFile
 from django.http import FileResponse, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -25,8 +25,9 @@ from .forms import (
     PruefungForm,
     PruefungsThemenquoteFormSet,
     ZuordnungsPaarForm,
+    PrueferZuweisungForm,
 )
-from .models import Antwort, Frage, Fragenkatalog, FragenTag, Pruefung, PruefungsAnmeldung, PruefungsbogenArchiv, PruefungsVersuch, TeilnehmerAntwort, ZuordnungsPaar
+from .models import Antwort, Frage, Fragenkatalog, FragenTag, Pruefung, PruefungsAnmeldung, PruefungsbogenArchiv, PruefungsVersuch, PruefungsZuweisung, TeilnehmerAntwort, ZuordnungsPaar
 from .pdf import generiere_pruefungsbogen_pdf
 from .services import NichtGenugFragenInThema, MaxVersucheErreicht, pruefe_zeitlimit, speichere_antwort, starte_pruefung, waehle_pruefungsfragen, werte_versuch_aus
 
@@ -550,21 +551,111 @@ class PruefungErgebnisListeView(LoginRequiredMixin, ListView):
         return queryset
 
 
-class ExaminerQueueView(RollenMixin, ListView):
+def examiner_answer_queryset(user, exam_id=None):
+    queryset = TeilnehmerAntwort.objects.filter(
+        frage__typ__in=[Frage.Typ.FREITEXT, Frage.Typ.SZENARIO],
+        freitext_punkte__isnull=True,
+        versuch__status=PruefungsVersuch.Status.AUSSTEHEND,
+    ).select_related("versuch", "versuch__pruefung", "frage", "versuch__nutzer")
+    if not user.is_superuser:
+        organisation_ids = user.profile.filter(rolle=Rolle.EXAMINER, aktiv=True).values_list("organisation_id", flat=True)
+        queryset = queryset.filter(versuch__pruefung__organisation_id__in=organisation_ids)
+    if exam_id:
+        queryset = queryset.filter(versuch__pruefung_id=exam_id)
+    return queryset
+
+
+class ExaminerQueueView(RollenMixin, TemplateView):
     rolle = Rolle.EXAMINER
     template_name = "exams/examiner/queue.html"
-    context_object_name = "antworten"
 
-    def get_queryset(self):
-        queryset = TeilnehmerAntwort.objects.filter(
-            frage__typ__in=[Frage.Typ.FREITEXT, Frage.Typ.SZENARIO],
-            freitext_punkte__isnull=True,
-            versuch__status=PruefungsVersuch.Status.AUSSTEHEND,
-        ).select_related("versuch", "versuch__pruefung", "frage", "versuch__nutzer")
-        if self.request.user.is_superuser:
-            return queryset
-        organisation_ids = self.request.user.profile.filter(aktiv=True).values_list("organisation_id", flat=True)
-        return queryset.filter(versuch__pruefung__organisation_id__in=organisation_ids)
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        user = self.request.user
+        if user.is_superuser:
+            exams = Pruefung.objects.filter(ist_aktiv=True)
+        else:
+            org_ids = user.profile.filter(rolle=Rolle.EXAMINER, aktiv=True).values_list("organisation_id", flat=True)
+            exams = Pruefung.objects.filter(ist_aktiv=True, organisation_id__in=org_ids)
+        exams = exams.annotate(offene_antworten=Count(
+            "pruefungsversuch__antworten",
+            filter=Q(pruefungsversuch__antworten__frage__typ__in=[Frage.Typ.FREITEXT, Frage.Typ.SZENARIO],
+                     pruefungsversuch__antworten__freitext_punkte__isnull=True,
+                     pruefungsversuch__antworten__versuch__status=PruefungsVersuch.Status.AUSSTEHEND),
+            distinct=True,
+        )).order_by("organisation__name", "titel")
+        assignments = PruefungsZuweisung.objects.filter(pruefer=user, abgeschlossen_am__isnull=True)
+        assigned_ids = set(assignments.values_list("pruefung_id", flat=True))
+        assigned_any_ids = set(PruefungsZuweisung.objects.filter(
+            pruefung__in=exams, abgeschlossen_am__isnull=True
+        ).values_list("pruefung_id", flat=True))
+        available = [exam for exam in exams if exam.pk not in assigned_any_ids and exam.offene_antworten]
+        selected_id = self.request.GET.get("pruefung")
+        selected_exam = exams.filter(pk=selected_id).first() if selected_id else None
+        if selected_exam and selected_exam.pk in assigned_ids:
+            answers = examiner_answer_queryset(user, selected_exam.pk)
+        else:
+            answers = TeilnehmerAntwort.objects.none()
+        context.update({
+            "pruefungen": exams,
+            "zugewiesene_pruefungen": exams.filter(pk__in=assigned_ids),
+            "verfuegbare_pruefungen": available,
+            "ausgewaehlte_pruefung": selected_exam,
+            "antworten": answers,
+        })
+        return context
+
+
+class ExaminerPruefungClaimView(RollenMixin, View):
+    rolle = Rolle.EXAMINER
+
+    def post(self, request, pk):
+        if request.user.is_superuser:
+            pruefung = get_object_or_404(Pruefung, pk=pk, ist_aktiv=True)
+        else:
+            org_ids = request.user.profile.filter(rolle=Rolle.EXAMINER, aktiv=True).values_list("organisation_id", flat=True)
+            pruefung = get_object_or_404(Pruefung, pk=pk, ist_aktiv=True, organisation_id__in=org_ids)
+        if not examiner_answer_queryset(request.user, pruefung.pk).exists():
+            messages.info(request, "Für diese Prüfung gibt es derzeit keine offenen manuellen Bewertungen.")
+        elif not PruefungsZuweisung.objects.filter(pruefung=pruefung, abgeschlossen_am__isnull=True).exists():
+            PruefungsZuweisung.objects.create(pruefung=pruefung, pruefer=request.user)
+            messages.success(request, f"Die Prüfung „{pruefung.titel}“ wurde dir zugewiesen.")
+        else:
+            messages.warning(request, "Diese Prüfung wurde inzwischen einem anderen Prüfer zugewiesen.")
+        return redirect(f"{reverse('examiner_queue')}?pruefung={pruefung.pk}")
+
+
+class ExaminerPruefungAssignmentView(RollenMixin, View):
+    rolle = Rolle.EXAM_OPERATOR
+    template_name = "exams/examiner/assignment.html"
+
+    def get_pruefung(self, pk, user):
+        return get_object_or_404(trainer_exam_queryset(user), pk=pk)
+
+    def get(self, request, pk):
+        pruefung = self.get_pruefung(pk, request.user)
+        return render(request, self.template_name, {
+            "pruefung": pruefung,
+            "form": PrueferZuweisungForm(pruefung=pruefung),
+            "zuweisungen": pruefung.pruefer_zuweisungen.filter(abgeschlossen_am__isnull=True).select_related("pruefer"),
+        })
+
+    def post(self, request, pk):
+        pruefung = self.get_pruefung(pk, request.user)
+        if request.POST.get("aktion") == "entfernen":
+            zuweisung = get_object_or_404(PruefungsZuweisung, pk=request.POST.get("zuweisung_id"), pruefung=pruefung)
+            zuweisung.abgeschlossen_am = timezone.now()
+            zuweisung.save(update_fields=["abgeschlossen_am"])
+            messages.success(request, "Prüfungszuweisung wurde beendet.")
+        else:
+            form = PrueferZuweisungForm(request.POST, pruefung=pruefung)
+            if form.is_valid():
+                PruefungsZuweisung.objects.update_or_create(
+                    pruefung=pruefung, pruefer=form.cleaned_data["pruefer"],
+                    defaults={"zugewiesen_von": request.user, "abgeschlossen_am": None},
+                )
+                messages.success(request, "Prüfung wurde dem Prüfer zugewiesen.")
+        return redirect("examiner_assignment", pk=pruefung.pk)
 
 
 class ExaminerBewertungView(RollenMixin, UpdateView):
@@ -574,13 +665,16 @@ class ExaminerBewertungView(RollenMixin, UpdateView):
     context_object_name = "antwort"
 
     def get_queryset(self):
-        return ExaminerQueueView().get_queryset()
+        return examiner_answer_queryset(self.request.user)
 
     def get_object(self, queryset=None):
-        queryset = TeilnehmerAntwort.objects.filter(frage__typ__in=[Frage.Typ.FREITEXT, Frage.Typ.SZENARIO]).select_related("versuch", "frage", "versuch__nutzer")
-        if not self.request.user.is_superuser:
-            organisation_ids = self.request.user.profile.filter(aktiv=True).values_list("organisation_id", flat=True)
-            queryset = queryset.filter(versuch__pruefung__organisation_id__in=organisation_ids)
+        queryset = examiner_answer_queryset(self.request.user).filter(
+            frage__typ__in=[Frage.Typ.FREITEXT, Frage.Typ.SZENARIO]
+        )
+        queryset = queryset.filter(
+            versuch__pruefung__pruefer_zuweisungen__pruefer=self.request.user,
+            versuch__pruefung__pruefer_zuweisungen__abgeschlossen_am__isnull=True,
+        )
         return get_object_or_404(queryset, pk=self.kwargs["pk"])
 
     def form_valid(self, form):

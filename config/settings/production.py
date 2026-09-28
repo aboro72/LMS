@@ -94,6 +94,7 @@ SECURE_REFERRER_POLICY = "same-origin"
 # und die Anwendung nicht direkt aus dem Internet erreichbar ist.
 if config("TRUST_PROXY_SSL_HEADER", default=False, cast=bool):
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+USE_X_FORWARDED_HOST = config("USE_X_FORWARDED_HOST", default=False, cast=bool)
 
 EMAIL_HOST = config("EMAIL_HOST", default="")
 EMAIL_PORT = config("EMAIL_PORT", default=587, cast=int)

@@ -7,6 +7,7 @@ from apps.accounts.views import DashboardView, HomeView
 
 
 urlpatterns = [
+    path("install/", include("apps.installer.urls")),
     path("", HomeView.as_view(), name="home"),
     path("dashboard/", DashboardView.as_view(), name="dashboard"),
     path("admin/", admin.site.urls),

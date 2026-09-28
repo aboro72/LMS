@@ -48,6 +48,27 @@ class Organisation(models.Model):
         return self.name
 
 
+class OrganisationDomain(models.Model):
+    """Public hostname mapped to exactly one active tenant."""
+    organisation = models.ForeignKey(Organisation, on_delete=models.CASCADE, related_name="domains")
+    hostname = models.CharField(max_length=255, unique=True)
+    aktiv = models.BooleanField(default=True)
+    primaer = models.BooleanField(default=False)
+    erstellt_am = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["hostname"]
+        verbose_name = "Mandantendomäne"
+        verbose_name_plural = "Mandantendomänen"
+
+    def save(self, *args, **kwargs):
+        self.hostname = self.hostname.strip().lower().rstrip(".")
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.hostname} → {self.organisation}"
+
+
 class Einladung(models.Model):
     organisation = models.ForeignKey(Organisation, on_delete=models.CASCADE)
     email = models.EmailField()

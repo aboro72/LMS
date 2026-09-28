@@ -67,6 +67,7 @@ if [[ -z "$DB_PASS" && "$DB" != "mongodb" ]]; then
 fi
 
 SECRET_KEY="$(python3 -c 'import secrets; print(secrets.token_urlsafe(50))')"
+INSTALLER_TOKEN="$(python3 -c 'import secrets; print(secrets.token_urlsafe(32))')"
 
 # --------------------------------------------------------------------------- #
 # Zusammenfassung
@@ -264,9 +265,13 @@ DATABASE_URL=${DATABASE_URL}"
 
   cat > "$ENV_FILE" <<EOF
 SECRET_KEY=${SECRET_KEY}
+INSTALLER_TOKEN=${INSTALLER_TOKEN}
 DEBUG=False
 ${DB_BLOCK}
 ALLOWED_HOSTS=${DOMAIN},www.${DOMAIN}
+USE_X_FORWARDED_HOST=True
+TRUST_PROXY_SSL_HEADER=True
+CSRF_TRUSTED_ORIGINS=https://${DOMAIN},https://www.${DOMAIN}
 MEDIA_ROOT=${APP_DIR}/media/
 MEDIA_URL=/media/
 SECURE_SSL_REDIRECT=False
@@ -368,11 +373,13 @@ server {
     }
 
     location / {
-        proxy_pass http://unix:/run/aborolms/gunicorn.sock;
+        proxy_pass http://unix:/run/aborolms/gunicorn.sock:;
         proxy_set_header Host \$host;
+        proxy_set_header X-Forwarded-Host \$host;
         proxy_set_header X-Real-IP \$remote_addr;
         proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto \$scheme;
+        proxy_set_header X-Forwarded-Port \$server_port;
         proxy_connect_timeout 60s;
         proxy_read_timeout 120s;
     }
@@ -431,8 +438,9 @@ echo "========================================================"
 echo ""
 echo "Nächste Schritte:"
 echo ""
-echo "  1. Superuser anlegen:"
-echo "     sudo -u ${APP_USER} ${APP_DIR}/.venv/bin/python ${APP_DIR}/manage.py createsuperuser"
+echo "  1. Web-Installer einmalig öffnen:"
+echo "     https://${DOMAIN}/install/?token=${INSTALLER_TOKEN}"
+echo "     Danach wird der Installer automatisch gesperrt."
 echo ""
 echo "  2. Demo-Daten laden (optional):"
 echo "     sudo -u ${APP_USER} ${APP_DIR}/.venv/bin/python ${APP_DIR}/manage.py create_demo_data"

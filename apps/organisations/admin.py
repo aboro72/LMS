@@ -3,14 +3,21 @@ from django.contrib import admin
 from .models import (
     Einladung,
     Organisation,
+    OrganisationDomain,
     OrganisationDesign,
     OrganisationEmailKonfiguration,
     OrganisationStartseite,
 )
 
 
+class OrganisationDomainInline(admin.TabularInline):
+    model = OrganisationDomain
+    extra = 1
+
+
 @admin.register(Organisation)
 class OrganisationAdmin(admin.ModelAdmin):
+    inlines = (OrganisationDomainInline,)
     list_display = ("name", "slug", "ist_demo_organisation", "lizenz_typ", "max_nutzer", "max_kurse", "aktiv", "erstellt_am")
     fields = ("name", "slug", "kontakt_email", "website", "weiterleitungs_url", "ist_demo_organisation", "lizenz_typ", "max_nutzer", "max_kurse", "aktiv")
     list_filter = ("lizenz_typ", "aktiv")

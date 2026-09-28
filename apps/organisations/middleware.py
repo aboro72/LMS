@@ -18,6 +18,14 @@ class TenantRedirectMiddleware:
         return self.get_response(request)
 
     def _active_organisation(self, request):
+        # Host mapping wins over the session. This prevents a previous tenant
+        # session from leaking into another domain behind a reverse proxy.
+        host = request.get_host().split(":", 1)[0].lower().rstrip(".")
+        mapped = Organisation.objects.filter(
+            domains__hostname=host, domains__aktiv=True, aktiv=True
+        ).first()
+        if mapped:
+            return mapped
         organisation_id = request.session.get("active_organisation_id")
         if organisation_id:
             org = Organisation.objects.filter(pk=organisation_id, aktiv=True).first()

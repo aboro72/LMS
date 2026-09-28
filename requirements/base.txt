@@ -6,6 +6,7 @@ django-allauth>=0.61
 django-quill-editor>=0.1.40
 WeasyPrint>=62.0
 qrcode[pil]>=7.4
+reportlab>=4.0
 Pillow>=10.0
 django-storages>=1.14
 boto3>=1.34

@@ -10,6 +10,8 @@ SECRET_KEY = config("SECRET_KEY", default="django-insecure-change-me-in-producti
 FIELD_ENCRYPTION_KEY = config("FIELD_ENCRYPTION_KEY", default="")
 DEBUG = config("DEBUG", default=False, cast=bool)
 ALLOWED_HOSTS = config("ALLOWED_HOSTS", default="localhost,127.0.0.1", cast=Csv())
+USE_X_FORWARDED_HOST = config("USE_X_FORWARDED_HOST", default=False, cast=bool)
+TRUST_PROXY_SSL_HEADER = config("TRUST_PROXY_SSL_HEADER", default=False, cast=bool)
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -30,6 +32,7 @@ INSTALLED_APPS = [
     "apps.payments",
     "apps.certificates",
     "apps.security",
+    "apps.installer",
 ]
 
 MIDDLEWARE = [
@@ -126,3 +129,4 @@ PAYPAL_CLIENT_ID = config("PAYPAL_CLIENT_ID", default="")
 PAYPAL_SECRET = config("PAYPAL_SECRET", default="")
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+INSTALLER_TOKEN = config("INSTALLER_TOKEN", default="")

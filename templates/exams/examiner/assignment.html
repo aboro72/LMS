@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block title %}Prüferzuweisung – {{ pruefung.titel }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div><h1 class="h3 mb-1">Prüferzuweisung</h1><p class="text-secondary mb-0">{{ pruefung.titel }} · {{ pruefung.organisation.name }}</p></div>
+    <a class="btn btn-outline-secondary" href="{% url 'trainer_exam_list' %}">Zurück</a>
+</div>
+<div class="row g-4">
+    <div class="col-lg-5"><div class="aboro-panel"><h2 class="h5 mb-3">Prüfer fest zuweisen</h2><form method="post">{% csrf_token %}{{ form.pruefer }}{% for error in form.pruefer.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}<button class="btn btn-aboro mt-3">Zuweisen</button></form></div></div>
+    <div class="col-lg-7"><div class="aboro-panel"><h2 class="h5 mb-3">Aktive Zuweisungen</h2>{% for zuweisung in zuweisungen %}<div class="d-flex justify-content-between align-items-center border rounded p-2 mb-2"><span>{{ zuweisung.pruefer.get_full_name|default:zuweisung.pruefer.username }}</span><form method="post">{% csrf_token %}<input type="hidden" name="aktion" value="entfernen"><input type="hidden" name="zuweisung_id" value="{{ zuweisung.pk }}"><button class="btn btn-sm btn-outline-danger">Entfernen</button></form></div>{% empty %}<p class="text-secondary mb-0">Noch niemand zugewiesen.</p>{% endfor %}</div></div>
+</div>
+{% endblock %}

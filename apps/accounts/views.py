@@ -189,6 +189,24 @@ ROLE_HELP_PAGES = {
             {"question": "Wie entsteht das Video-Thumbnail?", "answer": "Beim Speichern eines hochgeladenen Videos erzeugt ffmpeg automatisch ein JPG aus dem Frame bei Sekunde 3."},
         ],
     },
+    "exam_operator": {
+        "title": "Pruefungsoperator Hilfe",
+        "badge": "Formale Pruefungen verwalten",
+        "intro": "Pruefungsoperatoren pflegen Fragenkataloge, Fragen, Antworten und die Parameter von Zertifikatspruefungen.",
+        "quick_cards": [
+            {"title": "Kataloge", "text": "Fragenkataloge und Fragen organisationsbezogen verwalten."},
+            {"title": "Parameter", "text": "Zeitlimit, Bestehensgrenze, Fragenanzahl und Versuchslogik pflegen."},
+            {"title": "Isolation", "text": "Es sind ausschließlich Inhalte der eigenen aktiven Mandanten sichtbar."},
+        ],
+        "sections": [{"title": "Wichtige Bereiche", "text": "Die Operatorrolle ist auf formale Prüfungsinhalte begrenzt.", "items": [
+            {"title": "Fragenkataloge", "text": "Fragen, Antworten, Themen und CSV-Import verwalten.", "url_name": "trainer_catalog_list", "link_text": "Kataloge öffnen"},
+            {"title": "Prüfungen", "text": "Zertifikatsprüfungen konfigurieren, Statistiken und Ergebnisse einsehen.", "url_name": "trainer_exam_list", "link_text": "Prüfungen öffnen"},
+        ]}],
+        "faqs": [
+            {"question": "Kann ein Prüfungsoperator Kurse bearbeiten?", "answer": "Nein. Dafür ist eine zusätzliche Trainerrolle erforderlich."},
+            {"question": "Kann ein Prüfungsoperator andere Mandanten sehen?", "answer": "Nein. Alle Prüfungsdaten werden auf Organisationen mit aktivem Prüfungsoperator-Profil begrenzt."},
+        ],
+    },
     "examiner": {
         "title": "Pruefer Hilfe",
         "badge": "Antworten bewerten",

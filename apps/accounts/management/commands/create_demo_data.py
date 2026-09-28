@@ -913,12 +913,13 @@ KURSINHALTE = [
 ]
 
 # ---------------------------------------------------------------------------
-# Zertifikatspruefung: 12 Fragen, 10 werden gezogen
+# Zertifikatspruefung: 13 Fragen, 10 werden gezogen
 # ---------------------------------------------------------------------------
 PRUEFUNGSFRAGEN = [
     {
         "typ": Frage.Typ.SINGLE_CHOICE,
         "text": "Was beschreibt das Betriebsmodell von ABoroLMS am besten?",
+        "erklaerung": "Richtig ist Selfhosting: Der Betreiber installiert ABoroLMS auf einem eigenen Server und kontrolliert die gespeicherten Daten. Die Anwendung wird im Browser genutzt. Eine ausschliessliche Bereitstellung als fremdgehosteter Cloud-Dienst oder Desktop-Anwendung beschreibt dieses Betriebsmodell nicht.",
         "punkte": 1,
         "antworten": [
             ("Selfhosting auf eigenem Server mit vollstaendiger Datenkontrolle.", True),
@@ -930,6 +931,7 @@ PRUEFUNGSFRAGEN = [
     {
         "typ": Frage.Typ.MULTIPLE_CHOICE,
         "text": "Welche Apps gehoeren zur ABoroLMS-Kernarchitektur?",
+        "erklaerung": "accounts verwaltet Nutzer und Rollen, certificates die Zertifikate und deren PDF-Ausgabe, payments die Zahlungen und Umsatzaufteilung. wordpress ist keine Django-App dieser Plattform. Fuer die volle Punktzahl muessen alle drei richtigen Antworten und keine falsche Antwort gewaehlt sein; die automatische Bewertung vergibt keine Teilpunkte.",
         "punkte": 2,
         "antworten": [
             ("accounts – Nutzer, Rollen, UserProfile", True),
@@ -941,6 +943,7 @@ PRUEFUNGSFRAGEN = [
     {
         "typ": Frage.Typ.SINGLE_CHOICE,
         "text": "Welche Rolle erstellt Fragenkataloge und konfiguriert Pruefungen?",
+        "erklaerung": "Diese Aufgaben gehoeren zur Trainerrolle. Pruefer bewerten insbesondere offene Antworten; Lernende bearbeiten Kurse und Pruefungen. Gemeint ist die fachlich zustaendige Rolle, auch wenn hoeher berechtigte Administratoren ebenfalls Zugriff haben koennen.",
         "punkte": 1,
         "antworten": [
             ("Trainer", True),
@@ -952,6 +955,7 @@ PRUEFUNGSFRAGEN = [
     {
         "typ": Frage.Typ.WAHR_FALSCH,
         "text": "Ein Nutzer darf in verschiedenen Organisationen unterschiedliche Rollen haben.",
+        "erklaerung": "Die Aussage ist wahr. UserProfile verknuepft einen Nutzer mit einer Organisation und einer Rolle. Deshalb kann dieselbe Person beispielsweise Trainer in Organisation A und Lernender in Organisation B sein. Die Berechtigung muss im jeweiligen Organisationskontext geprueft werden.",
         "punkte": 1,
         "antworten": [
             ("Wahr", True),
@@ -961,6 +965,7 @@ PRUEFUNGSFRAGEN = [
     {
         "typ": Frage.Typ.MULTIPLE_CHOICE,
         "text": "Welche Aussagen zum Lernfortschritt sind korrekt?",
+        "erklaerung": "Richtig sind der Prozentwert aus abgeschlossenen und gesamten Lektionen sowie der eigene Fortschritt je Einschreibung. Ein Abschluss erzeugt einen Fortschrittseintrag und loescht keine Lektion. Das Beantworten einer Uebungsfrage allein schliesst keine Lektion ab. Nur die vollstaendig richtige Auswahl erhaelt die zwei Punkte.",
         "punkte": 2,
         "antworten": [
             ("Der Fortschritt wird als Prozentwert (abgeschlossene/Gesamt-Lektionen) gespeichert.", True),
@@ -972,6 +977,7 @@ PRUEFUNGSFRAGEN = [
     {
         "typ": Frage.Typ.SINGLE_CHOICE,
         "text": "Wie berechnet ABoroLMS den Trainer-Anteil bei einem Kurspreis von 200 EUR?",
+        "erklaerung": "Bei der hier zugrunde gelegten Aufteilung 85/15 betraegt der Trainer-Anteil 200 EUR mal 0,85 = 170 EUR. Die verbleibenden 30 EUR sind der Plattform-Anteil. Die Frage bezieht sich auf diese Aufteilung, nicht auf einen abweichend konfigurierten Provisionssatz.",
         "punkte": 2,
         "antworten": [
             ("170 EUR (85 %)", True),
@@ -983,6 +989,7 @@ PRUEFUNGSFRAGEN = [
     {
         "typ": Frage.Typ.SINGLE_CHOICE,
         "text": "Wann wird ein Zertifikat automatisch ausgestellt?",
+        "erklaerung": "Erforderlich sind ein abgeschlossener und bestandener Pruefungsversuch. Offene Freitext- oder Szenariobewertungen muessen zuvor erledigt sein. Einschreibung und Zeitablauf allein belegen keinen Pruefungserfolg; eine manuelle Anlage ist kein automatischer Ausstellungszeitpunkt.",
         "punkte": 1,
         "antworten": [
             ("Wenn der Pruefungsversuch abgeschlossen und bestanden ist.", True),
@@ -994,6 +1001,7 @@ PRUEFUNGSFRAGEN = [
     {
         "typ": Frage.Typ.MULTIPLE_CHOICE,
         "text": "Welche Fragetypen werden von ABoroLMS unterstuetzt?",
+        "erklaerung": "SC (Single Choice), FT (Freitext) und ZO (Zuordnung) sind unterstuetzte Fragetypen und hier auszuwaehlen. BI ist kein angebotener Fragetyp. Zusaetzlich existieren Multiple Choice, Wahr/Falsch und Szenario. Die automatische Bewertung gibt die volle Punktzahl nur fuer alle richtigen Optionen ohne falsche Auswahl.",
         "punkte": 2,
         "antworten": [
             ("SC – Single Choice", True),
@@ -1008,12 +1016,15 @@ PRUEFUNGSFRAGEN = [
             "Erklaere in eigenen Worten, wie ABoroLMS Mandantenfaehigkeit technisch umsetzt – "
             "ohne separate Datenbanken je Organisation zu benoetigen."
         ),
+        "erklaerung": "Erwartet wird eine gemeinsame Datenbank mit gemeinsamem Schema. Organisationsbezogene Objekte sind ueber Fremdschluessel direkt oder indirekt einer Organisation zugeordnet. UserProfile verbindet Nutzer, Organisation und Rolle. Abfragen und Berechtigungspruefungen begrenzen den Zugriff auf die aktive Organisation; allein eine Organisations-ID oder ein URL-Slug bietet noch keine Zugriffssicherheit. Sinngemaesse Beschreibungen und passende Beispiele sind ausreichend, exakte Klassenbezeichnungen sind nicht erforderlich.",
+        "bewertungshinweis": "<p>1 Punkt: gemeinsame Datenbank und gemeinsames Schema statt eigener Datenbank je Mandant.</p><p>1 Punkt: Zuordnung von Daten zur Organisation ueber Beziehungen/Fremdschluessel; die Mitgliedschaft bzw. Rolle des Nutzers ist organisationsbezogen.</p><p>1 Punkt: organisationsbezogene Filter und Berechtigungspruefungen verhindern den Zugriff auf fremde Daten.</p><p>Je Kriterium 0,5 Punkte bei teilweise richtiger, aber unvollstaendiger Beschreibung; 0 Punkte bei fehlender oder falscher Aussage. Maximal 3 Punkte. Gleichwertige Formulierungen anerkennen, denselben Aspekt nicht doppelt bewerten.</p>",
         "punkte": 3,
         "antworten": [],
     },
     {
         "typ": Frage.Typ.ZUORDNUNG,
         "text": "Ordne jede Rolle ihrer Hauptzustaendigkeit zu.",
+        "erklaerung": "Super-Admins betreiben die gesamte Plattform; Org-Admins verwalten ihre Organisation und deren Mitglieder. Trainer erstellen Lern- und Pruefungsinhalte, Pruefer bewerten offene Antworten, Lernende absolvieren Kurse und Pruefungen. Bewertet wird die Hauptzustaendigkeit, auch wenn Rollen kombiniert werden koennen. Bei fuenf Paaren und drei Gesamtpunkten ergibt jedes korrekte Paar 0,6 Punkte.",
         "punkte": 3,
         "zuordnungen": [
             ("Super-Admin", "Plattform betreiben und alle Daten verwalten"),
@@ -1026,6 +1037,7 @@ PRUEFUNGSFRAGEN = [
     {
         "typ": Frage.Typ.SINGLE_CHOICE,
         "text": "Was passiert, wenn das Nutzerlimit (max_nutzer) einer Organisation erreicht ist?",
+        "erklaerung": "Die Limitpruefung verhindert weitere Einladungen. Bereits vorhandene Nutzer und Kurse werden dadurch nicht geloescht oder deaktiviert. Eine Erhoehung des Limits muss administrativ erfolgen; es gibt kein automatisches Lizenz-Upgrade.",
         "punkte": 1,
         "antworten": [
             ("Weitere Einladungen werden gesperrt, bestehende Nutzer bleiben unveraendert.", True),
@@ -1037,6 +1049,7 @@ PRUEFUNGSFRAGEN = [
     {
         "typ": Frage.Typ.WAHR_FALSCH,
         "text": "Die oeffentliche Zertifikats-Verifikationsseite erfordert einen Login.",
+        "erklaerung": "Die Aussage ist falsch. Die oeffentliche Verifikation erlaubt Dritten, ein Zertifikat ueber dessen Verifikationslink zu pruefen. Sie ist vom geschuetzten persoenlichen PDF-Download zu unterscheiden, fuer den eine Zugriffspruefung erfolgt.",
         "punkte": 1,
         "antworten": [
             ("Falsch", True),
@@ -1046,6 +1059,7 @@ PRUEFUNGSFRAGEN = [
     {
         "typ": Frage.Typ.SINGLE_CHOICE,
         "text": "Welches Modell speichert das individuelle Zertifikats-Design einer Organisation in ABoroLMS?",
+        "erklaerung": "ZertifikatDesign ist ueber eine OneToOne-Beziehung mit der Organisation verbunden. Dadurch hat jede Organisation einen eigenen Design-Datensatz, beispielsweise fuer Farben und Unterschriften. Dafuer werden weder separate Datenbanktabellen je Organisation noch ausschliesslich CSS-Dateien verwendet.",
         "punkte": 1,
         "antworten": [
             ("ZertifikatDesign mit OneToOneField zu Organisation", True),
@@ -1101,6 +1115,7 @@ class Command(BaseCommand):
         for username, rolle in [
             ("orgadmin", Rolle.ORG_ADMIN),
             ("trainer", Rolle.TRAINER),
+            ("examoperator", Rolle.EXAM_OPERATOR),
             ("examiner", Rolle.EXAMINER),
             ("learner", Rolle.LEARNER),
         ]:
@@ -1128,6 +1143,7 @@ class Command(BaseCommand):
         for username, rolle in [
             ("orgadmin", Rolle.ORG_ADMIN),
             ("trainer", Rolle.TRAINER),
+            ("examoperator", Rolle.EXAM_OPERATOR),
             ("examiner", Rolle.EXAMINER),
             ("learner", Rolle.LEARNER),
         ]:
@@ -1322,6 +1338,8 @@ class Command(BaseCommand):
                 fragenkatalog=katalog,
                 typ=daten["typ"],
                 fragetext=quill_html("<p>" + daten["text"] + "</p>"),
+                erklaerung=quill_html("<p>" + daten["erklaerung"] + "</p>"),
+                bewertungshinweis=quill_html(daten.get("bewertungshinweis", "")),
                 punkte=daten["punkte"],
                 schwierigkeit=Frage.Schwierigkeit.MITTEL,
             )

@@ -53,10 +53,16 @@
                                 <li><a class="dropdown-item" href="{% if tenant_org %}{% url 'tenant_trainer_learning_path_list' tenant_org.slug %}{% else %}{% url 'trainer_learning_path_list' %}{% endif %}">Lernpfade</a></li>
                                 <li><a class="dropdown-item" href="{% if tenant_org %}{% url 'tenant_trainer_revenue_dashboard' tenant_org.slug %}{% else %}{% url 'trainer_revenue_dashboard' %}{% endif %}">Umsatz</a></li>
                                 <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item" href="{% if tenant_org %}{% url 'tenant_catalog_list' tenant_org.slug %}{% else %}{% url 'trainer_catalog_list' %}{% endif %}">Fragenkataloge</a></li>
-                                <li><a class="dropdown-item" href="{% if tenant_org %}{% url 'tenant_exam_list' tenant_org.slug %}{% else %}{% url 'trainer_exam_list' %}{% endif %}">Prüfungen</a></li>
+                                {% if ist_exam_operator %}
+                                    <li><a class="dropdown-item" href="{% if tenant_org %}{% url 'tenant_catalog_list' tenant_org.slug %}{% else %}{% url 'trainer_catalog_list' %}{% endif %}">Fragenkataloge</a></li>
+                                    <li><a class="dropdown-item" href="{% if tenant_org %}{% url 'tenant_exam_list' tenant_org.slug %}{% else %}{% url 'trainer_exam_list' %}{% endif %}">Prüfungen</a></li>
+                                {% endif %}
                             </ul>
                         </li>
+                    {% endif %}
+                    {% if ist_exam_operator and not ist_trainer %}
+                        <li class="nav-item"><a class="nav-link" href="{% url 'trainer_catalog_list' %}">Fragenkataloge</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{% url 'trainer_exam_list' %}">Prüfungen</a></li>
                     {% endif %}
                     {% if ist_examiner %}
                         <li class="nav-item"><a class="nav-link" href="{% url 'examiner_queue' %}">Prüfer-Queue</a></li>

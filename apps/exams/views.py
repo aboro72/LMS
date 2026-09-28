@@ -37,7 +37,7 @@ def trainer_catalog_queryset(user):
         return queryset.none()
     if user.is_superuser:
         return queryset
-    organisation_ids = user.profile.filter(rolle=Rolle.TRAINER, aktiv=True).values_list("organisation_id", flat=True)
+    organisation_ids = user.profile.filter(rolle=Rolle.EXAM_OPERATOR, aktiv=True).values_list("organisation_id", flat=True)
     return queryset.filter(organisation_id__in=organisation_ids)
 
 
@@ -47,21 +47,24 @@ def trainer_exam_queryset(user):
         return queryset.none()
     if user.is_superuser:
         return queryset
-    organisation_ids = user.profile.filter(rolle=Rolle.TRAINER, aktiv=True).values_list("organisation_id", flat=True)
+    organisation_ids = user.profile.filter(rolle=Rolle.EXAM_OPERATOR, aktiv=True).values_list("organisation_id", flat=True)
     return queryset.filter(organisation_id__in=organisation_ids)
 
 
 class TrainerFragenkatalogListView(RollenMixin, ListView):
-    rolle = Rolle.TRAINER
+    rolle = Rolle.EXAM_OPERATOR
     template_name = "exams/trainer/catalog_list.html"
     context_object_name = "kataloge"
 
     def get_queryset(self):
-        return trainer_catalog_queryset(self.request.user)
+        queryset = trainer_catalog_queryset(self.request.user)
+        if self.kwargs.get("org_slug"):
+            queryset = queryset.filter(organisation__slug=self.kwargs["org_slug"])
+        return queryset
 
 
 class TrainerFragenkatalogCreateView(RollenMixin, CreateView):
-    rolle = Rolle.TRAINER
+    rolle = Rolle.EXAM_OPERATOR
     form_class = FragenkatalogForm
     template_name = "exams/trainer/catalog_form.html"
 
@@ -80,7 +83,7 @@ class TrainerFragenkatalogCreateView(RollenMixin, CreateView):
 
 
 class TrainerFragenkatalogUpdateView(RollenMixin, UpdateView):
-    rolle = Rolle.TRAINER
+    rolle = Rolle.EXAM_OPERATOR
     form_class = FragenkatalogForm
     template_name = "exams/trainer/catalog_form.html"
 
@@ -112,7 +115,7 @@ class TrainerFragenkatalogUpdateView(RollenMixin, UpdateView):
 
 
 class TrainerFragenkatalogDeleteView(RollenMixin, DeleteView):
-    rolle = Rolle.TRAINER
+    rolle = Rolle.EXAM_OPERATOR
     model = Fragenkatalog
     template_name = "exams/trainer/catalog_confirm_delete.html"
 
@@ -136,7 +139,7 @@ class TrainerFragenkatalogDeleteView(RollenMixin, DeleteView):
 
 
 class TrainerFrageCreateView(RollenMixin, View):
-    rolle = Rolle.TRAINER
+    rolle = Rolle.EXAM_OPERATOR
 
     def get_katalog(self):
         return get_object_or_404(trainer_catalog_queryset(self.request.user), id=self.kwargs["katalog_id"])
@@ -203,7 +206,7 @@ class TrainerFrageCreateView(RollenMixin, View):
 
 
 class TrainerAntwortCreateView(RollenMixin, View):
-    rolle = Rolle.TRAINER
+    rolle = Rolle.EXAM_OPERATOR
 
     def post(self, request, frage_id):
         frage = get_object_or_404(Frage, id=frage_id, fragenkatalog__in=trainer_catalog_queryset(request.user))
@@ -220,7 +223,7 @@ class TrainerAntwortCreateView(RollenMixin, View):
 
 
 class TrainerCSVImportView(RollenMixin, View):
-    rolle = Rolle.TRAINER
+    rolle = Rolle.EXAM_OPERATOR
 
     def post(self, request, katalog_id):
         katalog = get_object_or_404(trainer_catalog_queryset(request.user), id=katalog_id)
@@ -239,16 +242,19 @@ class TrainerCSVImportView(RollenMixin, View):
 
 
 class TrainerPruefungListView(RollenMixin, ListView):
-    rolle = Rolle.TRAINER
+    rolle = Rolle.EXAM_OPERATOR
     template_name = "exams/trainer/exam_list.html"
     context_object_name = "pruefungen"
 
     def get_queryset(self):
-        return trainer_exam_queryset(self.request.user)
+        queryset = trainer_exam_queryset(self.request.user)
+        if self.kwargs.get("org_slug"):
+            queryset = queryset.filter(organisation__slug=self.kwargs["org_slug"])
+        return queryset
 
 
 class TrainerKatalogThemenView(RollenMixin, View):
-    rolle = Rolle.TRAINER
+    rolle = Rolle.EXAM_OPERATOR
 
     def get(self, request, pk):
         katalog = get_object_or_404(trainer_catalog_queryset(request.user), pk=pk)
@@ -295,7 +301,7 @@ class TrainerPruefungFormMixin:
 
 
 class TrainerPruefungCreateView(TrainerPruefungFormMixin, RollenMixin, CreateView):
-    rolle = Rolle.TRAINER
+    rolle = Rolle.EXAM_OPERATOR
     form_class = PruefungForm
     template_name = "exams/trainer/exam_form.html"
 
@@ -319,7 +325,7 @@ class TrainerPruefungCreateView(TrainerPruefungFormMixin, RollenMixin, CreateVie
 
 
 class TrainerPruefungUpdateView(TrainerPruefungFormMixin, RollenMixin, UpdateView):
-    rolle = Rolle.TRAINER
+    rolle = Rolle.EXAM_OPERATOR
     form_class = PruefungForm
     template_name = "exams/trainer/exam_form.html"
 
@@ -337,7 +343,7 @@ class TrainerPruefungUpdateView(TrainerPruefungFormMixin, RollenMixin, UpdateVie
 
 
 class TrainerPruefungsbogenPDFView(RollenMixin, View):
-    rolle = Rolle.TRAINER
+    rolle = Rolle.EXAM_OPERATOR
 
     def get(self, request, pk, variante):
         pruefung = get_object_or_404(trainer_exam_queryset(request.user), pk=pk)
@@ -355,7 +361,7 @@ class TrainerPruefungsbogenPDFView(RollenMixin, View):
 
 
 class TrainerOfflinePruefungsbogenCreateView(RollenMixin, View):
-    rolle = Rolle.TRAINER
+    rolle = Rolle.EXAM_OPERATOR
 
     def post(self, request, pk):
         pruefung = get_object_or_404(trainer_exam_queryset(request.user), pk=pk)
@@ -388,7 +394,7 @@ class TrainerOfflinePruefungsbogenCreateView(RollenMixin, View):
 
 
 class TrainerOfflinePruefungsbogenDownloadView(RollenMixin, View):
-    rolle = Rolle.TRAINER
+    rolle = Rolle.EXAM_OPERATOR
 
     def get(self, request, pk, archiv_id, variante):
         pruefung = get_object_or_404(trainer_exam_queryset(request.user), pk=pk)
@@ -590,7 +596,7 @@ class ExaminerBewertungView(RollenMixin, UpdateView):
 
 
 class TrainerPruefungStatistikView(RollenMixin, TemplateView):
-    rolle = Rolle.TRAINER
+    rolle = Rolle.EXAM_OPERATOR
     template_name = "exams/trainer/exam_stats.html"
 
     def dispatch(self, request, *args, **kwargs):
@@ -622,7 +628,7 @@ class TrainerPruefungStatistikView(RollenMixin, TemplateView):
 
 
 class TrainerPruefungErgebnisListeView(RollenMixin, ListView):
-    rolle = Rolle.TRAINER
+    rolle = Rolle.EXAM_OPERATOR
     template_name = "exams/trainer/exam_results.html"
     context_object_name = "versuche"
 

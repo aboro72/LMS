@@ -119,7 +119,7 @@ class ThemenquoteAuswahlTests(TestCase):
             titel="Offline-Pruefung", organisation=self.organisation,
             fragenkatalog=self.katalog, anzahl_fragen=1,
         )
-        UserProfile.objects.create(nutzer=self.user, organisation=self.organisation, rolle=Rolle.TRAINER)
+        UserProfile.objects.create(nutzer=self.user, organisation=self.organisation, rolle=Rolle.EXAM_OPERATOR)
         self.client.force_login(self.user)
         with tempfile.TemporaryDirectory() as media_root, override_settings(MEDIA_ROOT=media_root):
             response = self.client.post("/trainer/pruefungen/%s/offline-boegen/erstellen/" % pruefung.pk)

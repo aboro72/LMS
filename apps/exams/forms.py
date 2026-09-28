@@ -26,7 +26,7 @@ class FragenkatalogForm(forms.ModelForm):
     def __init__(self, *args, user=None, **kwargs):
         super().__init__(*args, **kwargs)
         if user and not user.is_superuser:
-            organisation_ids = user.profile.filter(rolle=Rolle.TRAINER, aktiv=True).values_list("organisation_id", flat=True)
+            organisation_ids = user.profile.filter(rolle=Rolle.EXAM_OPERATOR, aktiv=True).values_list("organisation_id", flat=True)
             self.fields["organisation"].queryset = Organisation.objects.filter(id__in=organisation_ids)
 
 
@@ -126,7 +126,7 @@ class PruefungForm(forms.ModelForm):
     def __init__(self, *args, user=None, **kwargs):
         super().__init__(*args, **kwargs)
         if user and not user.is_superuser:
-            organisation_ids = user.profile.filter(rolle=Rolle.TRAINER, aktiv=True).values_list("organisation_id", flat=True)
+            organisation_ids = user.profile.filter(rolle=Rolle.EXAM_OPERATOR, aktiv=True).values_list("organisation_id", flat=True)
             self.fields["organisation"].queryset = Organisation.objects.filter(id__in=organisation_ids)
             self.fields["fragenkatalog"].queryset = Fragenkatalog.objects.filter(organisation_id__in=organisation_ids)
 

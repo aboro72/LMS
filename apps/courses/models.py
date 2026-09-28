@@ -227,7 +227,7 @@ class KursBewertung(models.Model):
     class Meta:
         constraints = [
             models.UniqueConstraint(fields=["kurs", "nutzer"], name="unique_course_review_user"),
-            models.CheckConstraint(check=models.Q(sterne__gte=1, sterne__lte=5), name="course_review_stars_1_5"),
+            models.CheckConstraint(condition=models.Q(sterne__gte=1, sterne__lte=5), name="course_review_stars_1_5"),
         ]
         ordering = ["-erstellt_am"]
         verbose_name = "Kursbewertung"

@@ -46,6 +46,7 @@ def rollen_context(request):
     return {
         "ist_superadmin": ist_superadmin,
         "ist_trainer": Rolle.TRAINER in rollen,
+        "ist_exam_operator": Rolle.EXAM_OPERATOR in rollen,
         "ist_examiner": Rolle.EXAMINER in rollen,
         "ist_org_admin": Rolle.ORG_ADMIN in rollen,
         "meine_org": meine_org,

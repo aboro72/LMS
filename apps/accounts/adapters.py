@@ -1,8 +1,16 @@
 from allauth.account.adapter import DefaultAccountAdapter
+from django.urls import reverse
 
 
 class OrganisationAccountAdapter(DefaultAccountAdapter):
     """Uses an organisation's SMTP server and reset text when it is unambiguous."""
+
+    def get_logout_redirect_url(self, request):
+        # Tenant middleware resolves the organisation before logout clears the session.
+        organisation = getattr(request, "tenant_org", None)
+        if organisation is not None and organisation.aktiv:
+            return reverse("org_public_home", kwargs={"slug": organisation.slug})
+        return super().get_logout_redirect_url(request)
 
     def send_mail(self, template_prefix, email, context):
         if "password_reset" not in template_prefix:

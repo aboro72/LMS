@@ -40,6 +40,12 @@
                     <div class="lesson-content text-secondary">{{ antwort.frage.erklaerung.html|safe }}</div>
                 </div>
             {% endif %}
+            {% if antwort.frage.bewertungshinweis.html %}
+                <div class="mb-4">
+                    <p class="fw-semibold mb-2">Bewertungsschema (max. {{ antwort.frage.punkte }} Punkte):</p>
+                    <div class="lesson-content text-secondary">{{ antwort.frage.bewertungshinweis.html|safe }}</div>
+                </div>
+            {% endif %}
         </div>
 
         <div class="aboro-panel">

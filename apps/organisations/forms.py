@@ -32,6 +32,7 @@ class EinladungForm(forms.Form):
     email = forms.EmailField(label="E-Mail-Adresse")
     rolle = forms.ChoiceField(
         choices=[
+            (Rolle.EXAM_OPERATOR, "Prüfungsoperator"),
             (Rolle.TRAINER, "Trainer"),
             (Rolle.EXAMINER, "Prüfer"),
             (Rolle.LEARNER, "Lernender"),

@@ -464,6 +464,7 @@ class CertificateViewTests(BaseLmsTestCase):
         self.assertEqual(response["Content-Type"], "application/pdf")
 class TrainerExamTenantIsolationTests(BaseLmsTestCase):
     def test_trainer_catalog_list_only_contains_trainer_role_organisations(self):
+        UserProfile.objects.create(nutzer=self.trainer, organisation=self.org, rolle=Rolle.EXAM_OPERATOR)
         UserProfile.objects.create(nutzer=self.trainer, organisation=self.other_org, rolle=Rolle.LEARNER)
         own_catalog = Fragenkatalog.objects.create(titel="Eigener Katalog", organisation=self.org, erstellt_von=self.trainer)
         other_catalog = Fragenkatalog.objects.create(titel="Fremder Katalog", organisation=self.other_org, erstellt_von=self.other)
@@ -473,6 +474,7 @@ class TrainerExamTenantIsolationTests(BaseLmsTestCase):
         self.assertNotContains(response, other_catalog.titel)
 
     def test_trainer_exam_list_only_contains_trainer_role_organisations(self):
+        UserProfile.objects.create(nutzer=self.trainer, organisation=self.org, rolle=Rolle.EXAM_OPERATOR)
         UserProfile.objects.create(nutzer=self.trainer, organisation=self.other_org, rolle=Rolle.LEARNER)
         own_catalog = Fragenkatalog.objects.create(titel="Eigener Katalog", organisation=self.org, erstellt_von=self.trainer)
         other_catalog = Fragenkatalog.objects.create(titel="Fremder Katalog", organisation=self.other_org, erstellt_von=self.other)

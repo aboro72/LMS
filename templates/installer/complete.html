@@ -1,0 +1,3 @@
+{% extends "base.html" %}
+{% block title %}Installation abgeschlossen{% endblock %}
+{% block content %}<div class="aboro-panel text-center"><h1 class="h3">Installation abgeschlossen</h1><p>Die Organisation <strong>{{ organisation.name }}</strong> wurde eingerichtet.</p><a class="btn btn-aboro" href="{% url 'account_login' %}">Zum Login</a></div>{% endblock %}

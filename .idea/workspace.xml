@@ -1,0 +1,446 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="ALL" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="737e32f6-ffae-43bc-bcb4-9249991f321a" name="Changes" comment="Regeln angepasst">
+      <change afterPath="$PROJECT_DIR$/.idea/inspectionProfiles/Project_Default.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/apps/accounts/management/commands/ergaenze_zertifikatsfragen.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/apps/accounts/test_logout.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/apps/exams/test_solution_notes.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/media/begleitmaterial/ABoroLMS_Architektur_Ueberblick_JNG1Dup.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/media/begleitmaterial/ABoroLMS_Architektur_Ueberblick_e3P8HLT.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/media/begleitmaterial/CSV_Import_Format_gsvd7OI.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/media/begleitmaterial/CSV_Import_Format_wQjoZNg.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/media/begleitmaterial/Org_Konfiguration_Checkliste_F2Nm3Ag.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/media/begleitmaterial/Org_Konfiguration_Checkliste_yp2Dutm.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/media/begleitmaterial/Produktions_Checkliste_DiyzIkc.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/media/begleitmaterial/Produktions_Checkliste_ftpjPHQ.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/media/begleitmaterial/Rollenmatrix_CGhaolx.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/media/begleitmaterial/Rollenmatrix_EyTh384.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/media/begleitmaterial/Zahlungsintegration_Checkliste_EuOxcGT.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/media/begleitmaterial/Zahlungsintegration_Checkliste_dMiawbQ.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/media/begleitmaterial/Zertifikat_Design_Referenz_el2dapP.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/media/begleitmaterial/Zertifikat_Design_Referenz_evTCKhd.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/media/lektion-thumbnails/ML-LMS_Projekt_und_Innovationspraesentation_ergaenzt_final_2026-09-10-1.jpg" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/media/lektionen/ML-LMS_Projekt_und_Innovationspraesentation_ergaenzt_final_2026-09-10.mp4" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/media/lektionen/thumbnail-test.mp4" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/media/pruefungsboegen/loesungen/pruefungsbogen-1-20260918-144929-loesungen.pdf" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/media/pruefungsboegen/loesungen/pruefungsbogen-2-20260918-164316-loesungen.pdf" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/media/pruefungsboegen/loesungen/pruefungsbogen-2-20260918-170206-loesungen.pdf" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/media/pruefungsboegen/teilnehmer/pruefungsbogen-1-20260918-144929-teilnehmer.pdf" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/media/pruefungsboegen/teilnehmer/pruefungsbogen-2-20260918-164316-teilnehmer.pdf" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/media/pruefungsboegen/teilnehmer/pruefungsbogen-2-20260918-170206-teilnehmer.pdf" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/media/zertifikate/zertifikat-17eb4fcb-731c-406f-a26b-065f82875e4f.pdf" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/media/zertifikate/zertifikat-1b78865f-c1ab-447f-b3f3-450b577ee840.pdf" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/media/zertifikate/zertifikat-57cf30cf-84f6-4747-85bd-9d444ae7dc8f.pdf" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/media/zertifikate/zertifikat-6445ee17-9ff2-4155-9511-c3940bd9a5fd.pdf" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/media/zertifikate/zertifikat-99d6f9d3-6152-44d2-a5c4-c08e4a752537.pdf" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/media/zertifikate/zertifikat-d0a0d1c1-926b-42d8-bbe7-dfd471b0094c.pdf" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/media/zertifikate/zertifikat-e096bd37-3973-44f4-9c27-79b905bc72fc.pdf" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/output/pdf/ABoroLMS-Loesungsbogen.pdf" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/output/pdf/ABoroLMS-Pruefungsbogen.pdf" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/staticfiles/account/js/account.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/staticfiles/account/js/onload.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/staticfiles/admin/css/autocomplete.css" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/staticfiles/admin/css/base.css" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/staticfiles/admin/css/changelists.css" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/staticfiles/admin/css/dark_mode.css" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/staticfiles/admin/css/dashboard.css" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/staticfiles/admin/css/forms.css" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/staticfiles/admin/css/login.css" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/staticfiles/admin/css/nav_sidebar.css" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/staticfiles/admin/css/responsive.css" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/staticfiles/admin/css/responsive_rtl.css" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/staticfiles/admin/css/rtl.css" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/staticfiles/admin/css/unusable_password_field.css" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/staticfiles/admin/css/vendor/select2/LICENSE-SELECT2.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/staticfiles/admin/css/vendor/select2/select2.css" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/staticfiles/admin/css/vendor/select2/select2.min.css" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/staticfiles/admin/css/widgets.css" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/staticfiles/admin/img/LICENSE" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/staticfiles/admin/img/README.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/staticfiles/admin/img/calendar-icons.svg" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/staticfiles/admin/img/gis/move_vertex_off.svg" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/staticfiles/admin/img/gis/move_vertex_on.svg" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/staticfiles/admin/img/icon-addlink.svg" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/staticfiles/admin/img/icon-alert.svg" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/staticfiles/admin/img/icon-calendar.svg" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/staticfiles/admin/img/icon-changelink.svg" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/staticfiles/admin/img/icon-clock.svg" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/staticfiles/admin/img/icon-deletelink.svg" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/staticfiles/admin/img/icon-hidelink.svg" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/staticfiles/admin/img/icon-no.svg" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/staticfiles/admin/img/icon-unknown-alt.svg" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/staticfiles/admin/img/icon-unknown.svg" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/staticfiles/admin/img/icon-viewlink.svg" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/staticfiles/admin/img/icon-yes.svg" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/staticfiles/admin/img/inline-delete.svg" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/staticfiles/admin/img/search.svg" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/staticfiles/admin/img/selector-icons.svg" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/staticfiles/admin/img/sorting-icons.svg" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/staticfiles/admin/img/tooltag-add.svg" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/staticfiles/admin/img/tooltag-arrowright.svg" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/staticfiles/admin/js/SelectBox.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/staticfiles/admin/js/SelectFilter2.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/staticfiles/admin/js/actions.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/staticfiles/admin/js/admin/DateTimeShortcuts.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/staticfiles/admin/js/admin/RelatedObjectLookups.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/staticfiles/admin/js/autocomplete.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/staticfiles/admin/js/calendar.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/staticfiles/admin/js/cancel.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/staticfiles/admin/js/change_form.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/staticfiles/admin/js/core.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/staticfiles/admin/js/filters.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/staticfiles/admin/js/inlines.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/staticfiles/admin/js/jquery.init.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/staticfiles/admin/js/nav_sidebar.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/staticfiles/admin/js/popup_response.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/staticfiles/admin/js/prepopulate.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/staticfiles/admin/js/prepopulate_init.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/staticfiles/admin/js/theme.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/staticfiles/admin/js/unusable_password_field.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/staticfiles/admin/js/urlify.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/staticfiles/admin/js/vendor/jquery/LICENSE.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/staticfiles/admin/js/vendor/jquery/jquery.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/staticfiles/admin/js/vendor/jquery/jquery.min.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/staticfiles/admin/js/vendor/select2/LICENSE.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/staticfiles/admin/js/vendor/select2/i18n/af.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/staticfiles/admin/js/vendor/select2/i18n/ar.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/staticfiles/admin/js/vendor/select2/i18n/az.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/staticfiles/admin/js/vendor/select2/i18n/bg.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/staticfiles/admin/js/vendor/select2/i18n/bn.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/staticfiles/admin/js/vendor/select2/i18n/bs.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/staticfiles/admin/js/vendor/select2/i18n/ca.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/staticfiles/admin/js/vendor/select2/i18n/cs.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/staticfiles/admin/js/vendor/select2/i18n/da.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/staticfiles/admin/js/vendor/select2/i18n/de.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/staticfiles/admin/js/vendor/select2/i18n/dsb.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/staticfiles/admin/js/vendor/select2/i18n/el.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/staticfiles/admin/js/vendor/select2/i18n/en.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/staticfiles/admin/js/vendor/select2/i18n/es.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/staticfiles/admin/js/vendor/select2/i18n/et.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/staticfiles/admin/js/vendor/select2/i18n/eu.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/staticfiles/admin/js/vendor/select2/i18n/fa.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/staticfiles/admin/js/vendor/select2/i18n/fi.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/staticfiles/admin/js/vendor/select2/i18n/fr.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/staticfiles/admin/js/vendor/select2/i18n/gl.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/staticfiles/admin/js/vendor/select2/i18n/he.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/staticfiles/admin/js/vendor/select2/i18n/hi.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/staticfiles/admin/js/vendor/select2/i18n/hr.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/staticfiles/admin/js/vendor/select2/i18n/hsb.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/staticfiles/admin/js/vendor/select2/i18n/hu.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/staticfiles/admin/js/vendor/select2/i18n/hy.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/staticfiles/admin/js/vendor/select2/i18n/id.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/staticfiles/admin/js/vendor/select2/i18n/is.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/staticfiles/admin/js/vendor/select2/i18n/it.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/staticfiles/admin/js/vendor/select2/i18n/ja.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/staticfiles/admin/js/vendor/select2/i18n/ka.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/staticfiles/admin/js/vendor/select2/i18n/km.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/staticfiles/admin/js/vendor/select2/i18n/ko.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/staticfiles/admin/js/vendor/select2/i18n/lt.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/staticfiles/admin/js/vendor/select2/i18n/lv.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/staticfiles/admin/js/vendor/select2/i18n/mk.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/staticfiles/admin/js/vendor/select2/i18n/ms.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/staticfiles/admin/js/vendor/select2/i18n/nb.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/staticfiles/admin/js/vendor/select2/i18n/ne.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/staticfiles/admin/js/vendor/select2/i18n/nl.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/staticfiles/admin/js/vendor/select2/i18n/pl.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/staticfiles/admin/js/vendor/select2/i18n/ps.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/staticfiles/admin/js/vendor/select2/i18n/pt-BR.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/staticfiles/admin/js/vendor/select2/i18n/pt.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/staticfiles/admin/js/vendor/select2/i18n/ro.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/staticfiles/admin/js/vendor/select2/i18n/ru.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/staticfiles/admin/js/vendor/select2/i18n/sk.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/staticfiles/admin/js/vendor/select2/i18n/sl.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/staticfiles/admin/js/vendor/select2/i18n/sq.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/staticfiles/admin/js/vendor/select2/i18n/sr-Cyrl.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/staticfiles/admin/js/vendor/select2/i18n/sr.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/staticfiles/admin/js/vendor/select2/i18n/sv.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/staticfiles/admin/js/vendor/select2/i18n/th.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/staticfiles/admin/js/vendor/select2/i18n/tk.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/staticfiles/admin/js/vendor/select2/i18n/tr.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/staticfiles/admin/js/vendor/select2/i18n/uk.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/staticfiles/admin/js/vendor/select2/i18n/vi.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/staticfiles/admin/js/vendor/select2/i18n/zh-CN.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/staticfiles/admin/js/vendor/select2/i18n/zh-TW.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/staticfiles/admin/js/vendor/select2/select2.full.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/staticfiles/admin/js/vendor/select2/select2.full.min.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/staticfiles/admin/js/vendor/xregexp/LICENSE.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/staticfiles/admin/js/vendor/xregexp/xregexp.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/staticfiles/admin/js/vendor/xregexp/xregexp.min.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/staticfiles/css/aborolms.css" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/staticfiles/django_quill/django_quill.css" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/staticfiles/django_quill/django_quill.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/staticfiles/downloads/fragenkatalog_csv_vorlage.xlsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/templates/accounts/profile.html" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/templates/accounts/role_help.html" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/templates/courses/trainer/category_form.html" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/templates/courses/trainer/category_list.html" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/templates/courses/trainer/learning_path_form.html" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/templates/courses/trainer/learning_path_list.html" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/templates/exams/result_list.html" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/templates/exams/trainer/catalog_confirm_delete.html" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/templates/exams/trainer/exam_results.html" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/templates/exams/trainer/question_create.html" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/templates/organisations/startseite_pagebuilder.html" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/templates/payments/organisation/settings.html" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdf-tools/bin/pypdfium2.exe" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdf-tools/pypdf-6.19.0.dist-info/INSTALLER" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdf-tools/pypdf-6.19.0.dist-info/METADATA" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdf-tools/pypdf-6.19.0.dist-info/RECORD" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdf-tools/pypdf-6.19.0.dist-info/REQUESTED" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdf-tools/pypdf-6.19.0.dist-info/WHEEL" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdf-tools/pypdf-6.19.0.dist-info/licenses/LICENSE" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdf-tools/pypdf/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdf-tools/pypdf/_cmap.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdf-tools/pypdf/_codecs/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdf-tools/pypdf/_codecs/_codecs.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdf-tools/pypdf/_codecs/adobe_glyphs.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdf-tools/pypdf/_codecs/core_font_metrics.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdf-tools/pypdf/_codecs/pdfdoc.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdf-tools/pypdf/_codecs/std.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdf-tools/pypdf/_codecs/symbol.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdf-tools/pypdf/_codecs/zapfding.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdf-tools/pypdf/_configuration.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdf-tools/pypdf/_crypt_providers/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdf-tools/pypdf/_crypt_providers/_base.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdf-tools/pypdf/_crypt_providers/_cryptography.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdf-tools/pypdf/_crypt_providers/_fallback.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdf-tools/pypdf/_crypt_providers/_pycryptodome.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdf-tools/pypdf/_doc_common.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdf-tools/pypdf/_encryption.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdf-tools/pypdf/_font.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdf-tools/pypdf/_page.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdf-tools/pypdf/_page_labels.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdf-tools/pypdf/_protocols.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdf-tools/pypdf/_reader.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdf-tools/pypdf/_text_extraction/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdf-tools/pypdf/_text_extraction/_layout_mode/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdf-tools/pypdf/_text_extraction/_layout_mode/_fixed_width_page.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdf-tools/pypdf/_text_extraction/_layout_mode/_text_state_manager.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdf-tools/pypdf/_text_extraction/_layout_mode/_text_state_params.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdf-tools/pypdf/_text_extraction/_text_extractor.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdf-tools/pypdf/_utils.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdf-tools/pypdf/_version.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdf-tools/pypdf/_writer.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdf-tools/pypdf/actions/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdf-tools/pypdf/actions/_actions.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdf-tools/pypdf/annotations/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdf-tools/pypdf/annotations/_base.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdf-tools/pypdf/annotations/_markup_annotations.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdf-tools/pypdf/annotations/_non_markup_annotations.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdf-tools/pypdf/constants.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdf-tools/pypdf/errors.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdf-tools/pypdf/filters.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdf-tools/pypdf/generic/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdf-tools/pypdf/generic/_appearance_stream.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdf-tools/pypdf/generic/_base.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdf-tools/pypdf/generic/_color.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdf-tools/pypdf/generic/_data_structures.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdf-tools/pypdf/generic/_files.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdf-tools/pypdf/generic/_fit.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdf-tools/pypdf/generic/_image_inline.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdf-tools/pypdf/generic/_image_xobject.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdf-tools/pypdf/generic/_link.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdf-tools/pypdf/generic/_outline.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdf-tools/pypdf/generic/_rectangle.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdf-tools/pypdf/generic/_utils.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdf-tools/pypdf/generic/_viewerpref.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdf-tools/pypdf/pagerange.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdf-tools/pypdf/papersizes.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdf-tools/pypdf/py.typed" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdf-tools/pypdf/types.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdf-tools/pypdf/xmp.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdf-tools/pypdfium2-5.13.0.dist-info/INSTALLER" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdf-tools/pypdfium2-5.13.0.dist-info/METADATA" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdf-tools/pypdfium2-5.13.0.dist-info/RECORD" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdf-tools/pypdfium2-5.13.0.dist-info/REQUESTED" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdf-tools/pypdfium2-5.13.0.dist-info/WHEEL" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdf-tools/pypdfium2-5.13.0.dist-info/entry_points.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdf-tools/pypdfium2-5.13.0.dist-info/licenses/LICENSES/Apache-2.0.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdf-tools/pypdfium2-5.13.0.dist-info/licenses/LICENSES/BSD-3-Clause.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdf-tools/pypdfium2-5.13.0.dist-info/licenses/LICENSES/CC-BY-4.0.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdf-tools/pypdfium2-5.13.0.dist-info/licenses/data/windows_x64/BUILD_LICENSES/abseil.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdf-tools/pypdfium2-5.13.0.dist-info/licenses/data/windows_x64/BUILD_LICENSES/agg23.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdf-tools/pypdfium2-5.13.0.dist-info/licenses/data/windows_x64/BUILD_LICENSES/fast_float.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdf-tools/pypdfium2-5.13.0.dist-info/licenses/data/windows_x64/BUILD_LICENSES/freetype.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdf-tools/pypdfium2-5.13.0.dist-info/licenses/data/windows_x64/BUILD_LICENSES/icu.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdf-tools/pypdfium2-5.13.0.dist-info/licenses/data/windows_x64/BUILD_LICENSES/lcms.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdf-tools/pypdfium2-5.13.0.dist-info/licenses/data/windows_x64/BUILD_LICENSES/libjpeg_turbo.ijg" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdf-tools/pypdfium2-5.13.0.dist-info/licenses/data/windows_x64/BUILD_LICENSES/libjpeg_turbo.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdf-tools/pypdfium2-5.13.0.dist-info/licenses/data/windows_x64/BUILD_LICENSES/libopenjpeg.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdf-tools/pypdfium2-5.13.0.dist-info/licenses/data/windows_x64/BUILD_LICENSES/libpng.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdf-tools/pypdfium2-5.13.0.dist-info/licenses/data/windows_x64/BUILD_LICENSES/libtiff.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdf-tools/pypdfium2-5.13.0.dist-info/licenses/data/windows_x64/BUILD_LICENSES/llvm-libc.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdf-tools/pypdfium2-5.13.0.dist-info/licenses/data/windows_x64/BUILD_LICENSES/pdfium-binaries.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdf-tools/pypdfium2-5.13.0.dist-info/licenses/data/windows_x64/BUILD_LICENSES/pdfium.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdf-tools/pypdfium2-5.13.0.dist-info/licenses/data/windows_x64/BUILD_LICENSES/simdutf.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdf-tools/pypdfium2-5.13.0.dist-info/licenses/data/windows_x64/BUILD_LICENSES/zlib.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdf-tools/pypdfium2-5.13.0.dist-info/top_level.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdf-tools/pypdfium2/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdf-tools/pypdfium2/__main__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdf-tools/pypdfium2/_helpers/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdf-tools/pypdfium2/_helpers/attachment.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdf-tools/pypdfium2/_helpers/bitmap.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdf-tools/pypdfium2/_helpers/document.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdf-tools/pypdfium2/_helpers/matrix.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdf-tools/pypdfium2/_helpers/misc.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdf-tools/pypdfium2/_helpers/page.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdf-tools/pypdfium2/_helpers/pageobjects.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdf-tools/pypdfium2/_helpers/sysfontinfo.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdf-tools/pypdfium2/_helpers/textpage.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdf-tools/pypdfium2/_helpers/unsupported.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdf-tools/pypdfium2/_lazy.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdf-tools/pypdfium2/_library_scope.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdf-tools/pypdfium2/internal/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdf-tools/pypdfium2/internal/bases.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdf-tools/pypdfium2/internal/consts.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdf-tools/pypdfium2/internal/utils.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdf-tools/pypdfium2/raw.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdf-tools/pypdfium2/version.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdf-tools/pypdfium2/version.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdf-tools/pypdfium2_cfg/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdf-tools/pypdfium2_cfg/_shared/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdf-tools/pypdfium2_cfg/_shared/stl.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdf-tools/pypdfium2_cfg/stl.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdf-tools/pypdfium2_cli/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdf-tools/pypdfium2_cli/__main__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdf-tools/pypdfium2_cli/_parsers.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdf-tools/pypdfium2_cli/_setup.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdf-tools/pypdfium2_cli/_sysfonts.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdf-tools/pypdfium2_cli/arrange.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdf-tools/pypdfium2_cli/attachments.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdf-tools/pypdfium2_cli/default_fonts.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdf-tools/pypdfium2_cli/extract_images.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdf-tools/pypdfium2_cli/extract_text.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdf-tools/pypdfium2_cli/fonts.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdf-tools/pypdfium2_cli/imgtopdf.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdf-tools/pypdfium2_cli/pageobjects.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdf-tools/pypdfium2_cli/pdfinfo.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdf-tools/pypdfium2_cli/render.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdf-tools/pypdfium2_cli/tile.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdf-tools/pypdfium2_cli/toc.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdf-tools/pypdfium2_raw/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdf-tools/pypdfium2_raw/bindings.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdf-tools/pypdfium2_raw/pdfium.dll" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdf-tools/pypdfium2_raw/version.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdf-tools/pypdfium2_raw/version.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdfs/check_solution_notes.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdfs/loesungsbogen-1.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdfs/loesungsbogen-2.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdfs/loesungsbogen-3.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdfs/loesungsbogen-4.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdfs/loesungsbogen-5.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdfs/loesungsbogen-6.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdfs/loesungsbogen-7.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdfs/loesungsbogen.pdf" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdfs/overview.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdfs/teilnehmerbogen-1.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdfs/teilnehmerbogen-2.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdfs/teilnehmerbogen-3.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdfs/teilnehmerbogen-4.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tmp/pdfs/teilnehmerbogen.pdf" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="ProjectColorInfo"><![CDATA[{
+  "associatedIndex": 1,
+  "fromUser": false
+}]]></component>
+  <component name="ProjectId" id="3JwjiXwzmYv6zBFyy8FJthFlt7Q" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "RunOnceActivity.typescript.service.memoryLimit.init": "true",
+    "codeWithMe.voiceChat.enabledByDefault": "false",
+    "git-widget-placeholder": "master",
+    "ignore_missing_gitignore": "true",
+    "last_opened_file_path": "C:/Users/aborowczak/PycharmProjects/LMS",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "vue.rearranger.settings.migration": "true"
+  }
+}]]></component>
+  <component name="RunManager">
+    <configuration name="Unnamed" type="Python.DjangoServer" factoryName="Django server" nameIsGenerated="true">
+      <module name="LMS" />
+      <option name="ENV_FILES" value="" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="SDK_NAME" value="Python 3.14 (LMS)" />
+      <option name="WORKING_DIRECTORY" value="" />
+      <option name="IS_MODULE_SDK" value="false" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="DEBUG_JUST_MY_CODE" value="false" />
+      <option name="RUN_TOOL" value="" />
+      <option name="launchJavascriptDebuger" value="false" />
+      <option name="port" value="8000" />
+      <option name="host" value="" />
+      <option name="additionalOptions" value="" />
+      <option name="browserUrl" value="" />
+      <option name="runTestServer" value="false" />
+      <option name="runNoReload" value="false" />
+      <option name="useCustomRunCommand" value="false" />
+      <option name="customRunCommand" value="" />
+      <method v="2" />
+    </configuration>
+  </component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-js-predefined-d6986cc7102b-31caf2ab9e3c-JavaScript-PY-261.27258.51" />
+        <option value="bundled-python-sdk-84eaadda3698-c2ffad84badb-com.jetbrains.pycharm.pro.sharedIndexes.bundled-PY-261.27258.51" />
+      </set>
+    </attachedChunks>
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="737e32f6-ffae-43bc-bcb4-9249991f321a" name="Changes" comment="" />
+      <created>1790579152854</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1790579152854</updated>
+      <workItem from="1790579153894" duration="1144000" />
+    </task>
+    <task id="LOCAL-00001" summary="Regeln angepasst">
+      <option name="closed" value="true" />
+      <created>1790580277041</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1790580277041</updated>
+    </task>
+    <option name="localTasksCounter" value="2" />
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="Regeln angepasst" />
+    <option name="LAST_COMMIT_MESSAGE" value="Regeln angepasst" />
+  </component>
+</project>

@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block title %}Kategorie erstellen – ABoroLMS{% endblock %}
+{% block content %}
+<div class="row justify-content-center"><div class="col-lg-6"><div class="aboro-panel">
+  <h1 class="h3 mb-2">Kategorie erstellen</h1>
+  <p class="text-secondary">Ohne übergeordnetes Thema entsteht eine Hauptkategorie. Mit übergeordnetem Thema entsteht eine Unterkategorie.</p>
+  <form method="post" novalidate>{% csrf_token %}{{ form.as_p }}<button class="btn btn-aboro" type="submit">Speichern</button> <a class="btn btn-outline-secondary" href="{% url 'trainer_category_list' %}">Abbrechen</a></form>
+</div></div></div>
+{% endblock %}

@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block title %}Fragenkatalog löschen – ABoroLMS{% endblock %}
+
+{% block breadcrumbs %}
+<nav aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="{% url 'home' %}">Start</a></li><li class="breadcrumb-item"><a href="{% url 'trainer_catalog_list' %}">Fragenkataloge</a></li><li class="breadcrumb-item"><a href="{% url 'trainer_catalog_edit' object.pk %}">{{ object.titel }}</a></li><li class="breadcrumb-item active" aria-current="page">Löschen</li></ol></nav>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center"><div class="col-lg-7"><div class="aboro-panel border border-danger-subtle">
+    <p class="text-danger text-uppercase small fw-semibold mb-2">Unwiderrufliche Aktion</p>
+    <h1 class="h3 mb-3">Fragenkatalog löschen?</h1>
+    <p>Sie löschen den Katalog <strong>„{{ object.titel }}“</strong> dauerhaft aus der Datenbank und aus der Übersicht.</p>
+    <ul class="text-secondary"><li>{{ fragen_anzahl }} zugehörige Frage{{ fragen_anzahl|pluralize:"n" }} einschließlich Antworten und Zuordnungen</li><li>{{ pruefungen_anzahl }} davon abhängige Prüfung{{ pruefungen_anzahl|pluralize:"en" }}</li></ul>
+    <p class="small text-secondary">Themengebiete der Organisation bleiben erhalten, da sie in anderen Fragenkatalogen verwendet werden können.</p>
+    <form method="post" class="d-flex flex-column flex-sm-row gap-2 mt-4">{% csrf_token %}<a class="btn btn-outline-secondary" href="{% url 'trainer_catalog_edit' object.pk %}">Abbrechen</a><button class="btn btn-danger" type="submit">Katalog dauerhaft löschen</button></form>
+</div></div></div>
+{% endblock %}

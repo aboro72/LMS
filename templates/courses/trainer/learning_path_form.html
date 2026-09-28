@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+
+{% block title %}Lernpfad bearbeiten - ABoroLMS{% endblock %}
+
+{% block breadcrumbs %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'home' %}">Start</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'trainer_learning_path_list' %}">Trainer Lernpfade</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Lernpfad</li>
+    </ol>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+    <div class="col-lg-7">
+        <div class="aboro-panel mb-4">
+            <h1 class="h3 mb-3">{% if object %}Lernpfad bearbeiten{% else %}Lernpfad erstellen{% endif %}</h1>
+            <form method="post" novalidate>
+                {% csrf_token %}
+                {{ form.as_p }}
+                <button class="btn btn-aboro" type="submit">Speichern</button>
+            </form>
+        </div>
+
+        {% if object %}
+            <div class="aboro-panel">
+                <h2 class="h5 mb-3">Kurse im Lernpfad</h2>
+                <div class="list-group list-group-flush">
+                    {% for link in pfad_kurse %}
+                        <div class="list-group-item px-0 d-flex justify-content-between align-items-center gap-3">
+                            <div>
+                                <div class="fw-semibold">{{ link.reihenfolge }}. {{ link.kurs.titel }}</div>
+                                <div class="small text-secondary">{% if link.pflichtkurs %}Pflichtkurs{% else %}Optional{% endif %} · {{ link.kurs.get_niveau_display }} · {% if link.kurs.ist_veroeffentlicht %}veroeffentlicht{% else %}Entwurf{% endif %}</div>
+                            </div>
+                            <form method="post" action="{% url 'trainer_learning_path_course_delete' object.slug link.id %}">
+                                {% csrf_token %}
+                                <button class="btn btn-sm btn-outline-danger" type="submit">Entfernen</button>
+                            </form>
+                        </div>
+                    {% empty %}
+                        <div class="list-group-item px-0 text-secondary">Noch keine Kurse zugeordnet.</div>
+                    {% endfor %}
+                </div>
+            </div>
+        {% endif %}
+    </div>
+
+    <aside class="col-lg-5">
+        <div class="aboro-panel mb-4">
+            <h2 class="h5 mb-3">Anleitung</h2>
+            <ol class="text-secondary mb-0">
+                <li>Lege zuerst Titel, Slug, Beschreibung und Organisation fest.</li>
+                <li>Speichere den Lernpfad, damit Kurse hinzugefuegt werden koennen.</li>
+                <li>Fuege Kurse in der gewuenschten Reihenfolge hinzu.</li>
+                <li>Markiere Pflichtkurse, wenn sie fuer den Fortschritt besonders wichtig sind.</li>
+                <li>Setze Veroeffentlicht, sobald Lernende den Lernpfad sehen duerfen.</li>
+            </ol>
+        </div>
+
+        {% if object %}
+            <div class="aboro-panel">
+                <h2 class="h5 mb-3">Kurs hinzufuegen</h2>
+                {% if kurs_form.fields.kurs.queryset %}
+                    <form method="post" action="{% url 'trainer_learning_path_course_create' object.slug %}">
+                        {% csrf_token %}
+                        {{ kurs_form.as_p }}
+                        <button class="btn btn-outline-secondary" type="submit">Kurs hinzufuegen</button>
+                    </form>
+                {% else %}
+                    <p class="text-secondary mb-0">Alle verfuegbaren Kurse dieser Organisation sind bereits im Lernpfad oder es gibt noch keine Kurse.</p>
+                {% endif %}
+            </div>
+        {% endif %}
+    </aside>
+</div>
+{% endblock %}

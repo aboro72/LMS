@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block title %}Trainer Lernpfade - ABoroLMS{% endblock %}
+
+{% block breadcrumbs %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'home' %}">Start</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Trainer Lernpfade</li>
+    </ol>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-4">
+    <div>
+        <p class="text-uppercase text-aboro-orange fw-semibold mb-1 small">Trainer</p>
+        <h1 class="h3 mb-1">Lernpfade verwalten</h1>
+        <p class="text-secondary mb-0">Kurse zu strukturierten Reihen zusammenstellen und veroeffentlichen.</p>
+    </div>
+    <a class="btn btn-aboro" href="{% url 'trainer_learning_path_create' %}">Lernpfad erstellen</a>
+</div>
+
+<div class="aboro-panel mb-4">
+    <h2 class="h5 mb-3">So funktioniert ein Lernpfad</h2>
+    <div class="row g-3">
+        <div class="col-md-4"><strong>1. Grunddaten</strong><p class="text-secondary mb-0">Titel, Slug, Beschreibung und Organisation festlegen.</p></div>
+        <div class="col-md-4"><strong>2. Kurse zuordnen</strong><p class="text-secondary mb-0">Bestehende Kurse in eine Reihenfolge bringen und als Pflicht oder optional markieren.</p></div>
+        <div class="col-md-4"><strong>3. Veroeffentlichen</strong><p class="text-secondary mb-0">Erst veroeffentlichte Lernpfade erscheinen fuer Lernende im Katalog.</p></div>
+    </div>
+</div>
+
+<div class="row g-4">
+    {% for lernpfad in lernpfade %}
+        <div class="col-md-6 col-xl-4">
+            <div class="course-card h-100">
+                <div class="course-card__body">
+                    <p class="small text-secondary mb-1">{{ lernpfad.organisation.name }}</p>
+                    <h2 class="h5 mb-2"><a href="{% url 'trainer_learning_path_edit' lernpfad.slug %}">{{ lernpfad.titel }}</a></h2>
+                    <p class="text-secondary">{{ lernpfad.beschreibung|default:'Keine Beschreibung'|truncatewords:22 }}</p>
+                    <div class="d-flex gap-2 flex-wrap">
+                        <span class="badge text-bg-light">{{ lernpfad.pfad_kurse.count }} Kurse</span>
+                        {% if lernpfad.ist_veroeffentlicht %}<span class="badge text-bg-success">Veroeffentlicht</span>{% else %}<span class="badge text-bg-secondary">Entwurf</span>{% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% empty %}
+        <div class="col-12"><div class="aboro-panel text-secondary">Noch keine Lernpfade angelegt.</div></div>
+    {% endfor %}
+</div>
+{% endblock %}

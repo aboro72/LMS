@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}Kategorien – ABoroLMS{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div><h1 class="h3 mb-1">Kurskategorien</h1><p class="text-secondary mb-0">Themen und Unterthemen je Organisation verwalten.</p></div>
+  <a class="btn btn-aboro" href="{% url 'trainer_category_create' %}">Kategorie erstellen</a>
+</div>
+<div class="aboro-panel">
+  <div class="table-responsive"><table class="table align-middle mb-0"><thead><tr><th>Organisation</th><th>Thema</th><th>Kurse</th></tr></thead><tbody>
+  {% for kategorie in kategorien %}<tr><td>{{ kategorie.organisation.name }}</td><td>{% if kategorie.parent %}<span class="text-secondary">{{ kategorie.parent.name }} / </span>{% endif %}{{ kategorie.name }}</td><td>{{ kategorie.kurse.count }}</td></tr>
+  {% empty %}<tr><td colspan="3" class="text-secondary">Noch keine Kategorien vorhanden.</td></tr>{% endfor %}
+  </tbody></table></div>
+</div>
+{% endblock %}

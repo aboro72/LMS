@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block title %}Frage hinzufügen – {{ katalog.titel }}{% endblock %}
+
+{% block extra_head %}{{ form.media }}{% endblock %}
+
+{% block breadcrumbs %}
+<nav aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="{% url 'home' %}">Start</a></li><li class="breadcrumb-item"><a href="{% url 'trainer_catalog_list' %}">Fragenkataloge</a></li><li class="breadcrumb-item"><a href="{% url 'trainer_catalog_edit' katalog.pk %}">{{ katalog.titel }}</a></li><li class="breadcrumb-item active" aria-current="page">Frage hinzufügen</li></ol></nav>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+    <div><p class="text-uppercase small fw-semibold text-secondary mb-1">{{ katalog.titel }}</p><h1 class="h3 mb-1">Neue Frage erstellen</h1><p class="text-secondary mb-0">Thema, Frage und passende Antworten an einem übersichtlichen Ort eingeben.</p></div>
+    <a class="btn btn-outline-secondary" href="{% url 'trainer_catalog_edit' katalog.pk %}">Zum Katalog zurück</a>
+</div>
+
+<form method="post" novalidate>{% csrf_token %}
+    {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
+    <div class="row g-4">
+        <section class="col-lg-8">
+            <div class="aboro-panel mb-4">
+                <div class="catalog-section-title"><span class="catalog-step">1</span><div><h2 class="h5 mb-0">Frage festlegen</h2><small class="text-secondary">Typ, Inhalt und Bewertung</small></div></div>
+                <div class="row g-3"><div class="col-md-6"><label class="form-label fw-semibold" for="{{ form.typ.id_for_label }}">Fragetyp</label>{{ form.typ }}<div class="form-text">SC = eine Antwort, MC = mehrere Antworten, WF = Wahr/Falsch, FT = Freitext, ZO = Zuordnung, SZ = Szenario.</div>{% for error in form.typ.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}</div><div class="col-md-3"><label class="form-label fw-semibold" for="{{ form.schwierigkeit.id_for_label }}">Schwierigkeit</label>{{ form.schwierigkeit }}</div><div class="col-md-3"><label class="form-label fw-semibold" for="{{ form.punkte.id_for_label }}">Punkte</label>{{ form.punkte }}</div></div>
+                <div class="mt-4"><label class="form-label fw-semibold" for="{{ form.fragetext.id_for_label }}">Fragetext</label>{{ form.fragetext }}{% for error in form.fragetext.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}</div>
+                <div class="mt-4"><label class="form-label fw-semibold" for="{{ form.erklaerung.id_for_label }}">Erklärung / Lösungshinweis für Prüfer <span class="text-secondary fw-normal">(optional)</span></label>{{ form.erklaerung }}<div class="form-text">Erläutern Sie die richtige Lösung und die erwarteten Inhalte. Die Erklärung erscheint bei allen Fragetypen im Lösungsbogen, nicht im Teilnehmerbogen.</div></div>
+                <div class="mt-4"><label class="form-label fw-semibold" for="{{ form.bewertungshinweis.id_for_label }}">Bewertungsschema <span class="text-secondary fw-normal">(bei Freitext/Szenario)</span></label>{{ form.bewertungshinweis }}<div class="form-text">Definieren Sie die erwarteten Inhalte und die genaue Punktverteilung. Dieses Schema erscheint nur in der Trainer-Lösung.</div></div>
+                <div class="mt-4"><label class="form-label fw-semibold" for="{{ form.eltern_szenario.id_for_label }}">Übergeordnetes Szenario <span class="text-secondary fw-normal">(optional)</span></label>{{ form.eltern_szenario }}</div>
+            </div>
+
+            <div class="aboro-panel mb-4">
+                <div class="catalog-section-title"><span class="catalog-step">2</span><div><h2 class="h5 mb-0">Antworten oder Zuordnungspaare</h2><small class="text-secondary">Nur den Bereich ausfüllen, der zum Fragetyp passt</small></div></div>
+                <div class="row"><div class="col-lg-7"><h3 class="h6">Auswahlfragen</h3><p class="text-secondary small">Bei Single Choice genau eine, bei Multiple Choice eine oder mehrere richtige Antworten markieren.</p>{% for index in "12345678" %}<div class="row g-2 align-items-center mb-2"><div class="col-8"><input class="form-control" type="text" name="antwort_{{ index }}" placeholder="Antwort {{ index }}"></div><div class="col-4"><div class="form-check"><input class="form-check-input" type="checkbox" name="korrekt_{{ index }}" id="korrekt_{{ index }}" value="1"><label class="form-check-label" for="korrekt_{{ index }}">Richtig</label></div></div></div>{% endfor %}</div><div class="col-lg-5 border-lg-start mt-4 mt-lg-0"><h3 class="h6">Zuordnungspaare</h3><p class="text-secondary small">Nur für den Typ Zuordnung.</p>{% for index in "12345" %}<div class="row g-2 mb-2"><div class="col-6"><input class="form-control" type="text" name="links_{{ index }}" placeholder="Links {{ index }}"></div><div class="col-6"><input class="form-control" type="text" name="rechts_{{ index }}" placeholder="Rechts {{ index }}"></div></div>{% endfor %}</div></div>
+            </div>
+        </section>
+        <aside class="col-lg-4">
+            <div class="aboro-panel catalog-sidebar">
+                <div class="catalog-section-title"><span class="catalog-step">3</span><div><h2 class="h5 mb-0">Thema zuordnen</h2><small class="text-secondary">Für gezielte Prüfungsfragen</small></div></div>
+                <div class="topic-picker"><label class="form-label fw-bold" for="{{ form.themen.id_for_label }}">Themengebiet</label>{{ form.themen }}<datalist id="vorhandene-themen">{% for thema in themen %}<option value="{{ thema.name }}">{% endfor %}</datalist><div class="form-text">Ein vorhandenes Thema auswählen oder ein neues eingeben. Mehrere Themen mit Komma trennen.</div>{% if themen %}<div class="mt-3">{% for thema in themen %}<span class="catalog-topic">{{ thema.name }}</span>{% endfor %}</div>{% else %}<p class="small text-secondary mb-0 mt-3">Noch keine Themen im Katalog. Das erste eingegebene Thema wird automatisch angelegt.</p>{% endif %}</div>
+                <hr class="my-4"><p class="small text-secondary">Nach dem Speichern können Sie direkt die nächste Frage erfassen oder zur Übersicht zurückkehren.</p><button class="btn btn-outline-secondary w-100 mb-2" type="submit" name="weitere_frage" value="1">Speichern und weitere Frage</button><button class="btn btn-aboro w-100" type="submit">Speichern und zum Katalog</button>
+            </div>
+        </aside>
+    </div>
+</form>
+{% endblock %}

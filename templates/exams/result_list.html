@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block title %}Meine Prüfungsergebnisse - ABoroLMS{% endblock %}
+
+{% block content %}
+<div class="aboro-panel">
+    <h1 class="h3 mb-1">Meine Prüfungsergebnisse</h1>
+    <p class="text-secondary mb-3">Deine Ergebnisse sind ab Abschluss ein Jahr lang verfügbar.</p>
+    <div class="list-group list-group-flush">
+        {% for versuch in versuche %}
+        <a class="list-group-item list-group-item-action px-0 d-flex justify-content-between align-items-center" href="{% url 'exam_result' versuch.pruefung.pk versuch.pk %}">
+            <div><span class="fw-semibold">{{ versuch.pruefung.titel }}</span><span class="text-secondary small ms-2">{{ versuch.abgeschlossen_am|date:"d.m.Y" }}</span></div>
+            <span class="badge {% if versuch.bestanden %}text-bg-success{% else %}text-bg-secondary{% endif %}">{{ versuch.prozent_erreicht }}%</span>
+        </a>
+        {% empty %}<p class="text-secondary mb-0">Noch keine einsehbaren Prüfungsergebnisse.</p>{% endfor %}
+    </div>
+</div>
+{% endblock %}

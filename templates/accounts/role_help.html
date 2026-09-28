@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Hilfe {{ active_help.title }} - ABoroLMS{% endblock %}
+
+{% block breadcrumbs %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'home' %}">Start</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Hilfe</li>
+    </ol>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+    <aside class="col-lg-3">
+        <div class="aboro-panel sticky-lg-top">
+            <h1 class="h5 mb-2">Deine Hilfe</h1>
+            <p class="text-secondary mb-0">{{ active_help.title }}</p>
+        </div>
+    </aside>
+
+    <section class="col-lg-9">
+        <div class="aboro-panel mb-4">
+            <p class="text-uppercase text-aboro-orange fw-semibold mb-2">{{ active_help.badge }}</p>
+            <h2 class="h3 mb-3">{{ active_help.title }}</h2>
+            <p class="lead mb-0">{{ active_help.intro }}</p>
+        </div>
+
+        <div class="row g-3 mb-4">
+            {% for card in active_help.quick_cards %}
+                <div class="col-md-4">
+                    <div class="aboro-panel h-100">
+                        <h3 class="h6 mb-2">{{ card.title }}</h3>
+                        <p class="text-secondary mb-0">{{ card.text }}</p>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+
+        {% for section in active_help.sections %}
+            <section class="aboro-panel mb-4">
+                <h3 class="h5 mb-3">{{ section.title }}</h3>
+                {% if section.text %}<p class="text-secondary">{{ section.text }}</p>{% endif %}
+                <div class="list-group list-group-flush">
+                    {% for item in section.items %}
+                        <div class="list-group-item px-0">
+                            <div class="fw-semibold">{{ item.title }}</div>
+                            <div class="text-secondary">{{ item.text }}</div>
+                            {% if item.url_name %}
+                                <a class="btn btn-sm btn-outline-secondary mt-2" href="{% url item.url_name %}">{{ item.link_text }}</a>
+                            {% elif item.url_name_with_org and meine_org %}
+                                <a class="btn btn-sm btn-outline-secondary mt-2" href="{% url item.url_name_with_org meine_org.slug %}">{{ item.link_text }}</a>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
+            </section>
+        {% endfor %}
+
+        {% if active_help.csv_example %}
+            <section class="aboro-panel mb-4">
+                <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-3">
+                    <h3 class="h5 mb-0">CSV-Beispiel fuer Fragenkataloge</h3>
+                    {% if active_help.csv_template_file %}
+                        <a class="btn btn-sm btn-outline-secondary" href="{% static active_help.csv_template_file %}" download>Excel-Vorlage herunterladen</a>
+                    {% endif %}
+                </div>
+                <p class="text-secondary">Die Excel-Vorlage enthaelt dieselben Spalten und Beispielzeilen. Sie kann in Excel bearbeitet und anschliessend als CSV mit Semikolon-Trennzeichen exportiert werden.</p>
+                <pre class="bg-light border rounded p-3 small mb-0"><code>{{ active_help.csv_example }}</code></pre>
+            </section>
+        {% endif %}
+
+        <section class="aboro-panel">
+            <h3 class="h5 mb-3">Typische Stolperstellen</h3>
+            <div class="accordion" id="helpFaq">
+                {% for faq in active_help.faqs %}
+                    <div class="accordion-item">
+                        <h4 class="accordion-header" id="faq-heading-{{ forloop.counter }}">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq-{{ forloop.counter }}" aria-expanded="false" aria-controls="faq-{{ forloop.counter }}">
+                                {{ faq.question }}
+                            </button>
+                        </h4>
+                        <div id="faq-{{ forloop.counter }}" class="accordion-collapse collapse" aria-labelledby="faq-heading-{{ forloop.counter }}" data-bs-parent="#helpFaq">
+                            <div class="accordion-body text-secondary">{{ faq.answer }}</div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </section>
+    </section>
+</div>
+{% endblock %}

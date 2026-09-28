@@ -1,0 +1,330 @@
+{% extends "base.html" %}
+
+{% block title %}PageBuilder - {{ org.name }} - ABoroLMS{% endblock %}
+
+{% block extra_head %}
+<style>
+    .pagebuilder-shell {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 320px;
+        gap: 1rem;
+        align-items: start;
+    }
+    .pagebuilder-canvas {
+        min-height: 520px;
+        background: #fff;
+        border: 1px solid rgba(18, 49, 95, 0.14);
+        border-radius: 8px;
+        overflow: hidden;
+    }
+    .pagebuilder-hero {
+        min-height: 260px;
+        display: grid;
+        align-content: center;
+        padding: 2.25rem;
+        background: linear-gradient(135deg, var(--aboro-blue), var(--aboro-blue-dark));
+        color: #fff;
+    }
+    .pagebuilder-content {
+        padding: 1.5rem;
+        outline: 0;
+    }
+    .pagebuilder-content:empty::before {
+        content: "Abschnitt hinzufuegen oder direkt hier schreiben";
+        color: #6c757d;
+    }
+    .pagebuilder-content > * {
+        outline: 1px solid transparent;
+        border-radius: 6px;
+    }
+    .pagebuilder-content > *:hover,
+    .pagebuilder-content > *:focus {
+        outline-color: rgba(242, 140, 40, 0.45);
+    }
+    .builder-button-block a {
+        display: inline-block;
+        padding: 0.65rem 1rem;
+        border-radius: 6px;
+        background: var(--aboro-orange);
+        color: #111;
+        text-decoration: none;
+        font-weight: 700;
+    }
+    .builder-media-block img {
+        max-width: 100%;
+        border-radius: 8px;
+    }
+    .builder-columns-block {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 1rem;
+    }
+    .builder-callout-block {
+        border-left: 4px solid var(--aboro-orange);
+        background: #f8fafc;
+        padding: 1rem;
+    }
+    .pagebuilder-tools {
+        position: sticky;
+        top: 1rem;
+    }
+    .pagebuilder-tools .btn {
+        text-align: left;
+    }
+
+    .builder-gallery-block {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 0.75rem;
+    }
+    .builder-gallery-block img,
+    .builder-course-block img {
+        width: 100%;
+        aspect-ratio: 16 / 9;
+        object-fit: cover;
+        border-radius: 8px;
+    }
+    .builder-card-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 1rem;
+    }
+    .builder-card-grid > div,
+    .builder-course-block {
+        border: 1px solid rgba(18, 49, 95, 0.14);
+        border-radius: 8px;
+        padding: 1rem;
+        background: #fff;
+    }
+    .builder-video-block iframe,
+    .builder-video-block video {
+        width: 100%;
+        aspect-ratio: 16 / 9;
+        border: 0;
+        border-radius: 8px;
+        background: #05070c;
+    }
+    .builder-spacer-block {
+        height: 48px;
+    }
+    .builder-divider-block {
+        border: 0;
+        border-top: 1px solid rgba(18, 49, 95, 0.16);
+        margin: 1.5rem 0;
+    }
+    .builder-html-block {
+        padding: 1rem;
+        background: #f8fafc;
+        border: 1px dashed rgba(18, 49, 95, 0.28);
+        border-radius: 8px;
+    }
+    .pagebuilder-selection {
+        outline: 2px solid var(--aboro-orange) !important;
+        outline-offset: 2px;
+    }
+    @media (max-width: 991.98px) {
+        .pagebuilder-shell { grid-template-columns: 1fr; }
+        .pagebuilder-tools { position: static; }
+        .builder-columns-block,
+        .builder-gallery-block,
+        .builder-card-grid { grid-template-columns: 1fr; }
+    }
+</style>
+{% endblock %}
+
+{% block breadcrumbs %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'org_public_home' org.slug %}">Start</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'org_admin_dashboard' org.slug %}">{{ org.name }}</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'org_startseite' org.slug %}">Startseite</a></li>
+        <li class="breadcrumb-item active">PageBuilder</li>
+    </ol>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-4">
+    <div>
+        <p class="text-uppercase text-aboro-orange fw-semibold mb-1 small">{{ org.name }}</p>
+        <h1 class="h3 mb-1">PageBuilder</h1>
+        <p class="text-secondary mb-0">{% url 'org_public_home' org.slug as public_url %}<a href="{{ public_url }}" target="_blank">/{{ org.slug }}/</a></p>
+    </div>
+    <div class="d-flex gap-2">
+        <a class="btn btn-outline-secondary" href="{% url 'org_public_home' org.slug %}" target="_blank">Vorschau</a>
+        <a class="btn btn-outline-secondary" href="{% url 'org_startseite' org.slug %}">Klassischer Editor</a>
+    </div>
+</div>
+
+<form method="post" enctype="multipart/form-data" id="pagebuilderForm">
+    {% csrf_token %}
+    <textarea class="d-none" name="builder_html" id="builderHtml"></textarea>
+
+    <div class="pagebuilder-shell">
+        <div class="pagebuilder-canvas">
+            <section class="pagebuilder-hero" id="heroPreview"{% if seite.hero_bild %} style="background:linear-gradient(rgba(0,0,0,.42), rgba(0,0,0,.42)), url('{{ seite.hero_bild.url }}') center/cover no-repeat;"{% endif %}>
+                <p class="mb-2 small text-uppercase fw-semibold">{{ org.name }}</p>
+                <h2 class="display-6 fw-bold mb-3" id="heroTitlePreview">{{ seite.hero_titel|default:"Willkommen" }}</h2>
+                <p class="lead mb-4" id="heroSubtitlePreview">{{ seite.hero_untertitel|default:"Starten Sie mit Ihren Kursen." }}</p>
+                <span class="btn btn-aboro align-self-start" id="heroButtonPreview">{{ seite.hero_button_text|default:"Kurse entdecken" }}</span>
+            </section>
+            <div class="pagebuilder-content" id="builderCanvas" contenteditable="true">{{ builder_html|safe }}</div>
+        </div>
+
+        <aside class="aboro-panel pagebuilder-tools">
+            <div class="form-check form-switch mb-3">
+                <input class="form-check-input" type="checkbox" name="aktiv" id="id_aktiv" {% if seite.aktiv %}checked{% endif %}>
+                <label class="form-check-label fw-semibold" for="id_aktiv">Startseite aktiv</label>
+            </div>
+
+            <label class="form-label fw-semibold" for="id_weiterleitungs_url">{{ weiterleitung_form.weiterleitungs_url.label }}</label>
+            {{ weiterleitung_form.weiterleitungs_url }}
+            {% if weiterleitung_form.weiterleitungs_url.errors %}<div class="text-danger small mt-1">{{ weiterleitung_form.weiterleitungs_url.errors }}</div>{% endif %}
+
+            <hr>
+            <label class="form-label fw-semibold" for="heroTitle">Hero-Titel</label>
+            <input class="form-control mb-2" id="heroTitle" name="hero_titel" value="{{ seite.hero_titel }}">
+            <label class="form-label fw-semibold" for="heroSubtitle">Hero-Untertitel</label>
+            <textarea class="form-control mb-2" id="heroSubtitle" name="hero_untertitel" rows="3">{{ seite.hero_untertitel }}</textarea>
+            <label class="form-label fw-semibold" for="heroButton">Button-Text</label>
+            <input class="form-control mb-2" id="heroButton" name="hero_button_text" value="{{ seite.hero_button_text }}">
+            <label class="form-label fw-semibold" for="heroBild">Hero-Bild</label>
+            <input class="form-control mb-3" type="file" id="heroBild" name="hero_bild" accept="image/*">
+
+            <hr>
+            <div class="d-grid gap-2 mb-3">
+                <button class="btn btn-sm btn-outline-secondary" type="button" data-block="heading">Ueberschrift</button>
+                <button class="btn btn-sm btn-outline-secondary" type="button" data-block="text">Textabschnitt</button>
+                <button class="btn btn-sm btn-outline-secondary" type="button" data-block="callout">Hinweisbox</button>
+                <button class="btn btn-sm btn-outline-secondary" type="button" data-block="columns">Zwei Spalten</button>
+                <button class="btn btn-sm btn-outline-secondary" type="button" data-block="cards">Karten</button>
+                <button class="btn btn-sm btn-outline-secondary" type="button" data-block="course">Kurs-Teaser</button>
+                <button class="btn btn-sm btn-outline-secondary" type="button" data-block="button">Button</button>
+                <button class="btn btn-sm btn-outline-secondary" type="button" data-block="image">Bild per URL</button>
+                <button class="btn btn-sm btn-outline-secondary" type="button" data-block="gallery">Galerie</button>
+                <button class="btn btn-sm btn-outline-secondary" type="button" data-block="video">Video</button>
+                <button class="btn btn-sm btn-outline-secondary" type="button" data-block="faq">FAQ</button>
+                <button class="btn btn-sm btn-outline-secondary" type="button" data-block="table">Tabelle</button>
+                <button class="btn btn-sm btn-outline-secondary" type="button" data-block="divider">Trennlinie</button>
+                <button class="btn btn-sm btn-outline-secondary" type="button" data-block="spacer">Abstand</button>
+                <button class="btn btn-sm btn-outline-secondary" type="button" data-block="html">HTML</button>
+            </div>
+
+            <div class="d-flex gap-2 mb-3">
+                <button class="btn btn-sm btn-outline-secondary flex-fill" type="button" id="boldButton">B</button>
+                <button class="btn btn-sm btn-outline-secondary flex-fill" type="button" id="italicButton">I</button>
+                <button class="btn btn-sm btn-outline-secondary flex-fill" type="button" id="linkButton">Link</button>
+            </div>
+
+            <div class="d-grid gap-2 mb-3">
+                <button class="btn btn-sm btn-outline-secondary" type="button" id="moveUpButton">Auswahl nach oben</button>
+                <button class="btn btn-sm btn-outline-secondary" type="button" id="moveDownButton">Auswahl nach unten</button>
+                <button class="btn btn-sm btn-outline-danger" type="button" id="deleteButton">Auswahl loeschen</button>
+            </div>
+
+            <button class="btn btn-aboro w-100" type="submit">Speichern</button>
+        </aside>
+    </div>
+</form>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+    const canvas = document.getElementById('builderCanvas');
+    const form = document.getElementById('pagebuilderForm');
+    const htmlField = document.getElementById('builderHtml');
+    const heroTitle = document.getElementById('heroTitle');
+    const heroSubtitle = document.getElementById('heroSubtitle');
+    const heroButton = document.getElementById('heroButton');
+    const heroTitlePreview = document.getElementById('heroTitlePreview');
+    const heroSubtitlePreview = document.getElementById('heroSubtitlePreview');
+    const heroButtonPreview = document.getElementById('heroButtonPreview');
+
+    let selectedBlock = null;
+
+    function escapeAttribute(value) {
+        return String(value || '').replace(/"/g, '&quot;');
+    }
+
+    function insertBlock(html) {
+        canvas.focus();
+        document.execCommand('insertHTML', false, html);
+    }
+
+    function selectBlock(element) {
+        if (selectedBlock) selectedBlock.classList.remove('pagebuilder-selection');
+        selectedBlock = element && element !== canvas ? element : null;
+        if (selectedBlock) selectedBlock.classList.add('pagebuilder-selection');
+    }
+
+    canvas.addEventListener('click', (event) => {
+        const block = event.target.closest('#builderCanvas > *');
+        selectBlock(block);
+    });
+
+    document.querySelectorAll('[data-block]').forEach((button) => {
+        button.addEventListener('click', () => {
+            const block = button.dataset.block;
+            if (block === 'heading') insertBlock('<h2>Neue Ueberschrift</h2><p>Kurzer Einstiegstext.</p>');
+            if (block === 'text') insertBlock('<section><h2>Abschnitt</h2><p>Schreiben Sie hier Ihren Inhalt.</p></section>');
+            if (block === 'callout') insertBlock('<div class="builder-callout-block"><strong>Wichtig</strong><p>Hinweistext ergaenzen.</p></div>');
+            if (block === 'columns') insertBlock('<div class="builder-columns-block"><div><h3>Spalte links</h3><p>Inhalt links.</p></div><div><h3>Spalte rechts</h3><p>Inhalt rechts.</p></div></div>');
+            if (block === 'cards') insertBlock('<div class="builder-card-grid"><div><h3>Karte 1</h3><p>Inhalt ergaenzen.</p></div><div><h3>Karte 2</h3><p>Inhalt ergaenzen.</p></div><div><h3>Karte 3</h3><p>Inhalt ergaenzen.</p></div></div>');
+            if (block === 'course') insertBlock('<div class="builder-course-block"><h2>Kurs hervorheben</h2><p>Beschreiben Sie hier einen wichtigen Kurs oder Lernpfad.</p><p class="builder-button-block"><a href="/{{ org.slug }}/kurse/">Kurse ansehen</a></p></div>');
+            if (block === 'button') insertBlock('<p class="builder-button-block"><a href="/{{ org.slug }}/kurse/">Button bearbeiten</a></p>');
+            if (block === 'image') {
+                const url = window.prompt('Bild-URL');
+                if (url) insertBlock('<figure class="builder-media-block"><img src="' + escapeAttribute(url) + '" alt=""><figcaption>Bildbeschreibung</figcaption></figure>');
+            }
+            if (block === 'gallery') {
+                const first = window.prompt('Bild-URL 1');
+                const second = window.prompt('Bild-URL 2');
+                const third = window.prompt('Bild-URL 3');
+                if (first || second || third) insertBlock('<div class="builder-gallery-block">' + [first, second, third].filter(Boolean).map((url) => '<img src="' + escapeAttribute(url) + '" alt="">').join('') + '</div>');
+            }
+            if (block === 'video') {
+                const url = window.prompt('Video-URL oder Embed-URL');
+                if (url) insertBlock('<div class="builder-video-block"><iframe src="' + escapeAttribute(url) + '" title="Video" allowfullscreen></iframe></div>');
+            }
+            if (block === 'faq') insertBlock('<section><h2>FAQ</h2><details open><summary>Frage bearbeiten</summary><p>Antwort bearbeiten.</p></details><details><summary>Weitere Frage</summary><p>Weitere Antwort.</p></details></section>');
+            if (block === 'table') insertBlock('<table class="table"><thead><tr><th>Spalte 1</th><th>Spalte 2</th></tr></thead><tbody><tr><td>Inhalt</td><td>Inhalt</td></tr></tbody></table>');
+            if (block === 'divider') insertBlock('<hr class="builder-divider-block">');
+            if (block === 'spacer') insertBlock('<div class="builder-spacer-block"></div>');
+            if (block === 'html') insertBlock('<div class="builder-html-block"><p>Eigenen HTML-Inhalt hier einfuegen.</p></div>');
+        });
+    });
+
+    document.getElementById('boldButton').addEventListener('click', () => document.execCommand('bold'));
+    document.getElementById('italicButton').addEventListener('click', () => document.execCommand('italic'));
+    document.getElementById('linkButton').addEventListener('click', () => {
+        const url = window.prompt('Link-URL');
+        if (url) document.execCommand('createLink', false, url);
+    });
+    document.getElementById('moveUpButton').addEventListener('click', () => {
+        if (selectedBlock && selectedBlock.previousElementSibling) {
+            canvas.insertBefore(selectedBlock, selectedBlock.previousElementSibling);
+        }
+    });
+    document.getElementById('moveDownButton').addEventListener('click', () => {
+        if (selectedBlock && selectedBlock.nextElementSibling) {
+            canvas.insertBefore(selectedBlock.nextElementSibling, selectedBlock);
+        }
+    });
+    document.getElementById('deleteButton').addEventListener('click', () => {
+        if (selectedBlock && window.confirm('Ausgewaehlten Block loeschen?')) {
+            selectedBlock.remove();
+            selectedBlock = null;
+        }
+    });
+
+    heroTitle.addEventListener('input', () => heroTitlePreview.textContent = heroTitle.value || 'Willkommen');
+    heroSubtitle.addEventListener('input', () => heroSubtitlePreview.textContent = heroSubtitle.value || 'Starten Sie mit Ihren Kursen.');
+    heroButton.addEventListener('input', () => heroButtonPreview.textContent = heroButton.value || 'Kurse entdecken');
+
+    form.addEventListener('submit', () => {
+        htmlField.value = canvas.innerHTML.trim();
+    });
+})();
+</script>
+{% endblock %}
